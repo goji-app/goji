@@ -1,6 +1,4 @@
-# Goji VPN
-
-> Здесь лежат исходники приложений **без движка VPN**: код туннеля (Android — `GodjiVpnService.kt`, Windows и macOS — `VpnEngine.cs`, iOS — `PacketTunnelProvider.swift` и `XrayConfigBuilder.swift`) заменён заглушками, а адреса сервиса подставляются при сборке. Собрать рабочее приложение из этого репозитория нельзя; готовые сборки — на сайте загрузки и в релизах.
+# Goji 
 
 [![iOS](https://github.com/goji-app/goji-vpn/actions/workflows/ios.yml/badge.svg)](https://github.com/goji-app/goji-vpn/actions/workflows/ios.yml)
 
