@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Короткий отклик при подключении/отключении VPN (см. VpnStateObserver). -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Правила Wi-Fi (NetworkRulesManager): имя сети (SSID) Android отдаёт только при
+         разрешении на геолокацию. Запрашивается лишь когда пользователь сам добавляет
+         доверенную сеть; координаты приложение не читает и никуда не отправляет. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <!-- Экрану "Прокси для выбранных приложений" нужен список запускаемых пользователем
+         приложений (см. AppTunnelingViewModel.loadApps) — это заявление о видимости пакетов
+         (Android 11+), а не QUERY_ALL_PACKAGES: то разрешение Google Play одобряет только
+         узкому списку категорий (антивирусы, файловые менеджеры и т.п.) и требует отдельного
+         заявления в консоли на каждую публикацию — для этой функции почти наверняка отклонят
+         или задержат. queryIntentActivities с этим же intent-фильтром — официальный способ
+         получить список запускаемых приложений вообще без специальных разрешений. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
+    <application
+        android:name=".GodjiApplication"
+        android:allowBackup="false"
+        android:label="Goji VPN"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:theme="@style/Theme.GodjiVpn"
+        android:networkSecurityConfig="@xml/network_security_config">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.GodjiVpn">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Ловит редирект из Native OAuth (Google/Yandex/Telegram) после серверного callback.
+             Схему godjivpn://oauth2redirect нужно один раз внести в панели: Настройки →
+             Мобильные приложения → "Разрешённые схемы app_redirect". -->
+        <activity
+            android:name=".auth.OAuthCallbackActivity"
+            android:exported="true"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="godjivpn"
+                    android:host="oauth2redirect" />
+            </intent-filter>
+        </activity>
+
+        <!-- Вход по QR-коду переноса (godjivpn://transfer), отсканированному системной камерой
+             (см. TransferLoginActivity) — всегда с явным подтверждением пользователя. -->
+        <activity
+            android:name=".auth.TransferLoginActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTask"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="godjivpn"
+                    android:host="transfer" />
+            </intent-filter>
+        </activity>
+
+        <!-- Встроенный сканер QR (zxing-android-embedded) — вертикально, как весь интерфейс. -->
+        <activity
+            android:name="com.journeyapps.barcodescanner.CaptureActivity"
+            android:screenOrientation="portrait"
+            tools:replace="screenOrientation" />
+
+        <!-- Сам VPN-туннель. BIND_VPN_SERVICE — системное разрешение, декларируется на сервисе -->
+        <service
+            android:name=".vpn.GodjiVpnService"
+            android:permission="android.permission.BIND_VPN_SERVICE"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <intent-filter>
+                <action android:name="android.net.VpnService" />
+            </intent-filter>
+            <!-- Android 14+ и Google Play требуют описать, зачем нужен specialUse. -->
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="VPN tunnel (VpnService) that stays active while the user is connected to Goji VPN" />
+        </service>
+
+        <!-- Трамплин ярлыка "Подключиться: <последний узел>" (см. LastNodeShortcut). exported —
+             его запускает лаунчер; никаких данных извне не принимает, только поднимает VPN на
+             последнем узле пользователя. Отдельный taskAffinity — не вытаскивает основной экран. -->
+        <activity
+            android:name=".vpn.LastNodeShortcutActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <!-- Плитка "Goji VPN" в шторке быстрых настроек (см. GojiTileService). exported=true
+             обязателен — её биндит SystemUI; защищена системным BIND_QUICK_SETTINGS_TILE. -->
+        <service
+            android:name=".vpn.GojiTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_vpn_notification"
+            android:label="Goji VPN"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
+        </service>
+
+        <!-- Проверка пинга при подключённом VPN (см. PingProcessService): libXray не выполняет
+             pingBatch в процессе, где уже работает ядро туннеля, поэтому — отдельный процесс. -->
+        <service
+            android:name=".subscription.PingProcessService"
+            android:process=":ping"
+            android:exported="false" />
+
+        <!-- Виджет на главный экран (см. GojiWidgetProvider) — статус + кнопка подключения.
+             exported=true обязателен для AppWidgetProvider: APPWIDGET_UPDATE шлёт system_server
+             от имени лончера, и на части прошивок/версий Android такая доставка не проходит до
+             ресивера с exported=false, несмотря на то что сам intent-action защищённый. Сюда
+             приходят только системные широковещания жизненного цикла виджета (APPWIDGET_UPDATE/
+             OPTIONS_CHANGED) — сам провайдер только перерисовывает виджет по внутреннему
+             состоянию, никаких действий с реальным эффектом не выполняет. -->
+        <receiver
+            android:name=".widget.GojiWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_goji_info" />
+        </receiver>
+
+        <!-- Виджеты «Статус» и «Подписка» 2×2 (концепт Goji 2.0) — так же, как GojiWidgetProvider,
+             только перерисовываются по внутреннему состоянию; действия идут через
+             GojiWidgetActionReceiver (exported=false). -->
+        <receiver
+            android:name=".widget.GojiStatusWidgetProvider"
+            android:label="@string/widget_status_label"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_status_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.GojiSubscriptionWidgetProvider"
+            android:label="@string/widget_subscription_label"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_subscription_info" />
+        </receiver>
+
+        <!-- Выбор сервера/подключение из виджета (см. GojiWidgetActionReceiver) — в отличие от
+             GojiWidgetProvider выше, exported=false: эти действия реально меняют текущий узел
+             подписки и поднимают VPN, а не просто перерисовывают виджет, поэтому стороннему
+             приложению сюда доступа быть не должно. PendingIntent, которые создаёт сам виджет
+             (кнопка/строка списка), долетают сюда независимо от exported — это разрешение
+             переносится вместе с самим PendingIntent, а не проверяется заново на приёме. -->
+        <receiver
+            android:name=".widget.GojiWidgetActionReceiver"
+            android:exported="false" />
+
+        <!-- Список серверов внутри развёрнутого (3x3) виджета — см.
+             GojiWidgetRemoteViewsService/widget_goji_expanded.xml. BIND_REMOTEVIEWS — системное
+             разрешение, гарантирует, что подключаться к сервису может только сам системный
+             процесс лончера/виджет-хоста, а не произвольное приложение. -->
+        <service
+            android:name=".widget.GojiWidgetRemoteViewsService"
+            android:permission="android.permission.BIND_REMOTEVIEWS"
+            android:exported="false" />
+
+        <!-- WorkManager инициализируется вручную через HiltWorkerFactory в GodjiApplication
+             (Configuration.Provider) — стандартный провайдер-инициализатор нужно снять,
+             иначе он создаст WorkManager без Hilt-инъекции до onCreate() приложения. -->
+
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
+
+    </application>
+</manifest>

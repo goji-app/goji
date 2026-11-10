@@ -1,0 +1,24 @@
+<Project>
+  <!--
+    Движок VPN (VpnEngine.cs) в репозитории не хранится — там только заглушка-описание.
+    Настоящий файл лежит вне репозитория: «Приложения Goji\<платформа>\Приватное\VpnEngine.cs»
+    (платформу задаёт GojiPrivatePlatform в csproj) либо в папке из переменной окружения
+    GOJI_PRIVATE_DIR (в CI её наполняет шаг «Приватный код туннеля» из секрета).
+    Без настоящего файла сборка останавливается — приложение с пустым движком собрать нельзя.
+  -->
+  <PropertyGroup>
+    <GojiPrivateDir>$(GOJI_PRIVATE_DIR)</GojiPrivateDir>
+    <GojiPrivateDir Condition="'$(GojiPrivateDir)' == ''">$(MSBuildThisFileDirectory)../../Приложения Goji/$(GojiPrivatePlatform)/Приватное</GojiPrivateDir>
+    <GojiPrivateEngine>$(GojiPrivateDir)/VpnEngine.cs</GojiPrivateEngine>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Services\VpnEngine.cs" />
+    <Compile Include="$(GojiPrivateEngine)" Link="Services\VpnEngine.cs" Condition="Exists('$(GojiPrivateEngine)')" />
+  </ItemGroup>
+
+  <Target Name="GojiCheckPrivate" BeforeTargets="BeforeCompile;CoreCompile">
+    <Error Condition="!Exists('$(GojiPrivateEngine)')"
+           Text="Нет приватного движка VPN: $(GojiPrivateEngine). Положите VpnEngine.cs в «Приложения Goji\$(GojiPrivatePlatform)\Приватное» или задайте GOJI_PRIVATE_DIR." />
+  </Target>
+</Project>
