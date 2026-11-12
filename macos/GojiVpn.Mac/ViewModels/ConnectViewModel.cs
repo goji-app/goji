@@ -65,10 +65,18 @@ public sealed partial class ConnectViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool trialFailed;
 
     public bool HasTrial => TrialDays != null;
-    public string TrialTitle => TrialDays is > 0 and var d ? $"Пробный период — {d} {RuPlural.Days(d)}" : "Пробный период";
+    public string TrialTitle => TrialDays is > 0 and var d ? $"{Loc.T("Пробный период — ")}{d} {RuPlural.Days(d)}" : Loc.T("Пробный период");
 
-    [ObservableProperty] private string headline = "Пока без защиты";
-    [ObservableProperty] private string subline = "Провайдер видит всё, что ты открываешь";
+    [ObservableProperty] private string countryCode = "—";
+    [ObservableProperty] private string nodeCity = "";
+    [ObservableProperty] private string serverCounter = "";
+    [ObservableProperty] private int? pingMs;
+    [ObservableProperty] private string pingText = "—";
+    [ObservableProperty] private string stateTag = "НЕТ ЗАЩИТЫ";
+    [ObservableProperty] private string toggleLabel = "ВКЛЮЧИТЬ";
+    [ObservableProperty] private bool isOnOrBusy;
+    [ObservableProperty] private string headline = "Без защиты";
+    [ObservableProperty] private string subline = Loc.T("Провайдер видит всё, что ты открываешь");
 
     [ObservableProperty] private string currentNodeName = "Выбрать за меня";
     [ObservableProperty] private string currentNodeMeta = "";
@@ -144,6 +152,28 @@ public sealed partial class ConnectViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void OpenServers() => NavigateToServersRequested?.Invoke();
 
+    /// <summary>Следующий узел списка (пока идёт подключение — нельзя).</summary>
+    [RelayCommand]
+    private void NextServer()
+    {
+        if (IsConnecting) return;
+        var list = _subscription.Nodes.ToList();
+        if (list.Count < 2) return;
+        var i = list.FindIndex(n => n.Id == _subscription.SelectedId);
+        _subscription.SelectedId = list[(i + 1) % list.Count].Id;
+    }
+
+    /// <summary>Предыдущий узел списка (пока идёт подключение — нельзя).</summary>
+    [RelayCommand]
+    private void PrevServer()
+    {
+        if (IsConnecting) return;
+        var list = _subscription.Nodes.ToList();
+        if (list.Count < 2) return;
+        var i = list.FindIndex(n => n.Id == _subscription.SelectedId);
+        _subscription.SelectedId = list[(i <= 0 ? list.Count : i) - 1].Id;
+    }
+
     private readonly PingSettings _pingSettings;
 
     public ConnectViewModel(VpnEngine vpnEngine, SubscriptionRepository subscription, PingSettings pingSettings)
@@ -164,6 +194,7 @@ public sealed partial class ConnectViewModel : ObservableObject, IDisposable
         _qualityTimer.Tick += async (_, _) => await ProbeQualityAsync();
         NetworkJournal.Changed += OnJournalChanged;
 
+        Loc.Instance.Changed += () => Avalonia.Threading.Dispatcher.UIThread.Post(RefreshFromState);
         RefreshFromState();
         RefreshNetwork();
     }
@@ -191,7 +222,7 @@ public sealed partial class ConnectViewModel : ObservableObject, IDisposable
         var node = _subscription.SelectedNode;
         if (node == null)
         {
-            ErrorMessage = "Нет доступного сервера — выберите его на вкладке «Серверы»";
+            ErrorMessage = Loc.T("Нет доступного сервера — выберите его на вкладке «Серверы»");
             return;
         }
         await _vpnEngine.ConnectAsync(node);
@@ -228,7 +259,7 @@ public sealed partial class ConnectViewModel : ObservableObject, IDisposable
             var wifiDevices = MacHardwarePorts.WifiDevices;
             if (active.Any(n => wifiDevices.Contains(n.Name))) { NetLabel = "Wi-Fi"; HasNetwork = true; }
             else if (active.Count > 0) { NetLabel = "Ethernet"; HasNetwork = true; }
-            else { NetLabel = "Нет сети"; HasNetwork = false; }
+            else { NetLabel = Loc.T("Нет сети"); HasNetwork = false; }
         }
         catch
         {
@@ -246,7 +277,7 @@ public sealed partial class ConnectViewModel : ObservableObject, IDisposable
         {
             var error = await _subscription.ActivateTrialAsync();
             TrialFailed = error != null;
-            var notice = error ?? "Пробный период активирован";
+            var notice = error ?? Loc.T("Пробный период активирован");
             TrialNotice = notice;
             _ = ClearTrialNoticeLaterAsync(notice);
         }
@@ -297,6 +328,8 @@ public sealed partial class ConnectViewModel : ObservableObject, IDisposable
     {
         IsConnected = _vpnEngine.IsRunning;
         IsConnecting = _vpnEngine.IsConnecting;
+        // Только превью: GODJI_UI_PREVIEW_CONN=on|busy принудительно показывает состояние.
+        switch (Environment.GetEnvironmentVariable("GODJI_UI_PREVIEW_CONN")) { case "on": IsConnected = true; IsConnecting = false; break; case "busy": IsConnected = false; IsConnecting = true; break; }
         if (Environment.GetEnvironmentVariable("GODJI_UI_PREVIEW_TRIAL") != "1") TrialDays = _subscription.TrialDays;
         // «Нет активной подписки» не дублируем красной строкой, когда рядом карточка пробного периода.
         ErrorMessage = _vpnEngine.LastError ?? (HasTrial ? null : _subscription.LastError);
@@ -304,14 +337,14 @@ public sealed partial class ConnectViewModel : ObservableObject, IDisposable
         var vpnFailed = _vpnEngine.LastError != null;
         CanOpenPlans = vpnFailed && _subscription.Subscription is { IsActive: false };
         CanChangeServer = vpnFailed && !CanOpenPlans;
-        ErrorHint = CanOpenPlans ? "Подписка не активна" : CanChangeServer ? "Сервер не отвечает — попробуй другой" : null;
+        ErrorHint = CanOpenPlans ? Loc.T("Подписка не активна") : CanChangeServer ? Loc.T("Сервер не отвечает — попробуй другой") : null;
         ToggleCommand.NotifyCanExecuteChanged();
 
         var node = _subscription.SelectedNode;
         var geo = node != null ? CountryGeoLookup.Find(node.Name) : null;
         GlobeGeo = geo;
 
-        CurrentNodeName = node != null ? RemarkText.StripLeadingFlag(node.Name) : "Выбрать за меня";
+        CurrentNodeName = node != null ? RemarkText.StripLeadingFlag(node.Name) : Loc.T("Выбрать за меня");
         CurrentNodeMeta = geo != null ? $"{geo.City}, {geo.RuName}" : "";
         CurrentFlag = geo != null ? CountryGeoLookup.FlagEmoji(geo.Code) : "🌐";
         CurrentFlagImagePath = node != null ? FlagIcon.ForNode(node.Name, geo) : null;
@@ -323,11 +356,20 @@ public sealed partial class ConnectViewModel : ObservableObject, IDisposable
         GlobeStatus = IsConnected ? "on" : IsConnecting ? "connecting" : "off";
 
         var ruPrep = geo?.RuPrep ?? "надёжном месте";
-        var nodeLabel = node != null ? RemarkText.StripLeadingFlag(node.Name) : "Выбрать за меня";
-        Headline = IsConnected ? $"Ты в {ruPrep}" : IsConnecting ? "Ищем дорогу…" : "Пока без защиты";
-        Subline = IsConnected ? $"{nodeLabel} · в туннеле"
-            : IsConnecting ? $"Договариваемся с {nodeLabel}"
-            : "Провайдер видит всё, что ты открываешь";
+        var nodeLabel = node != null ? RemarkText.StripLeadingFlag(node.Name) : Loc.T("Выбрать за меня");
+        // Тексты и код страны — макет 9a «Афиша × Прибор».
+        Headline = IsConnected ? $"{Loc.T("Ты в сети: ")}{geo?.RuName ?? Loc.T("надёжное место")}" : IsConnecting ? Loc.T("Подключаем…") : Loc.T("Без защиты");
+        Subline = IsConnected ? Loc.T("Провайдер видит только шифр. Держит тебя в сети")
+            : IsConnecting ? Loc.T("Ищем лучший путь до узла")
+            : Loc.T("Провайдер видит всё, что ты открываешь");
+        StateTag = Loc.T(IsConnected ? Loc.T("В ТУННЕЛЕ") : IsConnecting ? Loc.T("ПОДКЛЮЧЕНИЕ") : Loc.T("НЕТ ЗАЩИТЫ"));
+        ToggleLabel = Loc.T(IsConnected ? Loc.T("ОТКЛЮЧИТЬ") : IsConnecting ? Loc.T("ОТМЕНА") : Loc.T("ВКЛЮЧИТЬ"));
+        IsOnOrBusy = IsConnected || IsConnecting;
+        CountryCode = geo?.Code ?? System.Text.RegularExpressions.Regex.Match(nodeLabel, "[A-Z]{2,3}$").Value switch { "" => node != null ? nodeLabel.Trim()[..Math.Min(2, nodeLabel.Trim().Length)].ToUpperInvariant() : "VPN", var c => c };
+        NodeCity = geo?.City ?? nodeLabel;
+        var nodes = _subscription.Nodes;
+        var idx = nodes.ToList().FindIndex(n => n.Id == _subscription.SelectedId);
+        ServerCounter = idx < 0 ? "" : $"{idx + 1} / {nodes.Count}";
 
         var sub = _subscription.Subscription;
         PlanName = sub?.PlanName ?? "—";
@@ -342,7 +384,7 @@ public sealed partial class ConnectViewModel : ObservableObject, IDisposable
         TrafficValueLabel = unlimited ? $"{used} ГБ / ∞" : $"{used} / {(int)QuotaGb} ГБ";
         TrafficFraction = unlimited ? 0 : Math.Clamp(UsedGb / QuotaGb, 0, 1);
         ShowTrafficBar = !unlimited;
-        TrafficExpiryLabel = $"Подписка до {ExpiryLabel} · осталось {DaysLeft} {RuPlural.Days(DaysLeft)}";
+        TrafficExpiryLabel = $"{Loc.T("Подписка до ")}{ExpiryLabel}{Loc.T(" · осталось ")}{DaysLeft} {RuPlural.Days(DaysLeft)}";
 
         SubDaysLabel = $"{DaysLeft} {RuPlural.Days(DaysLeft)}";
         SubBars = SubscriptionBars(DaysLeft);
@@ -365,7 +407,7 @@ public sealed partial class ConnectViewModel : ObservableObject, IDisposable
             if (!_qualityTimer.IsEnabled)
             {
                 _qualityTimer.Start();
-                QualityDetail = "Измеряем…";
+                QualityDetail = Loc.T("Измеряем…");
                 _ = ProbeQualityAsync();
             }
         }
@@ -378,7 +420,9 @@ public sealed partial class ConnectViewModel : ObservableObject, IDisposable
             QualityValue = "—";
             QualityLabel = "";
             QualityLevel = "none";
-            QualityDetail = "Подключись — и покажем";
+            QualityDetail = Loc.T("Подключись — и покажем");
+            PingMs = null;
+            PingText = "—";
             _downHistory.Clear();
             _upHistory.Clear();
             DownHistory = Array.Empty<double>();
@@ -431,7 +475,7 @@ public sealed partial class ConnectViewModel : ObservableObject, IDisposable
         DownSpeedLabel = wave[^1].ToString("0.0", Ru);
         UpSpeedLabel = (wave[^1] * 0.25).ToString("0.0", Ru);
         QualityValue = "92";
-        QualityLabel = "отлично";
+        QualityLabel = Loc.T("отлично");
         QualityLevel = "excellent";
         QualityDetail = "Пинг 48 мс · потерь нет";
         SubDaysLabel = "17 дней";
@@ -500,14 +544,16 @@ public sealed partial class ConnectViewModel : ObservableObject, IDisposable
         QualityValue = score.ToString(Ru);
         (QualityLabel, QualityLevel) = score switch
         {
-            >= 85 => ("отлично", "excellent"),
-            >= 65 => ("хорошо", "good"),
-            >= 45 => ("средне", "fair"),
-            _ => ("плохо", "poor")
+            >= 85 => (Loc.T("отлично"), "excellent"),
+            >= 65 => (Loc.T("хорошо"), "good"),
+            >= 45 => (Loc.T("средне"), "fair"),
+            _ => (Loc.T("плохо"), "poor")
         };
         QualityDetail = rtt is { } r
             ? (loss == 0 ? $"Пинг {r} мс · потерь нет" : $"Пинг {r} мс · потери {loss}%")
-            : "Сервер не отвечает";
+            : Loc.T("Сервер не отвечает");
+        PingMs = rtt;
+        PingText = rtt?.ToString() ?? "—";
     }
 
     private void OnJournalChanged() => RunOnUiThread(RefreshJournalLine);
@@ -520,7 +566,7 @@ public sealed partial class ConnectViewModel : ObservableObject, IDisposable
         var minutes = (long)day.Protected.TotalMinutes;
         var head = minutes > 0
             ? $"Сегодня под защитой {(minutes >= 60 ? $"{minutes / 60} ч {minutes % 60} мин" : $"{minutes} мин")}"
-            : "Сегодня VPN ещё не включался";
+            : Loc.T("Сегодня VPN ещё не включался");
         JournalLine = events.Count > 0 ? $"{head} · последнее событие {events[^1].At.ToLocalTime():HH:mm}" : head;
     }
 

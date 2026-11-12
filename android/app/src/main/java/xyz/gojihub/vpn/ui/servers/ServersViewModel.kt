@@ -62,7 +62,7 @@ class ServersViewModel @Inject constructor(
             servers = nodes.map {
                 NodeUi(
                     id = it.id, name = stripLeadingFlag(it.name),
-                    code = it.geo?.code ?: "??",
+                    code = it.geo?.code ?: Regex("""[A-Z]{2,3}$""").find(stripLeadingFlag(it.name).trim())?.value ?: "—",
                     flag = CountryGeoLookup.nodeFlag(it.name, it.geo),
                     host = it.host, port = it.port, pingMs = pings[it.id] ?: -2
                 )

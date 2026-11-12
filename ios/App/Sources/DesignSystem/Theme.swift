@@ -11,68 +11,87 @@ import UIKit
 /// chip = surfaceContainerHigh, selection = secondaryContainer и т. д. Токены, которые больше
 /// ничего не рисуют (блики, кромки, пятна фона, тени), прозрачные.
 enum GojiColor {
+    /// Цвет роли из текущей палитры (см. Palettes.swift): светлый и тёмный вариант выбираются по теме.
+    private static func pair(_ key: KeyPath<ToneSet, UInt32>) -> Color {
+        Color(light: Palettes.light[keyPath: key], dark: Palettes.dark[keyPath: key])
+    }
+
+    /// Заливка главной по состоянию: «Шалфей» — «песок/шалфей» макета 9a, остальные палитры — свой оттенок.
+    private static var isSage: Bool { Palettes.currentId == "sage" }
+    static var homeBusyFill: Color {
+        isSage ? pair(\.tertiaryC)
+            : Color(light: Palettes.mix(Palettes.light.surface, Palettes.light.primaryC, 0.28), dark: Palettes.mix(Palettes.dark.surface, Palettes.dark.primaryC, 0.28))
+    }
+    static var homeOnFill: Color {
+        isSage ? pair(\.secondaryC)
+            : Color(light: Palettes.mix(Palettes.light.surface, Palettes.light.primaryC, 0.55), dark: Palettes.mix(Palettes.dark.surface, Palettes.dark.primaryC, 0.55))
+    }
+    static var homeBusyInk: Color { isSage ? pair(\.onTertiaryC) : pair(\.onPrimaryC) }
+    static var homeOnInk: Color { isSage ? pair(\.onSecondaryC) : pair(\.onPrimaryC) }
+    static var homeBusyButton: Color { isSage ? pair(\.tertiary) : pair(\.primary) }
+
     // ── роли Material 3 ─────────────────────────────────────
-    static let surface = Color(light: 0xFFF4FBF8, dark: 0xFF0E1513)
-    static let surfaceContainerLow = Color(light: 0xFFEEF5F2, dark: 0xFF161D1C)
-    static let surfaceContainer = Color(light: 0xFFE8EFEC, dark: 0xFF1A2120)
-    static let surfaceContainerHigh = Color(light: 0xFFE3EAE7, dark: 0xFF252B2A)
-    static let surfaceContainerHighest = Color(light: 0xFFDDE4E1, dark: 0xFF2F3635)
-    static let primary = Color(light: 0xFF006A62, dark: 0xFF80D5CA)
-    static let onPrimary = Color(light: 0xFFFFFFFF, dark: 0xFF003732)
-    static let primaryContainer = Color(light: 0xFF9DF2E6, dark: 0xFF005049)
-    static let onPrimaryContainer = Color(light: 0xFF00201D, dark: 0xFF9DF2E6)
-    static let secondaryContainer = Color(light: 0xFFCCE8E3, dark: 0xFF334B48)
-    static let onSecondaryContainer = Color(light: 0xFF051F1C, dark: 0xFFCCE8E3)
-    static let tertiaryContainer = Color(light: 0xFFFFDBCF, dark: 0xFF7B2F12)
-    static let onTertiaryContainer = Color(light: 0xFF380D00, dark: 0xFFFFDBCF)
-    static let errorContainer = Color(light: 0xFFFFDAD6, dark: 0xFF93000A)
-    static let outline = Color(light: 0xFF5C6664, dark: 0xFF889391)
-    static let outlineVariant = Color(light: 0xFFBEC9C6, dark: 0xFF3F4947)
+    static var surface: Color { pair(\.surface) }
+    static var surfaceContainerLow: Color { pair(\.cLow) }
+    static var surfaceContainer: Color { pair(\.c) }
+    static var surfaceContainerHigh: Color { pair(\.cHigh) }
+    static var surfaceContainerHighest: Color { pair(\.cHighest) }
+    static var primary: Color { pair(\.primary) }
+    static var onPrimary: Color { pair(\.onPrimary) }
+    static var primaryContainer: Color { pair(\.primaryC) }
+    static var onPrimaryContainer: Color { pair(\.onPrimaryC) }
+    static var secondaryContainer: Color { pair(\.secondaryC) }
+    static var onSecondaryContainer: Color { pair(\.onSecondaryC) }
+    static var tertiaryContainer: Color { pair(\.tertiaryC) }
+    static var onTertiaryContainer: Color { pair(\.onTertiaryC) }
+    static var errorContainer: Color { Color(light: 0xFFFFDAD6, dark: 0xFF93000A) }
+    static var outline: Color { pair(\.outline) }
+    static var outlineVariant: Color { pair(\.outlineVariant) }
 
     // ── поля v5 (значения — роли M3) ────────────────────────
-    static let textPrimary = Color(light: 0xFF161D1C, dark: 0xFFDDE4E1)
-    static let textSecondary = Color(light: 0xFF3F4947, dark: 0xFFBEC9C6)
-    static let textMuted = outline
+    static var textPrimary: Color { pair(\.onSurface) }
+    static var textSecondary: Color { pair(\.onSurfaceVariant) }
+    static var textMuted: Color { outline }
 
-    static let teal = primary
-    static let tealDeep = primary
-    static let tealTint = primaryContainer
-    static let tealTintBorder = primary
+    static var teal: Color { primary }
+    static var tealDeep: Color { primary }
+    static var tealTint: Color { primaryContainer }
+    static var tealTintBorder: Color { primary }
 
     // Терракотовый приглушён на ~10–15% насыщенности (1.0.132): тёплый акцент — график отдачи,
     // полоски остатка подписки — не должен перетягивать внимание на карточке скорости.
-    static let terracotta = Color(light: 0xFF94553A, dark: 0xFFF2BCA2)
-    static let terracottaTint = tertiaryContainer
-    static let warning = Color(light: 0xFF8A6100, dark: 0xFFF0BF48)
-    static let danger = Color(light: 0xFFBA1A1A, dark: 0xFFFFB4AB)
-    static let jamBg = errorContainer
-    static let jamText = danger
+    static var terracotta: Color { pair(\.tertiary) }
+    static var terracottaTint: Color { tertiaryContainer }
+    static var warning: Color { Color(light: 0xFF8A6100, dark: 0xFFF0BF48) }
+    static var danger: Color { Color(light: 0xFFBA1A1A, dark: 0xFFFFB4AB) }
+    static var jamBg: Color { errorContainer }
+    static var jamText: Color { danger }
 
-    static let glass = surfaceContainer
-    static let glassStrong = surfaceContainerHigh
-    static let glassFaint = surfaceContainerHighest
-    static let stroke = Color.clear
+    static var glass: Color { surfaceContainer }
+    static var glassStrong: Color { surfaceContainerHigh }
+    static var glassFaint: Color { surfaceContainerHighest }
+    static var stroke: Color { Color.clear }
     /// Разделитель внутри карточек — «щель» цвета фона (M3 Expressive), а не тонкая линия.
-    static let hair = surface
-    static let highlight = Color.clear
-    static let chip = surfaceContainerHigh
-    static let track = surfaceContainerHighest
-    static let selection = secondaryContainer
-    static let glassShadow = Color.clear
+    static var hair: Color { surface }
+    static var highlight: Color { Color.clear }
+    static var chip: Color { surfaceContainerHigh }
+    static var track: Color { surfaceContainerHighest }
+    static var selection: Color { secondaryContainer }
+    static var glassShadow: Color { Color.clear }
 
     // Градиенты v5 сведены к плоскому primary — в M3E заливки однотонные.
-    static let accentTop = primary
-    static let accentMid = primary
-    static let accentBottom = primary
-    static let accentGlow = Color.clear
+    static var accentTop: Color { primary }
+    static var accentMid: Color { primary }
+    static var accentBottom: Color { primary }
+    static var accentGlow: Color { Color.clear }
 
-    static let inkButton = primary
-    static let inkButtonText = onPrimary
-    static let ringCore = surfaceContainer
+    static var inkButton: Color { primary }
+    static var inkButtonText: Color { onPrimary }
+    static var ringCore: Color { surfaceContainer }
 
-    static let baseTop = surface
-    static let baseMid = surface
-    static let baseBottom = surface
+    static var baseTop: Color { surface }
+    static var baseMid: Color { surface }
+    static var baseBottom: Color { surface }
 
     static var accentGradient: LinearGradient {
         LinearGradient(colors: [accentTop, accentBottom], startPoint: .top, endPoint: .bottom)
@@ -104,11 +123,12 @@ extension UIColor {
 /// «Размер текста» (Dynamic Type) через relativeTo.
 enum GojiFont {
     enum Weight: String {
-        case regular = "Manrope-Regular"
-        case medium = "Manrope-Medium"
-        case semibold = "Manrope-SemiBold"
-        case bold = "Manrope-Bold"
-        case extraBold = "Manrope-ExtraBold"
+        // Макет 9a: Golos Text вместо Manrope. Имя `manrope` у функций осталось ради вызовов по всему приложению.
+        case regular = "GolosText-Regular"
+        case medium = "GolosText-Medium"
+        case semibold = "GolosText-SemiBold"
+        case bold = "GolosText-Bold"
+        case extraBold = "GolosText-Bold"
     }
 
     /// Общий масштаб текста (2026-10-16): шрифт во всех приложениях уменьшен на ступень, как
@@ -119,12 +139,23 @@ enum GojiFont {
         .custom(weight.rawValue, size: (size * scale).rounded(.toNearestOrEven), relativeTo: style)
     }
 
+    /// Моноширинные подписи, цифры, кнопки и навигация (макет 9a): JetBrains Mono.
+    static func mono(_ size: CGFloat, _ weight: Weight = .regular, relativeTo style: Font.TextStyle = .body) -> Font {
+        let name: String
+        switch weight {
+        case .regular, .medium: name = "JetBrainsMono-Regular"
+        case .semibold: name = "JetBrainsMono-SemiBold"
+        case .bold, .extraBold: name = "JetBrainsMono-Bold"
+        }
+        return .custom(name, size: (size * scale).rounded(.toNearestOrEven), relativeTo: style)
+    }
+
     static func serif(_ size: CGFloat, italic: Bool = false, relativeTo style: Font.TextStyle = .largeTitle) -> Font {
         .custom(italic ? "InstrumentSerif-Italic" : "InstrumentSerif-Regular", size: (size * scale).rounded(.toNearestOrEven), relativeTo: style)
     }
 
-    /// Заголовки экранов: Manrope Bold 26 (Android 1.0.115).
-    static func title(_ size: CGFloat = 26) -> Font { manrope(size, .bold, relativeTo: .largeTitle) }
+    /// Заголовки экранов: Golos SemiBold 30 (макет 9a).
+    static func title(_ size: CGFloat = 30) -> Font { manrope(size, .semibold, relativeTo: .largeTitle) }
     static func section() -> Font { manrope(17, .bold, relativeTo: .headline) }
     static func body() -> Font { manrope(14, .medium) }
     static func caption() -> Font { manrope(12, .medium, relativeTo: .caption) }
@@ -133,6 +164,6 @@ enum GojiFont {
 
 enum GojiMetrics {
     static let screenPadding: CGFloat = 16
-    static let cardRadius: CGFloat = 24
-    static let buttonRadius: CGFloat = 18
+    static let cardRadius: CGFloat = 2
+    static let buttonRadius: CGFloat = 2
 }

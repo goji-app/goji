@@ -2,6 +2,7 @@ import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject private var model: AppModel
+    @EnvironmentObject private var settings: AppSettings
 
     var body: some View {
         ZStack {
@@ -28,6 +29,7 @@ struct RootView: View {
         } message: {
             Text(L("crash.text"))
         }
+        .id(settings.paletteId + settings.languageCode) // смена палитры перерисовывает все экраны
         .animation(.easeInOut(duration: 0.25), value: model.route)
         .overlay(alignment: .top) { ToastView() }
         .alert(L("transfer.confirm.title"), isPresented: Binding(

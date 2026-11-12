@@ -54,6 +54,28 @@ foreach ($loc in $satelliteLocales) {
     Remove-Item -Recurse -Force (Join-Path $publishDir $loc) -ErrorAction SilentlyContinue
 }
 
+Write-Host "== Обфускация GodjiVpn.dll (Obfuscar, см. obfuscar.xml) ==" -ForegroundColor Cyan
+# Публикация идёт без single-file/trimming, поэтому GodjiVpn.dll — читаемый в ILSpy IL-код
+# с именами приватных классов и строками (URL, сообщения). Obfuscar переименовывает
+# приватные/внутренние члены и шифрует строковые литералы; публичный API остаётся как есть —
+# это безопасный для WPF профиль (XAML/биндинги резолвятся по публичным именам). Конфиг и
+# обоснование — obfuscar.xml рядом со скриптом; версия инструмента зафиксирована в
+# .config/dotnet-tools.json (dotnet tool restore ставит её в %USERPROFILE%\.dotnet\tools).
+Push-Location $root
+try {
+    # Манифест ищется от текущей папки (windows\.config\dotnet-tools.json);
+    # команда запускается через dotnet tool run — не зависит от PATH (%USERPROFILE%\.dotnet\tools).
+    dotnet tool restore | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "dotnet tool restore завершился с ошибкой" }
+    dotnet tool run obfuscar.console -- obfuscar.xml
+    if ($LASTEXITCODE -ne 0) { throw "Obfuscar завершился с ошибкой" }
+    # Obfuscar пишет результат в publish_stage_obf — забираем из него только сборку приложения.
+    Copy-Item (Join-Path $root "publish_stage_obf\GodjiVpn.dll") $publishDir -Force
+} finally {
+    Pop-Location
+}
+Remove-Item -Recurse -Force (Join-Path $root "publish_stage_obf") -ErrorAction SilentlyContinue
+
 Write-Host "== Компиляция установщика (Inno Setup) ==" -ForegroundColor Cyan
 $iscc = Find-Iscc
 # Версия — из GodjiVpn.csproj, чтобы установщик не отставал от приложения.

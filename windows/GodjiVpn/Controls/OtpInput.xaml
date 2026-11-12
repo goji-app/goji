@@ -10,22 +10,22 @@
         <!-- v5 «Стекло»: клетки высотой 56 делят ширину поровну (как в эталоне verify) на Chip-подложке, скругление 16; цвет/толщина рамки
              (активная — Teal, ошибка — Danger) выставляются из code-behind. -->
         <Style x:Key="OtpCellStyle" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-            <Setter Property="Height" Value="56"/>
+            <Setter Property="Height" Value="60"/>
             <Setter Property="Margin" Value="4,0"/>
             <Setter Property="Padding" Value="0"/>
             <Setter Property="MaxLength" Value="1"/>
             <Setter Property="TextAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="FontFamily" Value="{DynamicResource ManropeFamily}"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="FontSize" Value="{s:Fs 20}"/>
-            <Setter Property="Background" Value="{DynamicResource ChipBrush}"/>
+            <Setter Property="FontFamily" Value="{DynamicResource JetBrainsMonoFamily}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="{s:Fs 26}"/>
+            <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="1.3"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
                         <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="16">
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="2">
                             <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>

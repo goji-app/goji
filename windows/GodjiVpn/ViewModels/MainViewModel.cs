@@ -22,9 +22,9 @@ public sealed partial class MainViewModel : ObservableObject
         _login.LoggedIn += OnLoggedIn;
         _shell.LoggedOut += OnLoggedOut;
 
-        // Первый запуск — сначала три экрана знакомства (OnboardingViewModel), потом вход.
+        // На десктопе знакомства нет: без входа сразу экран авторизации, как на телефонах (OnboardingViewModel оставлен для превью).
         onboarding.Done += () => CurrentViewModel = _login;
-        currentViewModel = _tokenStore.IsLoggedIn ? _shell : OnboardingViewModel.IsSeen ? _login : onboarding;
+        currentViewModel = _tokenStore.IsLoggedIn ? _shell : _login;
 
         // Только для превью-экземпляра (GODJI_UI_PREVIEW, см. App.xaml.cs): показать экран
         // входа/подтверждения кода для сверки с эталоном, не трогая сохранённую сессию.
@@ -67,7 +67,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (CurrentViewModel != _shell || Environment.GetEnvironmentVariable("GODJI_UI_PREVIEW") == "1") return;
         _tokenStore.Clear();
         _login.Reset();
-        _login.ErrorMessage = "Сессия истекла — войдите снова. VPN при этом продолжает работать.";
+        _login.ErrorMessage = Loc.T("Сессия истекла — войдите снова. VPN при этом продолжает работать.");
         CurrentViewModel = _login;
     }
 

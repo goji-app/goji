@@ -84,39 +84,35 @@ val TAB_BAR_HEIGHT = 56.dp
 @Composable
 fun GlassTabBar(tabs: List<GlassTab>, selectedRoute: String?, onSelect: (GlassTab) -> Unit, modifier: Modifier = Modifier) {
     val idx = tabs.indexOfFirst { it.route == selectedRoute }.coerceAtLeast(0)
-    val pill = RoundedCornerShape(50)
+    val bg by animateColorAsState(GodjiColors.navBg ?: GodjiColors.SurfaceBase, androidx.compose.animation.core.tween(500), label = "navBg")
+    val names = when (xyz.gojihub.vpn.i18n.Loc.lang) {
+        xyz.gojihub.vpn.i18n.AppLanguage.RU -> listOf("ГЛАВНАЯ", "СЕРВЕРЫ", "АККАУНТ", "ЕЩЁ")
+        xyz.gojihub.vpn.i18n.AppLanguage.EN -> listOf("HOME", "SERVERS", "ACCOUNT", "MORE")
+        xyz.gojihub.vpn.i18n.AppLanguage.ZH -> listOf("主页", "服务器", "账户", "更多")
+    }
     Row(
         modifier
             .fillMaxWidth()
-            .background(GodjiColors.SurfaceContainer)
+            .background(bg)
             .navigationBarsPadding()
             .height(TAB_BAR_HEIGHT)
+            .padding(horizontal = 20.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         tabs.forEachIndexed { i, tab ->
             val selected = i == idx
-            val indicator by animateDpAsState(
-                if (selected) 48.dp else 24.dp,
-                spring(dampingRatio = 0.6f, stiffness = 500f), label = "indicator"
-            )
-            val iconColor by animateColorAsState(if (selected) GodjiColors.OnSecondaryContainer else GodjiColors.TextSecondary, label = "tabIcon")
-            val labelColor by animateColorAsState(if (selected) GodjiColors.TextPrimary else GodjiColors.TextSecondary, label = "tabLabel")
-            Column(
+            Box(
                 Modifier
-                    .weight(1f)
                     .fillMaxHeight()
                     .selectable(selected, remember { MutableInteractionSource() }, null, role = Role.Tab) { onSelect(tab) },
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically)
+                contentAlignment = Alignment.Center
             ) {
-                Box(Modifier.size(48.dp, 28.dp), contentAlignment = Alignment.Center) {
-                    if (selected) Box(Modifier.width(indicator).fillMaxHeight().clip(pill).background(GodjiColors.Lens))
-                    Icon(if (selected) tab.selectedIcon else tab.icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(20.dp))
-                }
                 Text(
-                    // Одинаковая толщина у всех подписей: выбранная отличается цветом, а не размером.
-                    tab.label, color = labelColor, fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
-                    maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(horizontal = 2.dp)
+                    "%02d %s".format(i + 1, names.getOrElse(i) { tab.label.uppercase() }),
+                    color = if (selected) GodjiColors.Ink else GodjiColors.TextMuted,
+                    fontFamily = JetBrainsMonoFamily, fontSize = 11.sp,
+                    maxLines = 1, softWrap = false,
+                    modifier = Modifier.padding(vertical = 12.dp)
                 )
             }
         }

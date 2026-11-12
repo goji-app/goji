@@ -38,7 +38,7 @@ private fun isAccentBorder(c: Color) =
 
 /** Карточка-модуль. Сигнатура совместима с 1.0.77. */
 fun Modifier.godjiCard(
-    shape: Shape = RoundedCornerShape(24.dp),
+    shape: Shape = RoundedCornerShape(2.dp),
     tint: Color = GodjiColors.Surface,
     borderColor: Color = GodjiColors.CardBorder
 ): Modifier = tonalSurface(
@@ -48,13 +48,13 @@ fun Modifier.godjiCard(
 )
 
 /** Лист входа, тост — уровень выше карточки (surfaceContainerHigh). */
-fun Modifier.godjiGlassStrong(shape: Shape = RoundedCornerShape(28.dp)): Modifier =
+fun Modifier.godjiGlassStrong(shape: Shape = RoundedCornerShape(2.dp)): Modifier =
     tonalSurface(shape, { GodjiColors.GlassStrong }, false)
 
 /** Круглые кнопки, плашка «Goji», сетевой статус, чипы. */
-fun Modifier.godjiGlassPill(shape: Shape = RoundedCornerShape(50), tint: Color? = null): Modifier =
+fun Modifier.godjiGlassPill(shape: Shape = RoundedCornerShape(2.dp), tint: Color? = null): Modifier =
     tonalSurface(shape, if (tint != null) ({ tint }) else ({ GodjiColors.SurfaceContainerHigh }), false)
 
 /** Строка/чип ВНУТРИ карточки (surfaceContainerHighest). */
-fun Modifier.godjiGlassFlat(shape: Shape = RoundedCornerShape(16.dp)): Modifier =
+fun Modifier.godjiGlassFlat(shape: Shape = RoundedCornerShape(2.dp)): Modifier =
     tonalSurface(shape, { GodjiColors.GlassFaint }, false)

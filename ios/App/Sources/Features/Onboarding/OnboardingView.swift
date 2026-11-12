@@ -4,7 +4,8 @@ import SwiftUI
 /// Windows и macOS, 2026-10-28), затем обязательный экран о данных (PrivacyIntroView, App Store
 /// 5.4). «Пропустить» ведёт к экрану о данных — его пропустить нельзя.
 struct OnboardingView: View {
-    @State private var page = 0
+    // Знакомство убрано (2026-11-12): сразу обязательный экран о данных (App Store 5.4), его пропустить нельзя.
+    @State private var page = 2
 
     private let pages: [(title: String, points: String)] = [
         ("onboarding.title1", "onboarding.points1"),

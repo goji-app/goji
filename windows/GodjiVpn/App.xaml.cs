@@ -133,6 +133,10 @@ public partial class App : Application
 
         var window = new MainWindow { DataContext = mainViewModel };
         MainWindow = window;
+        window.HotkeyPressed = async () =>
+        {
+            if (connectViewModel.ToggleCommand.CanExecute(null)) await connectViewModel.ToggleCommand.ExecuteAsync(null);
+        };
 
         Tray = new TrayIconService(vpnEngine, connectViewModel, window, ExitApplication);
         subscriptionNotifier.NotificationRequested += (title, text) => Tray.ShowBalloon(title, text);

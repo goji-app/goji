@@ -50,7 +50,7 @@ public sealed partial class LoginViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            ErrorMessage = "Не удалось отправить код: " + ex.Message;
+            ErrorMessage = Loc.T("Не удалось отправить код: ") + ex.Message;
         }
         finally
         {
@@ -81,18 +81,18 @@ public sealed partial class LoginViewModel : ObservableObject
         catch (HttpRequestException)
         {
             // Сетевой сбой — код может быть верным: не очищаем ввод и не называем его неверным.
-            ErrorMessage = "Нет связи, попробуйте ещё раз";
+            ErrorMessage = Loc.T("Нет связи, попробуйте ещё раз");
             IsBusy = false;
         }
         catch (TaskCanceledException)
         {
             // Таймаут запроса — тот же случай «нет связи», код не очищаем.
-            ErrorMessage = "Нет связи, попробуйте ещё раз";
+            ErrorMessage = Loc.T("Нет связи, попробуйте ещё раз");
             IsBusy = false;
         }
         catch (Exception ex)
         {
-            ErrorMessage = "Неверный код: " + ex.Message;
+            ErrorMessage = Loc.T("Неверный код: ") + ex.Message;
             Code = "";
             IsBusy = false;
         }
@@ -155,7 +155,7 @@ public sealed partial class LoginViewModel : ObservableObject
     partial void OnOtpSentChanged(bool value) => VerifyCommand.NotifyCanExecuteChanged();
     /// <summary>Как loginSendingOtp/loginGetCode в Android Strings.kt — во время отправки
     /// кода кнопка показывает "Отправляем…" вместо "Получить код".</summary>
-    public string SendOtpButtonText => IsBusy ? "Отправляем…" : "Получить код";
+    public string SendOtpButtonText => IsBusy ? Loc.T("Отправляем…") : Loc.T("Получить код");
 
     partial void OnIsBusyChanged(bool value)
     {

@@ -30,13 +30,15 @@ public class SegmentedControl : UserControl
 
     public SegmentedControl()
     {
+        Loaded += (_, _) => Services.Loc.Instance.Changed += RebuildItems;
+        Unloaded += (_, _) => Services.Loc.Instance.Changed -= RebuildItems;
         Focusable = false;
         _thumb.HorizontalAlignment = HorizontalAlignment.Left;
         _thumb.VerticalAlignment = VerticalAlignment.Center;
         _thumb.RenderTransform = _thumbX;
         _thumb.BorderThickness = new Thickness(1);
-        _thumb.SetResourceReference(Border.BackgroundProperty, "ThumbBrush");
-        _thumb.SetResourceReference(Border.BorderBrushProperty, "CardBorderBrush");
+        _thumb.SetResourceReference(Border.BackgroundProperty, "InkBrush");
+        _thumb.SetResourceReference(Border.BorderBrushProperty, "InkBrush");
         // M3: выбранный сегмент — плоская заливка secondaryContainer, без тени.
         _root.Children.Add(_thumb);
         _root.Children.Add(_cells);
@@ -104,13 +106,13 @@ public class SegmentedControl : UserControl
         if (_track is GlassPanel oldGlass) oldGlass.Child = null;
         if (Track == SegmentTrack.Glass)
         {
-            _track = new GlassPanel { CornerRadius = 999, Shadow = GlassShadow.Pill, Padding = new Thickness(4), Child = _root };
+            _track = new GlassPanel { CornerRadius = 2, Shadow = GlassShadow.Pill, Padding = new Thickness(4), Child = _root };
         }
         else
         {
-            var b = new Border { CornerRadius = new CornerRadius(999), Padding = new Thickness(3), BorderThickness = new Thickness(1), Child = _root };
-            b.SetResourceReference(Border.BackgroundProperty, "ChipBrush");
-            b.SetResourceReference(Border.BorderBrushProperty, "CardBorderBrush");
+            var b = new Border { CornerRadius = new CornerRadius(2), Padding = new Thickness(3), BorderThickness = new Thickness(1), Child = _root };
+            b.Background = Brushes.Transparent;
+            b.SetResourceReference(Border.BorderBrushProperty, "OutlineVariantBrush");
             _track = b;
         }
         Content = _track;
@@ -120,7 +122,7 @@ public class SegmentedControl : UserControl
     private void UpdateTrackCorners()
     {
         if (_track is Border b)
-            b.CornerRadius = new CornerRadius((ItemHeight + 8) / 2);
+            b.CornerRadius = new CornerRadius(2);
     }
 
     private void RebuildItems()
@@ -130,25 +132,25 @@ public class SegmentedControl : UserControl
         var items = ItemsSource?.Cast<object>().ToList() ?? new List<object>();
         _cells.Columns = Math.Max(1, items.Count);
         _thumb.Height = ItemHeight;
-        _thumb.CornerRadius = new CornerRadius(ItemHeight / 2);
+        _thumb.CornerRadius = new CornerRadius(2);
         UpdateTrackCorners();
         for (var i = 0; i < items.Count; i++)
         {
             var item = items[i];
             var label = new TextBlock
             {
-                FontWeight = FontWeights.Bold,
+                FontWeight = FontWeights.Normal,
                 TextTrimming = TextTrimming.CharacterEllipsis,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(4, 0, 4, 0)
             };
             FontScale.Bind(label, TextBlock.FontSizeProperty, LabelFontSize);
-            label.SetResourceReference(TextBlock.FontFamilyProperty, "ManropeFamily");
+            label.SetResourceReference(TextBlock.FontFamilyProperty, "JetBrainsMonoFamily");
             if (!string.IsNullOrEmpty(DisplayMemberPath))
-                label.SetBinding(TextBlock.TextProperty, new Binding(DisplayMemberPath) { Source = item });
+                label.SetBinding(TextBlock.TextProperty, new Binding(DisplayMemberPath) { Source = item, Converter = UpperConverter.Instance });
             else
-                label.Text = item?.ToString() ?? "";
+                label.Text = GodjiVpn.Services.Loc.T(item?.ToString() ?? "").ToUpperInvariant();
             var cell = new Border { Background = Brushes.Transparent, Height = ItemHeight, Cursor = Cursors.Hand, Child = label };
             var index = i;
             cell.MouseLeftButtonUp += (_, _) =>
@@ -174,7 +176,7 @@ public class SegmentedControl : UserControl
     private void UpdateLabelColors()
     {
         for (var i = 0; i < _labels.Count; i++)
-            _labels[i].SetResourceReference(TextBlock.ForegroundProperty, i == SelectedIndex ? "TextPrimaryBrush" : "TextSecondaryBrush");
+            _labels[i].SetResourceReference(TextBlock.ForegroundProperty, i == SelectedIndex ? "BgSolidBrush" : "TextSecondaryBrush");
     }
 
     private void PlaceThumb(bool animate)
@@ -210,4 +212,15 @@ public class SegmentedControl : UserControl
         base.OnRenderSizeChanged(sizeInfo);
         Dispatcher.BeginInvoke(() => PlaceThumb(animate: false));
     }
+}
+
+
+/// <summary>Подписи чипов — капсом (макет 9a).</summary>
+internal sealed class UpperConverter : System.Windows.Data.IValueConverter
+{
+    public static readonly UpperConverter Instance = new();
+    public object? Convert(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture) =>
+        GodjiVpn.Services.Loc.T(value?.ToString() ?? "").ToUpperInvariant();
+    public object ConvertBack(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture) =>
+        throw new NotSupportedException();
 }

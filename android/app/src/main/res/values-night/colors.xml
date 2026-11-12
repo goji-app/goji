@@ -1,30 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Тёмная тема системы — уведомление о статусе VPN рисуется в тёмном фоне шторки,
-         поэтому здесь белый текст вместо чёрного из values/colors.xml. -->
-    <color name="notification_text">#FFFFFFFF</color>
+    <color name="launcher_background">#1C2120</color>
+    <color name="notification_text">#FFEEF2EF</color>
 
-    <!-- Палитра виджета при системной тёмной теме — те же роли, что и в values/colors.xml,
-         тёмные значения взяты из тёмной палитры приложения (GodjiColors.applyDark()). -->
-    <color name="widget_bg">#1A2120</color>
-    <color name="widget_border">#00000000</color>
-    <color name="widget_text_primary">#DDE4E1</color>
-    <color name="widget_text_secondary">#BEC9C6</color>
-    <color name="widget_node_bg">#2F3635</color>
-    <color name="widget_dot_muted">#889391</color>
-    <color name="widget_dot_active">#80D5CA</color>
-    <color name="widget_button_teal">#80D5CA</color>
-    <color name="widget_button_red">#FFB59A</color>
-    <color name="widget_button_text">#003732</color>
+    <!-- Виджеты — токены макета 9a («Шалфей»): следуют СИСТЕМНОЙ теме телефона (values-night).
+         RemoteViews инфлейтит лончер, поэтому внутриприложенческая палитра сюда не доходит. -->
+    <color name="widget_bg">#1C2120</color>
+    <color name="widget_border">#333B38</color>
+    <color name="widget_text_primary">#EEF2EF</color>
+    <color name="widget_text_secondary">#9AA6A0</color>
+    <color name="widget_node_bg">#242A28</color>
+    <color name="widget_dot_muted">#9AA6A0</color>
+    <color name="widget_dot_active">#DCEAE2</color>
+    <color name="widget_button_teal">#D9E1DC</color>
+    <color name="widget_button_red">#EEF2EF</color>
+    <color name="widget_button_text">#1C2120</color>
     <color name="widget_list_item_bg">#00000000</color>
-    <color name="widget_list_item_selected_bg">#334B48</color>
-    <color name="widget_on_bg">#80D5CA</color>
-    <color name="widget_on_text">#00201D</color>
-    <color name="widget_on_text_secondary">#0B3A35</color>
-    <color name="widget_on_button_bg">#00201D</color>
-    <color name="widget_on_button_text">#80D5CA</color>
-    <color name="widget_bar_off">#3F4947</color>
-    <color name="widget_bar_on">#80D5CA</color>
-    <color name="widget_bar_warm">#FFB59A</color>
-    <color name="widget_bar_danger">#FFB4AB</color>
+    <color name="widget_list_item_selected_bg">#2F4038</color>
+    <color name="widget_on_bg">#2F4038</color>
+    <color name="widget_on_text">#EAF3EE</color>
+    <color name="widget_on_text_secondary">#B0C4BA</color>
+    <color name="widget_on_button_bg">#EAF3EE</color>
+    <color name="widget_on_button_text">#2F4038</color>
+    <color name="widget_bar_off">#333B38</color>
+    <color name="widget_bar_on">#DCEAE2</color>
+    <color name="widget_bar_warm">#B39A62</color>
+    <color name="widget_bar_danger">#A5655E</color>
 </resources>

@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Goji VPN</string>
+    <string name="widget_tiny_label">Goji · кнопка</string>
+    <string name="widget_strip_label">Goji · строка</string>
+    <string name="widget_wide_label">Goji · страна</string>
     <string name="widget_status_label">Goji · статус</string>
     <string name="widget_status_desc">Защищено ли соединение и кнопка подключения</string>
     <string name="widget_subscription_label">Goji · подписка</string>

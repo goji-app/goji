@@ -348,7 +348,7 @@ public sealed class SubscriptionRepository : INotifyPropertyChanged
         return null;
     }
 
-    private const string CabinetUnreachable = "Не удалось связаться с личным кабинетом. Проверьте интернет и нажмите «Обновить».";
+    private static string CabinetUnreachable => Loc.T("Не удалось связаться с личным кабинетом. Проверьте интернет и нажмите «Обновить».");
     private const string CabinetStale = "Не получилось обновить подписку — показываем сохранённые данные.";
 
     private static string Shorten(string message)

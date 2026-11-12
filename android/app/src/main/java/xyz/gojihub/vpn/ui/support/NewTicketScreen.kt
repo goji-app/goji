@@ -59,7 +59,7 @@ fun NewTicketScreen(
                         Modifier
                             .fillMaxWidth()
                             .scale(goScale.value)
-                            .clip(RoundedCornerShape(50))
+                            .clip(RoundedCornerShape(2.dp))
                             .background(GodjiColors.Ink)
                             .clickable(interactionSource = goInteraction, indication = androidx.compose.foundation.LocalIndication.current) { onGoToTicket(ticketId) }
                             .padding(vertical = 9.dp),
@@ -106,7 +106,7 @@ fun NewTicketScreen(
             Modifier
                 .fillMaxWidth()
                 .scale(submitScale.value)
-                .clip(RoundedCornerShape(50))
+                .clip(RoundedCornerShape(2.dp))
                 .background(GodjiColors.Ink)
                 .clickable(interactionSource = submitInteraction, indication = androidx.compose.foundation.LocalIndication.current, enabled = !state.submitting) {
                     viewModel.submit(onCreated)
@@ -129,7 +129,7 @@ private fun QueueChip(queue: SupportQueueDto, selected: Boolean, onSelect: () ->
     val fg = if (selected) GodjiColors.Surface else GodjiColors.TextPrimary
     Box(
         Modifier
-            .clip(RoundedCornerShape(50))
+            .clip(RoundedCornerShape(2.dp))
             .background(bg)
             .clickable(onClick = onSelect)
             .padding(horizontal = 14.dp, vertical = 8.dp)

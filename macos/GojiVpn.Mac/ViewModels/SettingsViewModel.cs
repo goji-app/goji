@@ -103,10 +103,10 @@ public sealed partial class SettingsViewModel : ObservableObject
     public bool LeakOk => LeakReport?.Verdict == NetworkDiagnostics.Verdict.Safe;
     public string LeakTitle => LeakReport?.Verdict switch
     {
-        NetworkDiagnostics.Verdict.Safe => "Всё защищено",
-        NetworkDiagnostics.Verdict.Leak => "Найдена утечка",
-        NetworkDiagnostics.Verdict.VpnOff => "VPN выключен",
-        _ => "Не удалось проверить"
+        NetworkDiagnostics.Verdict.Safe => Loc.T("Всё защищено"),
+        NetworkDiagnostics.Verdict.Leak => Loc.T("Найдена утечка"),
+        NetworkDiagnostics.Verdict.VpnOff => Loc.T("VPN выключен"),
+        _ => Loc.T("Не удалось проверить")
     };
     public string LeakDesc
     {
@@ -115,12 +115,12 @@ public sealed partial class SettingsViewModel : ObservableObject
             if (LeakReport is not { } r) return "";
             return r.Verdict switch
             {
-                NetworkDiagnostics.Verdict.Safe => "Сайты видят IP сервера VPN, DNS-запросы тоже идут через туннель.",
-                NetworkDiagnostics.Verdict.VpnOff => "Сайты и провайдер видят твой настоящий IP. Включи VPN и проверь ещё раз.",
-                NetworkDiagnostics.Verdict.Error => "Через туннель не пришёл ответ. Проверь соединение и попробуй ещё раз.",
+                NetworkDiagnostics.Verdict.Safe => Loc.T("Сайты видят IP сервера VPN, DNS-запросы тоже идут через туннель."),
+                NetworkDiagnostics.Verdict.VpnOff => Loc.T("Сайты и провайдер видят твой настоящий IP. Включи VPN и проверь ещё раз."),
+                NetworkDiagnostics.Verdict.Error => Loc.T("Через туннель не пришёл ответ. Проверь соединение и попробуй ещё раз."),
                 _ => string.Join(" ", new[]
                 {
-                    r.IpLeak ? "Сайты видят твой настоящий IP." : null,
+                    r.IpLeak ? Loc.T("Сайты видят твой настоящий IP.") : null,
                     !r.DnsLeak ? null : r.DnsViaIsp
                         ? "DNS-запросы идут через твоего провайдера" + (r.Dns?.Isp is { } isp ? $" ({isp})" : "") + " — он видит, какие сайты ты открываешь."
                         : "DNS-запросы разрешает сервер в твоей стране" + (r.Dns?.Isp is { } res ? $" ({res})" : "") + ", а не на стороне VPN — по ним видно, какие сайты ты открываешь."
@@ -216,6 +216,22 @@ public sealed partial class SettingsViewModel : ObservableObject
     public bool ShowUpdateIdle => !IsDownloadingUpdate && !HasAvailableUpdate && !IsCheckingUpdate;
     public string UpdateIdleText => UpdateCheckMessage ?? $"Версия {AppVersion}";
     public string DownloadPercentLabel => $"{(int)Math.Round(DownloadProgress * 100)}%";
+
+    /// <summary>Образцы палитр для «Внешний вид»: фон · акцент · тёплый акцент в текущей (светлой/тёмной) теме.</summary>
+    public IReadOnlyList<PaletteItem> PaletteItems => Palettes.All.Select(p =>
+    {
+        var t = _theme.IsDark ? Palettes.Dark(p) : Palettes.Light(p);
+        Avalonia.Media.IBrush Br(Avalonia.Media.Color c) => new Avalonia.Media.SolidColorBrush(c);
+        return new PaletteItem(p.Id, p.Name("ru"), Br(t.Surface), Br(t.Primary), Br(t.Tertiary), p.Id == _theme.PaletteId);
+    }).ToList();
+
+    [RelayCommand]
+    private void SelectPalette(string? id)
+    {
+        if (string.IsNullOrEmpty(id)) return;
+        _theme.SetPalette(id);
+        OnPropertyChanged(nameof(PaletteItems));
+    }
 
     /// <summary>Индекс для сегмент-контрола темы (Светлая/Тёмная/Системная).</summary>
     public int ThemeIndex
@@ -666,3 +682,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
     }
 }
+
+
+/// <summary>Образец палитры для сетки выбора.</summary>
+public sealed record PaletteItem(string Id, string Name, Avalonia.Media.IBrush Surface, Avalonia.Media.IBrush Primary,
+    Avalonia.Media.IBrush Tertiary, bool IsSelected);

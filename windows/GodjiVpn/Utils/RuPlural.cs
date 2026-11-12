@@ -16,5 +16,10 @@ public static class RuPlural
         };
     }
 
-    public static string Days(int n) => Form(n, "день", "дня", "дней");
+    public static string Days(int n) => GodjiVpn.Services.Loc.Instance.Lang switch
+    {
+        "en" => Math.Abs(n) == 1 ? "day" : "days",
+        "zh" => "天",
+        _ => Form(n, "день", "дня", "дней")
+    };
 }

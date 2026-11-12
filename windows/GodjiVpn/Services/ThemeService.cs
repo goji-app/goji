@@ -34,6 +34,26 @@ public sealed class ThemeService
     public ThemeMode Mode { get; private set; } = ThemeMode.System;
     public bool IsDark { get; private set; }
 
+    private static string PalettePath => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GodjiVpn", "palette.txt");
+
+    /// <summary>Выбранная палитра (см. Palettes.cs); по умолчанию «Шалфей» из макета 9a.</summary>
+    public string PaletteId { get; private set; } = Palettes.DefaultId;
+
+    public void SetPalette(string id)
+    {
+        if (id == PaletteId) return;
+        PaletteId = id;
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(PalettePath)!);
+            File.WriteAllText(PalettePath, id);
+        }
+        catch { /* лучшее усилие — при следующем старте вернётся «Шалфей» */ }
+        Apply();
+        Changed?.Invoke();
+    }
+
     /// <summary>Не событие PropertyChanged — GlobeHost не ViewModel, ему не нужен полный
     /// INotifyPropertyChanged ради одного bool.</summary>
     public event Action? Changed;
@@ -43,6 +63,7 @@ public sealed class ThemeService
     public void Initialize()
     {
         Mode = Load();
+        try { if (File.Exists(PalettePath)) PaletteId = Palettes.ById(File.ReadAllText(PalettePath).Trim()).Id; } catch { }
         // Превью-экземпляр (GODJI_UI_PREVIEW, см. App.xaml.cs) может принудительно показать
         // светлую/тёмную тему для сверки с эталоном, не трогая сохранённый выбор пользователя.
         if (Environment.GetEnvironmentVariable("GODJI_UI_PREVIEW_THEME") is "light" or "dark")
@@ -103,6 +124,7 @@ public sealed class ThemeService
     {
         var uri = new Uri(IsDark ? "Themes/DarkTheme.xaml" : "Themes/LightTheme.xaml", UriKind.Relative);
         var dict = new ResourceDictionary { Source = uri };
+        Palettes.Apply(dict, Palettes.ById(PaletteId), IsDark);
         Application.Current.Resources.MergedDictionaries[0] = dict;
     }
 

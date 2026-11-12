@@ -41,8 +41,8 @@ public sealed partial class JournalViewModel : ObservableObject
 
     public IReadOnlyList<JournalDayOption> Days { get; } = new[]
     {
-        new JournalDayOption { Label = "Сегодня" },
-        new JournalDayOption { Label = "Вчера" }
+        new JournalDayOption { Label = Loc.T("Сегодня") },
+        new JournalDayOption { Label = Loc.T("Вчера") }
     };
 
     [ObservableProperty] private int dayIndex;

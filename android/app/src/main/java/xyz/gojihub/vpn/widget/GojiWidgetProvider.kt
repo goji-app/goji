@@ -63,6 +63,9 @@ class GojiWidgetProvider : AppWidgetProvider() {
             if (ids.isNotEmpty()) manager.notifyAppWidgetViewDataChanged(ids, R.id.widget_server_list)
             // Виджеты концепта Goji 2.0 обновляются по тем же событиям.
             GojiStatusWidgetProvider.refresh(context)
+            GojiTinyWidgetProvider.refresh(context)
+            GojiStripWidgetProvider.refresh(context)
+            GojiWideWidgetProvider.refresh(context)
             GojiSubscriptionWidgetProvider.refresh(context)
         }
 

@@ -18,6 +18,7 @@ public sealed partial class NodeItem : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PingLabel))]
     [NotifyPropertyChangedFor(nameof(PingLevel), nameof(PingGood), nameof(PingMid), nameof(PingBad))]
+    [NotifyPropertyChangedFor(nameof(PingBarMs), nameof(PingNumber))]
     private int pingMs = -2;
     [ObservableProperty] private bool isSelected;
     [ObservableProperty]
@@ -27,8 +28,8 @@ public sealed partial class NodeItem : ObservableObject
 
     public string PingLabel => IsChecking ? "…" : PingMs switch
     {
-        -2 => "проверить",
-        < 0 => "недоступен",
+        -2 => Loc.T("проверить"),
+        < 0 => Loc.T("недоступен"),
         _ => $"{PingMs} мс"
     };
 
@@ -51,6 +52,13 @@ public sealed partial class NodeItem : ObservableObject
     /// <summary>Добавлен вручную по JSON-профилю (см. CustomNodeStore), а не пришёл с
     /// подписки — только у таких узлов показываем кнопку удаления.</summary>
     public bool IsCustom => Node.Id.StartsWith("custom-", StringComparison.Ordinal);
+
+    /// <summary>Значение для шкалы пинга (null — не проверен или недоступен) и число рядом с ней.</summary>
+    public int? PingBarMs => PingMs >= 0 ? PingMs : null;
+    public string PingNumber => PingMs switch { -2 => "—", < 0 => "×", _ => PingMs.ToString() };
+
+    /// <summary>Код страны для крупной подписи: ISO у узла со страной, иначе заглавный суффикс названия (EU, LTE).</summary>
+    public string Code => Geo?.Code ?? (System.Text.RegularExpressions.Regex.Match(DisplayName, "[A-Z]{2,3}$").Value switch { "" => "—", var c => c });
 
     public CountryGeo? Geo => CountryGeoLookup.Find(Node.Name);
     public string DisplayName => RemarkText.StripLeadingFlag(Node.Name);
@@ -152,8 +160,8 @@ public sealed partial class ServersViewModel : ObservableObject
 
         RefreshResultIsError = !ok || _subscription.LastError != null;
         ShowRefreshMessage(RefreshResultIsError
-            ? _subscription.LastError ?? "Не удалось обновить подписку — проверьте соединение"
-            : "Подписка обновлена");
+            ? _subscription.LastError ?? Loc.T("Не удалось обновить подписку — проверьте соединение")
+            : Loc.T("Подписка обновлена"));
         // Новый список сразу перепроверяем — уже под индикатором кнопки «Пинг» (как Android).
         if (ok) await PingAllCommand.ExecuteAsync(null);
     }

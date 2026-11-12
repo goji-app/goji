@@ -139,35 +139,27 @@ object GodjiColors {
         BaseTop = surface; BaseMid = surface; BaseBottom = surface
     }
 
+    /** Выбранная палитра (см. Palettes.kt); меняется в Настройках → Оформление. */
+    var paletteId by mutableStateOf(Palettes.DEFAULT_ID)
+    /** Заливка главной (по состоянию): нижняя панель берёт её же, чтобы экран был цельным. null — обычный фон. */
+    var navBg by mutableStateOf<Color?>(null)
+
+    private fun applyTones(t: ToneSet, error: Color, errorC: Color, warning: Color) = apply(
+        surface = t.surface, cLow = t.cLow, c = t.c, cHigh = t.cHigh, cHighest = t.cHighest,
+        onSurface = t.onSurface, onSurfaceVariant = t.onSurfaceVariant, outline = t.outline, outlineVariant = t.outlineVariant,
+        primary = t.primary, onPrimary = t.onPrimary, primaryC = t.primaryC, onPrimaryC = t.onPrimaryC,
+        secondaryC = t.secondaryC, onSecondaryC = t.onSecondaryC,
+        tertiary = t.tertiary, tertiaryDeep = t.tertiaryDeep, tertiaryC = t.tertiaryC, onTertiaryC = t.onTertiaryC,
+        error = error, errorC = errorC, warning = warning
+    )
+
     fun applyLight() {
         isDark = false
-        apply(
-            surface = Color(0xFFF4FBF8), cLow = Color(0xFFEEF5F2), c = Color(0xFFE8EFEC),
-            cHigh = Color(0xFFE3EAE7), cHighest = Color(0xFFDDE4E1),
-            onSurface = Color(0xFF161D1C), onSurfaceVariant = Color(0xFF3F4947),
-            outline = Color(0xFF5C6664), outlineVariant = Color(0xFFBEC9C6),
-            primary = Color(0xFF006A62), onPrimary = Color(0xFFFFFFFF),
-            primaryC = Color(0xFF9DF2E6), onPrimaryC = Color(0xFF00201D),
-            secondaryC = Color(0xFFCCE8E3), onSecondaryC = Color(0xFF051F1C),
-            tertiary = Color(0xFF9A4524), tertiaryDeep = Color(0xFF7B2F12),
-            tertiaryC = Color(0xFFFFDBCF), onTertiaryC = Color(0xFF380D00),
-            error = Color(0xFFBA1A1A), errorC = Color(0xFFFFDAD6), warning = Color(0xFF8A6100)
-        )
+        applyTones(Palettes.byId(paletteId).light(), Color(0xFFBA1A1A), Color(0xFFFFDAD6), Color(0xFF8A6100))
     }
 
     fun applyDark() {
         isDark = true
-        apply(
-            surface = Color(0xFF0E1513), cLow = Color(0xFF161D1C), c = Color(0xFF1A2120),
-            cHigh = Color(0xFF252B2A), cHighest = Color(0xFF2F3635),
-            onSurface = Color(0xFFDDE4E1), onSurfaceVariant = Color(0xFFBEC9C6),
-            outline = Color(0xFF889391), outlineVariant = Color(0xFF3F4947),
-            primary = Color(0xFF80D5CA), onPrimary = Color(0xFF003732),
-            primaryC = Color(0xFF005049), onPrimaryC = Color(0xFF9DF2E6),
-            secondaryC = Color(0xFF334B48), onSecondaryC = Color(0xFFCCE8E3),
-            tertiary = Color(0xFFFFB59A), tertiaryDeep = Color(0xFFFFDBCF),
-            tertiaryC = Color(0xFF7B2F12), onTertiaryC = Color(0xFFFFDBCF),
-            error = Color(0xFFFFB4AB), errorC = Color(0xFF93000A), warning = Color(0xFFF0BF48)
-        )
+        applyTones(Palettes.byId(paletteId).dark(), Color(0xFFFFB4AB), Color(0xFF93000A), Color(0xFFF0BF48))
     }
 }

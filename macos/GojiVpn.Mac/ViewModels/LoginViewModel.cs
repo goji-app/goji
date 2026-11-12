@@ -25,7 +25,7 @@ public sealed partial class LoginViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(VerifyHint))]
     private bool isBusy;
 
-    public string VerifyHint => IsBusy ? "Проверяем…" : "Проверка запустится сама, как только введёшь все цифры";
+    public string VerifyHint => IsBusy ? Loc.T("Проверяем…") : "Проверка запустится сама, как только введёшь все цифры";
     [ObservableProperty] private string? errorMessage;
     [ObservableProperty] private string? infoMessage;
     /// <summary>Полноэкранный успех (галочка) после верного кода, перед переходом дальше —
@@ -52,7 +52,7 @@ public sealed partial class LoginViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            ErrorMessage = "Не удалось отправить код: " + ex.Message;
+            ErrorMessage = Loc.T("Не удалось отправить код: ") + ex.Message;
         }
         finally
         {
@@ -93,7 +93,7 @@ public sealed partial class LoginViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            ErrorMessage = "Неверный код: " + ex.Message;
+            ErrorMessage = Loc.T("Неверный код: ") + ex.Message;
             Code = "";
         }
         finally
@@ -161,7 +161,7 @@ public sealed partial class LoginViewModel : ObservableObject
     partial void OnOtpSentChanged(bool value) => VerifyCommand.NotifyCanExecuteChanged();
     /// <summary>Как loginSendingOtp/loginGetCode в Android Strings.kt — во время отправки
     /// кода кнопка показывает "Отправляем…" вместо "Получить код".</summary>
-    public string SendOtpButtonText => IsBusy ? "Отправляем…" : "Получить код";
+    public string SendOtpButtonText => IsBusy ? Loc.T("Отправляем…") : Loc.T("Получить код");
 
     partial void OnIsBusyChanged(bool value)
     {

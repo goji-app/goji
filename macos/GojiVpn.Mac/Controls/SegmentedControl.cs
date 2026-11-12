@@ -56,11 +56,13 @@ public class SegmentedControl : UserControl
 
     public SegmentedControl()
     {
+        AttachedToVisualTree += (_, _) => Services.Loc.Instance.Changed += RebuildItems;
+        DetachedFromVisualTree += (_, _) => Services.Loc.Instance.Changed -= RebuildItems;
         _thumb.HorizontalAlignment = HorizontalAlignment.Left;
         _thumb.VerticalAlignment = VerticalAlignment.Center;
         _thumb.BorderThickness = new Thickness(1);
-        _thumb[!Border.BackgroundProperty] = new DynamicResourceExtension("ThumbBrush");
-        _thumb[!Border.BorderBrushProperty] = new DynamicResourceExtension("CardBorderBrush");
+        _thumb[!Border.BackgroundProperty] = new DynamicResourceExtension("InkBrush");
+        _thumb[!Border.BorderBrushProperty] = new DynamicResourceExtension("InkBrush");
         // M3: выбранный сегмент — плоская заливка secondaryContainer, без тени.
         _root.Children.Add(_thumb);
         _root.Children.Add(_cells);
@@ -109,13 +111,13 @@ public class SegmentedControl : UserControl
         {
             var b = new Border
             {
-                CornerRadius = new CornerRadius(999),
+                CornerRadius = new CornerRadius(2),
                 Padding = new Thickness(3),
                 BorderThickness = new Thickness(1),
                 Child = _root
             };
-            b[!Border.BackgroundProperty] = new DynamicResourceExtension("ChipBrush");
-            b[!Border.BorderBrushProperty] = new DynamicResourceExtension("CardBorderBrush");
+            b.Background = Brushes.Transparent;
+            b[!Border.BorderBrushProperty] = new DynamicResourceExtension("OutlineVariantBrush");
             Content = b;
         }
     }
@@ -127,23 +129,24 @@ public class SegmentedControl : UserControl
         var items = ItemsSource?.Cast<object>().ToList() ?? new List<object>();
         _cells.Columns = Math.Max(1, items.Count);
         _thumb.Height = ItemHeight;
-        _thumb.CornerRadius = new CornerRadius(ItemHeight / 2);
+        _thumb.CornerRadius = new CornerRadius(2);
         for (var i = 0; i < items.Count; i++)
         {
             var item = items[i];
             var label = new TextBlock
             {
                 [!TextBlock.FontSizeProperty] = FontScale.For(LabelFontSize),
-                FontWeight = FontWeight.Bold,
+                FontFamily = new FontFamily("avares://GojiVpn/Assets/Fonts#JetBrains Mono"),
+                FontWeight = FontWeight.Normal,
                 TextTrimming = TextTrimming.CharacterEllipsis,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(4, 0)
             };
             if (!string.IsNullOrEmpty(DisplayMemberPath))
-                label.Bind(TextBlock.TextProperty, new Binding(DisplayMemberPath) { Source = item });
+                label.Bind(TextBlock.TextProperty, new Binding(DisplayMemberPath) { Source = item, Converter = new Avalonia.Data.Converters.FuncValueConverter<string?, string?>(t => t == null ? null : GodjiVpn.Services.Loc.T(t).ToUpperInvariant()) });
             else
-                label.Text = item?.ToString() ?? "";
+                label.Text = GodjiVpn.Services.Loc.T(item?.ToString() ?? "").ToUpperInvariant();
             var cell = new Border
             {
                 Background = Brushes.Transparent,
@@ -169,7 +172,7 @@ public class SegmentedControl : UserControl
     {
         for (var i = 0; i < _labels.Count; i++)
             _labels[i][!TextBlock.ForegroundProperty] =
-                new DynamicResourceExtension(i == SelectedIndex ? "TextPrimaryBrush" : "TextSecondaryBrush");
+                new DynamicResourceExtension(i == SelectedIndex ? "BgSolidBrush" : "TextSecondaryBrush");
     }
 
     private void PlaceThumb(bool animate)

@@ -1,5 +1,7 @@
 package xyz.gojihub.vpn.ui.plans
 
+import xyz.gojihub.vpn.ui.theme.MonoFamily
+import androidx.compose.ui.unit.em
 import xyz.gojihub.vpn.ui.theme.RefreshPill
 import androidx.compose.ui.semantics.Role
 import android.content.Intent
@@ -90,9 +92,8 @@ fun PlansScreen(onOpenSupport: () -> Unit, viewModel: PlansViewModel = hiltViewM
     Column(
         Modifier
             .fillMaxSize()
-            .background(GodjiColors.Background)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 12.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Row(
@@ -101,11 +102,13 @@ fun PlansScreen(onOpenSupport: () -> Unit, viewModel: PlansViewModel = hiltViewM
             verticalAlignment = Alignment.Top
         ) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text(Loc.s.plansTitle, color = GodjiColors.TextPrimary, fontFamily = SpaceGroteskFamily, fontWeight = FontWeight.Bold, fontSize = 26.sp, lineHeight = 28.sp, letterSpacing = (-0.6).sp)
-                Text(Loc.s.plansSubtitle, color = GodjiColors.TextSecondary, fontWeight = FontWeight.Medium, fontSize = 12.sp)
+                Text(accountTitle(), color = GodjiColors.Ink, fontFamily = SpaceGroteskFamily, fontWeight = FontWeight.SemiBold, fontSize = 30.sp, lineHeight = 32.sp, letterSpacing = (-0.02).em)
             }
             Spacer(Modifier.width(10.dp))
-            RefreshPill(label = Loc.s.serversRefresh, busy = state.refreshing, onClick = viewModel::refresh)
+            Text(
+                if (state.refreshing) "…" else Loc.s.serversRefresh.uppercase(), color = GodjiColors.Ink, fontFamily = MonoFamily, fontSize = 11.sp,
+                modifier = Modifier.clickable(role = Role.Button, onClick = viewModel::refresh).padding(vertical = 14.dp, horizontal = 4.dp)
+            )
         }
 
         SubscriptionCard(state)
@@ -203,13 +206,13 @@ fun PlansScreen(onOpenSupport: () -> Unit, viewModel: PlansViewModel = hiltViewM
             Modifier
                 .fillMaxWidth()
                 .scale(supportScale.value)
-                .godjiGlassPill(RoundedCornerShape(24.dp), tint = GodjiColors.TerracottaTint)
+                .godjiCard()
                 .clickable(interactionSource = supportInteraction, indication = null, onClick = onOpenSupport)
                 .padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Box(Modifier.size(34.dp).clip(CircleShape).background(GodjiColors.Terracotta), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(34.dp).clip(RoundedCornerShape(2.dp)).background(GodjiColors.InkBtn), contentAlignment = Alignment.Center) {
                 Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = null, tint = GodjiColors.Surface, modifier = Modifier.size(16.dp))
             }
             Text(Loc.s.plansSupportText, color = GodjiColors.TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, lineHeight = 16.8.sp)
@@ -217,56 +220,60 @@ fun PlansScreen(onOpenSupport: () -> Unit, viewModel: PlansViewModel = hiltViewM
     }
 }
 
-/** Верхняя карточка: кольцо дней, тариф, "АКТИВНА", "Продлить" (тональная primaryContainer). */
+private fun daysWord(n: Int): String = when (xyz.gojihub.vpn.i18n.Loc.lang) {
+    xyz.gojihub.vpn.i18n.AppLanguage.RU -> {
+        val m100 = n % 100; val m10 = n % 10
+        "$n " + if (m100 in 11..14) "дней" else when (m10) { 1 -> "день"; 2, 3, 4 -> "дня"; else -> "дней" }
+    }
+    xyz.gojihub.vpn.i18n.AppLanguage.EN -> if (n == 1) "$n day" else "$n days"
+    xyz.gojihub.vpn.i18n.AppLanguage.ZH -> "$n 天"
+}
+
+private fun accountTitle() = when (xyz.gojihub.vpn.i18n.Loc.lang) {
+    xyz.gojihub.vpn.i18n.AppLanguage.RU -> "Аккаунт"
+    xyz.gojihub.vpn.i18n.AppLanguage.EN -> "Account"
+    xyz.gojihub.vpn.i18n.AppLanguage.ZH -> "账户"
+}
+
+private fun noAutoRenew() = when (xyz.gojihub.vpn.i18n.Loc.lang) {
+    xyz.gojihub.vpn.i18n.AppLanguage.RU -> "Подписка не продлевается сама — списаний врасплох не будет."
+    xyz.gojihub.vpn.i18n.AppLanguage.EN -> "Your subscription never renews itself — no surprise charges."
+    xyz.gojihub.vpn.i18n.AppLanguage.ZH -> "订阅不会自动续费，不会有意外扣款。"
+}
+
+/** Макет 9a: «24 дня» крупно, «до 27 октября», пояснение про ручное продление, кнопка в личный кабинет. */
 @Composable
 private fun SubscriptionCard(state: PlansUiState) {
     val context = LocalContext.current
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .godjiCard(RoundedCornerShape(28.dp), tint = GodjiColors.TealTint)
-            .clip(RoundedCornerShape(28.dp))
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            DaysRing(state.daysLeft, state.daysTotal)
-            // Тариф и статус — в одну строку; срок окончания — сразу под ними, акцентом
-            // (Primary, semibold): раньше был самой блёклой строкой карточки.
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        buildAnnotatedString {
-                            append(Loc.s.plansYourPlanPrefix)
-                            withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = GodjiColors.TextPrimary)) { append(state.planName) }
-                        },
-                        color = GodjiColors.TextSecondary, fontWeight = FontWeight.Medium, fontSize = 13.sp,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false)
-                    )
-                    if (state.subscriptionId != null && state.daysLeft > 0) ActiveBadge(label = Loc.s.plansActive)
-                }
-                Text(Loc.s.plansUntil(state.expiryLabel), color = GodjiColors.TealDeep, fontWeight = FontWeight.SemiBold, fontSize = 11.5.sp)
-            }
+    Column(Modifier.fillMaxWidth().padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(
+                daysWord(state.daysLeft), color = GodjiColors.Ink, fontFamily = SpaceGroteskFamily,
+                fontWeight = FontWeight.SemiBold, fontSize = 44.sp, letterSpacing = (-0.04).em, maxLines = 1
+            )
+            Text(Loc.s.plansUntil(state.expiryLabel), color = GodjiColors.TextSecondary, fontSize = 14.sp, modifier = Modifier.padding(bottom = 8.dp))
         }
+        Text(noAutoRenew(), color = GodjiColors.TextSecondary, fontSize = 13.sp, lineHeight = 18.sp)
         // Только в сборке site (сайт загрузки / GitHub): в Google Play вести к оплате мимо
         // Google Play Billing нельзя (см. app/build.gradle.kts).
         if (BuildConfig.ENABLE_CABINET_LINK) {
-            val (payInteraction, payScale) = rememberPressScale()
-            Row(
+            Box(
                 Modifier
+                    .padding(top = 8.dp)
                     .fillMaxWidth()
-                    .height(44.dp)
-                    .scale(payScale.value)
-                    .clip(RoundedCornerShape(50))
-                    .background(GodjiColors.Teal)
-                    .clickable(interactionSource = payInteraction, indication = null) {
+                    .heightIn(min = 56.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(GodjiColors.InkBtn)
+                    .clickable(role = androidx.compose.ui.semantics.Role.Button) {
                         runCatching { CustomTabsIntent.Builder().build().launchUrl(context, Uri.parse(CABINET_URL)) }
-                    },
-                horizontalArrangement = Arrangement.spacedBy(7.dp, Alignment.CenterHorizontally),
-                verticalAlignment = Alignment.CenterVertically
+                    }
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Text(Loc.f.payInCabinet, color = GodjiColors.Surface, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1)
-                Icon(Icons.Filled.NorthEast, contentDescription = null, tint = GodjiColors.Surface, modifier = Modifier.size(13.dp))
+                Text(
+                    Loc.f.payInCabinet.uppercase(), color = GodjiColors.Surface, fontFamily = MonoFamily,
+                    fontWeight = FontWeight.Bold, fontSize = 14.sp, letterSpacing = 0.06.em, textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
             }
         }
     }
@@ -280,12 +287,12 @@ private fun SectionLabel(text: String) {
 
 @Composable
 private fun SectionLabelText(text: String) {
-    Text(text.uppercase(), color = GodjiColors.TextMuted, fontWeight = FontWeight.SemiBold, fontSize = 11.sp, letterSpacing = 1.sp)
+    Text(text.uppercase(), color = GodjiColors.TextMuted, fontFamily = MonoFamily, fontSize = 11.sp)
 }
 
 @Composable
 private fun SectionLabelText(text: AnnotatedString) {
-    Text(text, color = GodjiColors.TextMuted, fontWeight = FontWeight.SemiBold, fontSize = 11.sp, letterSpacing = 1.sp)
+    Text(text, color = GodjiColors.TextMuted, fontFamily = MonoFamily, fontSize = 11.sp)
 }
 
 @Composable
@@ -293,9 +300,9 @@ private fun PagerCircle(glyph: String, enabled: Boolean, onClick: () -> Unit) {
     Box(
         Modifier
             .size(28.dp)
-            .clip(CircleShape)
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(2.dp))
             .background(GodjiColors.Chip)
-            .border(1.dp, GodjiColors.CardBorder, CircleShape)
+            .border(1.dp, GodjiColors.CardBorder, androidx.compose.foundation.shape.RoundedCornerShape(2.dp))
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -319,8 +326,8 @@ private fun NewsCard(item: NewsUi) {
     Column(
         Modifier
             .fillMaxWidth()
-            .godjiCard(RoundedCornerShape(24.dp))
-            .clip(RoundedCornerShape(24.dp))
+            .godjiCard(RoundedCornerShape(2.dp))
+            .clip(RoundedCornerShape(2.dp))
             .clickable { expanded = !expanded }
             .padding(horizontal = 14.dp, vertical = 9.dp),
         verticalArrangement = Arrangement.spacedBy(3.dp)
@@ -346,9 +353,9 @@ private fun NewsCard(item: NewsUi) {
                 Box(
                     Modifier
                         .height(32.dp)
-                        .clip(RoundedCornerShape(50))
+                        .clip(RoundedCornerShape(2.dp))
                         .background(GodjiColors.Chip)
-                        .border(1.dp, GodjiColors.CardBorder, RoundedCornerShape(50))
+                        .border(1.dp, GodjiColors.CardBorder, RoundedCornerShape(2.dp))
                         .clickable { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(btn.url))) }
                         .padding(horizontal = 14.dp),
                     contentAlignment = Alignment.Center
@@ -369,13 +376,13 @@ private fun TransferCard(onClick: () -> Unit) {
         Modifier
             .fillMaxWidth()
             .scale(scale.value)
-            .godjiCard(RoundedCornerShape(24.dp))
+            .godjiCard(RoundedCornerShape(2.dp))
             .clickable(interactionSource = interaction, indication = null, onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Box(Modifier.size(36.dp).clip(CircleShape).background(GodjiColors.TealTint), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(36.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(2.dp)).background(GodjiColors.TealTint), contentAlignment = Alignment.Center) {
             Icon(Icons.Filled.QrCode2, contentDescription = null, tint = GodjiColors.TealDeep, modifier = Modifier.size(18.dp))
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -398,9 +405,9 @@ private fun ReferralCard(referral: ReferralUi, onCopy: () -> Unit, onShare: () -
             Modifier
                 .fillMaxWidth()
                 .height(44.dp)
-                .clip(RoundedCornerShape(50))
+                .clip(RoundedCornerShape(2.dp))
                 .background(GodjiColors.Chip)
-                .border(1.dp, GodjiColors.CardBorder, RoundedCornerShape(50))
+                .border(1.dp, GodjiColors.CardBorder, RoundedCornerShape(2.dp))
                 .padding(start = 14.dp, end = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -416,9 +423,9 @@ private fun ReferralCard(referral: ReferralUi, onCopy: () -> Unit, onShare: () -
                 Modifier
                     .size(32.dp)
                     .scale(qrScale.value)
-                    .clip(CircleShape)
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(2.dp))
                     .background(GodjiColors.Thumb)
-                    .border(1.dp, GodjiColors.CardBorder, CircleShape)
+                    .border(1.dp, GodjiColors.CardBorder, androidx.compose.foundation.shape.RoundedCornerShape(2.dp))
                     .clickable(interactionSource = qrInteraction, indication = null, onClick = onQr),
                 contentAlignment = Alignment.Center
             ) {
@@ -429,7 +436,7 @@ private fun ReferralCard(referral: ReferralUi, onCopy: () -> Unit, onShare: () -
                 Modifier
                     .height(32.dp)
                     .scale(copyScale.value)
-                    .clip(RoundedCornerShape(50))
+                    .clip(RoundedCornerShape(2.dp))
                     .background(Brush.verticalGradient(0f to GodjiColors.AccentGradTop, 0.55f to GodjiColors.AccentGradMid, 1f to GodjiColors.AccentGradBottom))
                     .clickable(interactionSource = copyInteraction, indication = null, onClick = onCopy)
                     .padding(horizontal = 12.dp),
@@ -472,7 +479,7 @@ private fun ReferralRow(e: ReferralEntryUi) {
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Box(
-            Modifier.size(28.dp).clip(CircleShape).background(GodjiColors.Chip).border(1.dp, GodjiColors.CardBorder, CircleShape),
+            Modifier.size(28.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(2.dp)).background(GodjiColors.Chip).border(1.dp, GodjiColors.CardBorder, androidx.compose.foundation.shape.RoundedCornerShape(2.dp)),
             contentAlignment = Alignment.Center
         ) {
             Text(e.displayName.take(1).uppercase(), color = GodjiColors.TextSecondary, fontWeight = FontWeight.Bold, fontSize = 11.sp)
@@ -487,7 +494,7 @@ private fun ReferralRow(e: ReferralEntryUi) {
         Row(
             Modifier
                 .height(22.dp)
-                .clip(RoundedCornerShape(50))
+                .clip(RoundedCornerShape(2.dp))
                 .background(if (active) GodjiColors.TealTint else Color.Transparent)
                 .drawWithContent {
                     drawContent()
@@ -504,7 +511,7 @@ private fun ReferralRow(e: ReferralEntryUi) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(5.dp)
         ) {
-            Box(Modifier.size(6.dp).clip(CircleShape).background(if (active) GodjiColors.Teal else Color.Transparent))
+            Box(Modifier.size(6.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(2.dp)).background(if (active) GodjiColors.Teal else Color.Transparent))
             Text(
                 if (active) Loc.s.plansReferralActiveBadge else Loc.s.plansReferralInactiveBadge,
                 color = if (active) GodjiColors.TealDeep else GodjiColors.TextSecondary,
@@ -541,7 +548,7 @@ private fun DevicesSection(
     } else {
         SectionLabel(Loc.s.plansDevicesTitle)
     }
-    Column(Modifier.fillMaxWidth().godjiCard().clip(RoundedCornerShape(26.dp))) {
+    Column(Modifier.fillMaxWidth().godjiCard().clip(RoundedCornerShape(2.dp))) {
         if (devices.isEmpty()) {
             Text(Loc.s.plansDevicesEmpty, color = GodjiColors.TextSecondary, fontWeight = FontWeight.Medium, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 14.dp, vertical = 11.dp))
         }
@@ -561,8 +568,23 @@ private fun DevicesSection(
                     }
                 } else {
                     // Зона нажатия 48dp (норма Material), значок прежнего размера.
-                    DeviceAction(Icons.Filled.Edit, Loc.f.a11yRenameDevice(device.name), GodjiColors.TealDeep) { renameTarget = device }
-                    DeviceAction(Icons.Filled.Close, Loc.f.a11yDeleteDevice(device.name), GodjiColors.Danger) { deleteTarget = device }
+                    var menu by remember { mutableStateOf(false) }
+                    Box {
+                        Box(
+                            Modifier.size(48.dp).clickable(role = Role.Button) { menu = true },
+                            contentAlignment = Alignment.Center
+                        ) { Text("···", color = GodjiColors.TextMuted, fontSize = 18.sp, letterSpacing = 2.sp) }
+                        androidx.compose.material3.DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                            androidx.compose.material3.DropdownMenuItem(
+                                text = { Text(Loc.s.plansDevicesRenameTitle) },
+                                onClick = { menu = false; renameTarget = device }
+                            )
+                            androidx.compose.material3.DropdownMenuItem(
+                                text = { Text(Loc.s.plansDevicesDelete, color = GodjiColors.Danger) },
+                                onClick = { menu = false; deleteTarget = device }
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -607,7 +629,7 @@ private fun DevicesSection(
 @Composable
 private fun DeviceAction(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, tint: Color, onClick: () -> Unit) {
     Box(
-        Modifier.size(48.dp).clip(CircleShape).clickable(role = Role.Button, onClick = onClick),
+        Modifier.size(48.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(2.dp)).clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(icon, contentDescription = label, tint = tint, modifier = Modifier.size(17.dp))
@@ -631,7 +653,7 @@ private fun DaysRing(days: Int, totalDays: Int) {
         val density = androidx.compose.ui.platform.LocalDensity.current
         val numberSize = with(density) { 19.dp.toSp() }
         val labelSize = with(density) { 7.5.dp.toSp() }
-        Box(Modifier.size(54.dp).clip(CircleShape).background(GodjiColors.RingCore), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(54.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(2.dp)).background(GodjiColors.RingCore), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("$days", color = GodjiColors.TextPrimary, fontWeight = FontWeight.ExtraBold, fontSize = numberSize, lineHeight = numberSize, maxLines = 1)
                 Text(Loc.s.plansDays, color = GodjiColors.TextSecondary, fontWeight = FontWeight.Bold, fontSize = labelSize, lineHeight = labelSize, letterSpacing = 0.6.sp, maxLines = 1)

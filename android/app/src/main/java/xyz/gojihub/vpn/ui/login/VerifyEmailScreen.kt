@@ -1,5 +1,7 @@
 package xyz.gojihub.vpn.ui.login
 
+import androidx.compose.ui.unit.em
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -117,10 +119,10 @@ fun VerifyEmailScreen(
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().background(GodjiColors.Background).padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = Modifier.fillMaxSize().background(GodjiColors.SurfaceBase).statusBarsPadding().padding(horizontal = 20.dp),
+        horizontalAlignment = Alignment.Start
     ) {
-        Spacer(Modifier.height(40.dp))
+        Spacer(Modifier.height(48.dp))
 
         AnimatedContent(
             targetState = state.success,
@@ -143,12 +145,12 @@ private fun VerifyFormContent(
     viewModel: VerifyEmailViewModel,
     onVerified: () -> Unit
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(Loc.s.verifyTitle, color = GodjiColors.TextPrimary, fontFamily = SpaceGroteskFamily, fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
-        Spacer(Modifier.height(6.dp))
-        Text(Loc.s.verifySentTo(email), color = GodjiColors.TextMuted, fontSize = 12.sp, textAlign = TextAlign.Center)
+    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
+        Text(Loc.s.verifyTitle, color = GodjiColors.Ink, fontFamily = SpaceGroteskFamily, fontWeight = FontWeight.SemiBold, fontSize = 30.sp, lineHeight = 32.sp, letterSpacing = (-0.02).em)
+        Spacer(Modifier.height(10.dp))
+        Text(Loc.s.verifySentTo(email), color = GodjiColors.TextSecondary, fontSize = 15.sp, lineHeight = 22.sp)
 
-        Spacer(Modifier.height(28.dp))
+        Spacer(Modifier.height(34.dp))
         OtpCodeInput(
             code = state.code,
             hasError = state.error != null,
@@ -159,13 +161,14 @@ private fun VerifyFormContent(
         Spacer(Modifier.height(14.dp))
         Text(
             if (state.loading) Loc.s.verifyChecking else Loc.s.verifyAutoHint,
-            color = GodjiColors.TextMuted,
-            fontSize = 11.sp
+            color = GodjiColors.TextSecondary,
+            fontFamily = JetBrainsMonoFamily,
+            fontSize = 12.sp
         )
 
         state.error?.let {
             Spacer(Modifier.height(8.dp))
-            Text(it, color = GodjiColors.Danger, fontSize = 12.sp, textAlign = TextAlign.Center)
+            Text(it, color = GodjiColors.Danger, fontSize = 12.sp)
         }
     }
 }
@@ -186,9 +189,10 @@ private fun OtpCodeInput(code: String, hasError: Boolean, enabled: Boolean, onCo
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-        Row(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             repeat(OTP_LENGTH) { i ->
                 DigitCell(
+                    modifier = Modifier.weight(1f),
                     digit = code.getOrNull(i),
                     isActive = enabled && i == code.length,
                     justFilled = i == code.length - 1,
@@ -206,7 +210,7 @@ private fun OtpCodeInput(code: String, hasError: Boolean, enabled: Boolean, onCo
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp)
+                .height(60.dp)
                 .focusRequester(focusRequester)
                 .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
                     focusRequester.requestFocus()
@@ -216,7 +220,7 @@ private fun OtpCodeInput(code: String, hasError: Boolean, enabled: Boolean, onCo
 }
 
 @Composable
-private fun DigitCell(digit: Char?, isActive: Boolean, justFilled: Boolean, hasError: Boolean) {
+private fun DigitCell(modifier: Modifier, digit: Char?, isActive: Boolean, justFilled: Boolean, hasError: Boolean) {
     // Короткая вспышка (масштаб + свечение) ровно один раз в момент заполнения именно ЭТОЙ
     // клетки — retrigger только когда клетка реально только что стала последней заполненной
     // (не на каждой рекомпозиции), поэтому ключ — сама пара (digit, justFilled).
@@ -235,37 +239,20 @@ private fun DigitCell(digit: Char?, isActive: Boolean, justFilled: Boolean, hasE
 
     val borderColor = when {
         hasError -> GodjiColors.Danger
-        isActive -> GodjiColors.Teal
-        else -> GodjiColors.CardBorder
+        digit != null || isActive -> GodjiColors.Ink
+        else -> GodjiColors.OutlineVariant
     }
-    val borderWidth = 1.5.dp
-    val glowAlpha = burst.value * 0.9f
 
     Box(
-        Modifier
-            .size(44.dp)
-            .scale(1f + burst.value * 0.12f)
-            .shadow(
-                elevation = (burst.value * 14).dp,
-                shape = RoundedCornerShape(13.dp),
-                ambientColor = GodjiColors.Teal.copy(alpha = glowAlpha),
-                spotColor = GodjiColors.Teal.copy(alpha = glowAlpha)
-            )
-            .clip(RoundedCornerShape(13.dp))
-            .background(GodjiColors.Chip)
-            .border(borderWidth, borderColor, RoundedCornerShape(13.dp)),
+        modifier
+            .height(60.dp)
+            .border(1.dp, borderColor),
         contentAlignment = Alignment.Center
     ) {
         if (digit != null) {
-            Text(digit.toString(), color = GodjiColors.TextPrimary, fontFamily = JetBrainsMonoFamily, fontWeight = FontWeight.Bold, fontSize = 19.sp)
+            Text(digit.toString(), color = GodjiColors.Ink, fontFamily = JetBrainsMonoFamily, fontWeight = FontWeight.SemiBold, fontSize = 26.sp)
         } else if (isActive) {
-            Box(
-                Modifier
-                    .width(2.dp)
-                    .height(20.dp)
-                    .alpha(cursorAlpha)
-                    .background(GodjiColors.Teal, RoundedCornerShape(1.dp))
-            )
+            Box(Modifier.width(2.dp).height(28.dp).alpha(cursorAlpha).background(GodjiColors.Ink))
         }
     }
 }
@@ -341,8 +328,8 @@ private fun VerifySuccessBadge() {
             Modifier
                 .size(88.dp)
                 .scale(badgeScale)
-                .shadow(28.dp, CircleShape, ambientColor = GodjiColors.Teal, spotColor = GodjiColors.Teal)
-                .clip(CircleShape)
+                .shadow(28.dp, androidx.compose.foundation.shape.RoundedCornerShape(2.dp), ambientColor = GodjiColors.Teal, spotColor = GodjiColors.Teal)
+                .clip(androidx.compose.foundation.shape.RoundedCornerShape(2.dp))
                 .background(GodjiColors.Teal),
             contentAlignment = Alignment.Center
         ) {

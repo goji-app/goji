@@ -4,17 +4,27 @@ import Foundation
 /// Язык выбирает система (Настройки iOS → Goji VPN → Язык), отдельного переключателя в
 /// приложении нет — так рекомендует Apple для приложений с несколькими локализациями.
 func L(_ key: String) -> String {
-    NSLocalizedString(key, comment: "")
+    NSLocalizedString(key, bundle: AppLanguage.bundle, comment: "")
 }
 
 /// Строка с подстановкой аргументов (%@, %d, %lld в тексте перевода).
 func L(_ key: String, _ args: CVarArg...) -> String {
-    String(format: NSLocalizedString(key, comment: ""), locale: Locale.current, arguments: args)
+    String(format: NSLocalizedString(key, bundle: AppLanguage.bundle, comment: ""), locale: Locale.current, arguments: args)
 }
 
 enum AppLanguage {
-    /// Язык, который iOS реально выбрала для интерфейса приложения.
-    static var code: String { Bundle.main.preferredLocalizations.first ?? "ru" }
+    /// Язык, выбранный на экране входа или в настройках («ru»/«en»); nil — как в системе.
+    static var override: String? {
+        get { UserDefaults.standard.string(forKey: "app.lang") }
+        set { UserDefaults.standard.set(newValue, forKey: "app.lang") }
+    }
+    /// Язык интерфейса: выбор пользователя, иначе тот, что iOS выбрала для приложения.
+    static var code: String { override ?? Bundle.main.preferredLocalizations.first ?? "ru" }
+    /// Пакет строк выбранного языка (для L()).
+    static var bundle: Bundle {
+        guard let o = override, let path = Bundle.main.path(forResource: o, ofType: "lproj"), let b = Bundle(path: path) else { return .main }
+        return b
+    }
     static var isRussian: Bool { code.hasPrefix("ru") }
 }
 

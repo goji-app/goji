@@ -137,7 +137,7 @@ fun TicketChatScreen(
                             Modifier
                                 .size(48.dp)
                                 .scale(attachScale.value)
-                                .clip(RoundedCornerShape(50))
+                                .clip(RoundedCornerShape(2.dp))
                                 .background(GodjiColors.Chip)
                                 .clickable(interactionSource = attachInteraction, indication = androidx.compose.foundation.LocalIndication.current) { showAttachMenu = true },
                             contentAlignment = Alignment.Center
@@ -184,7 +184,7 @@ fun TicketChatScreen(
                         Modifier
                             .size(48.dp)
                             .scale(sendScale.value)
-                            .clip(RoundedCornerShape(50))
+                            .clip(RoundedCornerShape(2.dp))
                             .background(GodjiColors.Ink)
                             .clickable(
                                 interactionSource = sendInteraction,
@@ -210,7 +210,7 @@ fun TicketChatScreen(
 private fun AttachmentChip(name: String, onRemove: () -> Unit) {
     Row(
         Modifier
-            .clip(RoundedCornerShape(50))
+            .clip(RoundedCornerShape(2.dp))
             .background(GodjiColors.Chip)
             .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -277,7 +277,7 @@ private fun MessageBubble(message: SupportMessageUi) {
         Column(
             Modifier
                 .fillMaxWidth(0.8f)
-                .clip(RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(2.dp))
                 .background(bg)
                 .padding(12.dp)
         ) {

@@ -78,6 +78,10 @@ public partial class App : Application
 
         var window = new MainWindow { DataContext = mainViewModel };
         desktop.MainWindow = window;
+        window.HotkeyPressed = async () =>
+        {
+            if (connectViewModel.ToggleCommand.CanExecute(null)) await connectViewModel.ToggleCommand.ExecuteAsync(null);
+        };
 
         MenuBarService? tray = null;
         tray = new MenuBarService(vpnEngine, connectViewModel, window, () => Exit());

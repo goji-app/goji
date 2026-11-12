@@ -29,22 +29,22 @@
         <Setter Property="AccentColor" Value="{DynamicResource TealColor}"/>
     </Style>
     <Style Selector="c|GlassPanel.card">
-        <Setter Property="CornerRadius" Value="24"/>
+        <Setter Property="CornerRadius" Value="2"/>
         <Setter Property="Level" Value="Normal"/>
         <Setter Property="Shadow" Value="Card"/>
     </Style>
     <Style Selector="c|GlassPanel.pill">
-        <Setter Property="CornerRadius" Value="999"/>
+        <Setter Property="CornerRadius" Value="2"/>
         <Setter Property="Level" Value="Strong"/>
         <Setter Property="Shadow" Value="Pill"/>
     </Style>
     <Style Selector="c|GlassPanel.strong">
-        <Setter Property="CornerRadius" Value="28"/>
+        <Setter Property="CornerRadius" Value="2"/>
         <Setter Property="Level" Value="Strong"/>
         <Setter Property="Shadow" Value="Strong"/>
     </Style>
     <Style Selector="c|GlassPanel.flat">
-        <Setter Property="CornerRadius" Value="16"/>
+        <Setter Property="CornerRadius" Value="2"/>
         <Setter Property="Level" Value="Faint"/>
         <Setter Property="Shadow" Value="None"/>
     </Style>
@@ -54,8 +54,8 @@
         <Setter Property="FontFamily" Value="{StaticResource Manrope}"/>
     </Style>
     <Style Selector="TextBlock.title">
-        <Setter Property="FontWeight" Value="Bold"/>
-        <Setter Property="FontSize" Value="{s:Fs 26}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="FontSize" Value="{s:Fs 30}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     </Style>
     <Style Selector="TextBlock.subTitle">
@@ -100,8 +100,8 @@
     </Style>
 
     <Style Selector="Rectangle.hair">
-        <Setter Property="Height" Value="2"/>
-        <Setter Property="Fill" Value="{DynamicResource BgSolidBrush}"/>
+        <Setter Property="Height" Value="1"/>
+        <Setter Property="Fill" Value="{DynamicResource OutlineVariantBrush}"/>
     </Style>
     <Style Selector="Rectangle.vhair">
         <Setter Property="Width" Value="2"/>
@@ -184,7 +184,7 @@
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="Template">
             <ControlTemplate>
-                <Border Name="Bg" CornerRadius="999" Background="{DynamicResource AccentGradientBrush}" Padding="16,0">
+                <Border Name="Bg" CornerRadius="2" Background="{DynamicResource AccentGradientBrush}" Padding="16,0">
                     <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
                                       HorizontalAlignment="Center" VerticalAlignment="Center"
                                       Foreground="{TemplateBinding Foreground}"/>
@@ -210,7 +210,7 @@
         <Setter Property="FontSize" Value="{s:Fs 15}"/>
         <Setter Property="Template">
             <ControlTemplate>
-                <Border CornerRadius="999" Background="{DynamicResource InkBtnBrush}" Padding="16,0">
+                <Border CornerRadius="2" Background="{DynamicResource InkBtnBrush}" Padding="16,0">
                     <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
                                       HorizontalAlignment="Center" VerticalAlignment="Center"
                                       Foreground="{TemplateBinding Foreground}"/>
@@ -227,7 +227,7 @@
         <Setter Property="FontSize" Value="{s:Fs 13.5}"/>
         <Setter Property="Template">
             <ControlTemplate>
-                <Border CornerRadius="999" Background="{DynamicResource DangerBrush}" Padding="16,0">
+                <Border CornerRadius="2" Background="{DynamicResource DangerBrush}" Padding="16,0">
                     <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Center" VerticalAlignment="Center"
                                       Foreground="{TemplateBinding Foreground}"/>
                 </Border>
@@ -244,7 +244,7 @@
         <Setter Property="Padding" Value="14,0"/>
         <Setter Property="Template">
             <ControlTemplate>
-                <Border CornerRadius="999" Background="{DynamicResource ChipBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
+                <Border CornerRadius="2" Background="{DynamicResource ChipBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
                         BorderThickness="1" Padding="{TemplateBinding Padding}">
                     <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
                                       HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -289,12 +289,12 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <Panel>
-                    <Border Name="Track" CornerRadius="16" Background="{DynamicResource TrackBgBrush}">
+                    <Border Name="Track" CornerRadius="2" Background="{DynamicResource TrackBgBrush}">
                         <Border.Transitions>
                             <Transitions><BrushTransition Property="Background" Duration="0:0:0.3"/></Transitions>
                         </Border.Transitions>
                     </Border>
-                    <Border Name="Knob" Width="36" Height="26" CornerRadius="13" Background="#F2FFFFFF"
+                    <Border Name="Knob" Width="36" Height="26" CornerRadius="2" Background="#F2FFFFFF"
                             HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,3,0,0"
                             BoxShadow="0 1 6 0 #38000000" RenderTransform="translate(3px, 0px)">
                         <Border.Transitions>
@@ -318,7 +318,7 @@
         <Setter Property="FontWeight" Value="Medium"/>
         <Setter Property="FontSize" Value="{s:Fs 14}"/>
         <Setter Property="Padding" Value="14,11"/>
-        <Setter Property="CornerRadius" Value="16"/>
+        <Setter Property="CornerRadius" Value="2"/>
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
         <Setter Property="Background" Value="{DynamicResource ChipBrush}"/>
         <!-- Рамка — outline (M3): на стеклянной карточке тёмной темы поле с CardBorder сливалось с фоном. -->
@@ -367,16 +367,16 @@
                 <DockPanel>
                     <Grid DockPanel.Dock="Bottom" IsVisible="{TemplateBinding HasPages}">
                         <Rectangle Classes="hair" VerticalAlignment="Top"/>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4">
-                            <Button Classes="bare pager" AutomationProperties.Name="Предыдущая страница"
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10">
+                            <Button Classes="bare" Padding="12,8" AutomationProperties.Name="Предыдущая страница"
                                     Command="{Binding PrevCommand, RelativeSource={RelativeSource TemplatedParent}}">
-                                <Path Classes="icon" Data="{StaticResource IconChevronLeft}" Width="18" Height="18"/>
+                                <TextBlock Text="‹ НАЗАД" FontFamily="{DynamicResource Mono}" FontSize="11" Foreground="{DynamicResource TextPrimaryBrush}"/>
                             </Button>
-                            <TextBlock Text="{TemplateBinding PagerText}" FontWeight="Bold" FontSize="{s:Fs 12}" MinWidth="44"
-                                       TextAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            <Button Classes="bare pager" AutomationProperties.Name="Следующая страница"
+                            <TextBlock Text="{TemplateBinding PagerText}" FontFamily="{DynamicResource Mono}" FontSize="11"
+                                       VerticalAlignment="Center" Margin="10,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <Button Classes="bare" Padding="12,8" AutomationProperties.Name="Следующая страница"
                                     Command="{Binding NextCommand, RelativeSource={RelativeSource TemplatedParent}}">
-                                <Path Classes="icon" Data="{StaticResource IconChevronRight}" Width="18" Height="18"/>
+                                <TextBlock Text="ДАЛЬШЕ ›" FontFamily="{DynamicResource Mono}" FontSize="11" Foreground="{DynamicResource TextPrimaryBrush}"/>
                             </Button>
                         </StackPanel>
                     </Grid>

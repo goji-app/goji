@@ -157,9 +157,9 @@ public partial class OtpInput : UserControl
             var isActive = i == activeIndex && cell.IsFocused;
             cell.BorderBrush = HasError
                 ? ResourceBrush("DangerBrush")
-                : isActive ? ResourceBrush("TealBrush")
-                : ResourceBrush("CardBorderBrush");
-            cell.BorderThickness = new Thickness(isActive || HasError ? 1.5 : 1);
+                : isActive || filled ? ResourceBrush("InkBrush")
+                : ResourceBrush("OutlineVariantBrush");
+            cell.BorderThickness = new Thickness(1);
         }
     }
 

@@ -22,7 +22,7 @@ public abstract class TonalPill : UserControl
     {
         Height = height;
         VerticalAlignment = VerticalAlignment.Center;
-        _body.CornerRadius = new CornerRadius(height / 2);
+        _body.CornerRadius = new CornerRadius(2);
         _body.Child = Row;
         Content = _body;
     }

@@ -1,5 +1,6 @@
 package xyz.gojihub.vpn.ui.connect
 
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
@@ -90,6 +91,8 @@ import xyz.gojihub.vpn.network.NetState
 import xyz.gojihub.vpn.ui.globe.GojiGlobe
 import xyz.gojihub.vpn.ui.theme.GodjiColors
 import xyz.gojihub.vpn.ui.theme.SpaceGroteskFamily
+import xyz.gojihub.vpn.ui.theme.JetBrainsMonoFamily
+import androidx.compose.ui.unit.em
 import xyz.gojihub.vpn.ui.theme.godjiCard
 import xyz.gojihub.vpn.ui.theme.godjiGlassPill
 import xyz.gojihub.vpn.ui.theme.godjiGlassStrong
@@ -100,139 +103,208 @@ fun ConnectScreen(viewModel: ConnectViewModel = hiltViewModel(), onOpenPlans: ()
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
 
-    val vpnPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) viewModel.startTunnel(context)
-    }
+    val toggle = rememberVpnToggle(viewModel, state.connected, state.connecting)
+    val counter by viewModel.serverCounter.collectAsState()
 
-    // На Android 13+ мало объявить POST_NOTIFICATIONS в манифесте — без явного рантайм-запроса
-    // канал молча остаётся importance=NONE, и уведомление foreground-сервиса (с реальным
-    // сервером и скоростью) никогда не показывается, хотя сам сервис исправно работает.
-    // Не блокируем подключение отказом — просто не покажется уведомление, это не критично.
-    val notificationPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { /* игнорируем результат — уведомление необязательно для работы VPN */ }
+    val target = when { state.connected -> 2; state.connecting -> 1; else -> 0 }
+    // «Шалфей» — «песок/шалфей» из макета 9a; остальные палитры красятся в собственный оттенок:
+    // подключение — полутон между фоном и акцентным контейнером, в сети — сам акцентный контейнер.
+    val sage = GodjiColors.paletteId == "sage"
+    val busyFill = if (sage) GodjiColors.TertiaryContainer else androidx.compose.ui.graphics.lerp(GodjiColors.SurfaceBase, GodjiColors.PrimaryContainer, 0.28f)
+    val onFill = if (sage) GodjiColors.SecondaryContainer else androidx.compose.ui.graphics.lerp(GodjiColors.SurfaceBase, GodjiColors.PrimaryContainer, 0.55f)
+    val busyInk = if (sage) GodjiColors.OnTertiaryContainer else GodjiColors.OnPrimaryContainer
+    val onInk = if (sage) GodjiColors.OnSecondaryContainer else GodjiColors.OnPrimaryContainer
+    val bg by animateColorAsState(
+        when (target) { 2 -> onFill; 1 -> busyFill; else -> GodjiColors.SurfaceBase },
+        tween(500), label = "homeBg"
+    )
+    val ink by animateColorAsState(
+        when (target) { 2 -> onInk; 1 -> busyInk; else -> GodjiColors.TextPrimary },
+        tween(500), label = "homeInk"
+    )
+    SideEffect { GodjiColors.navBg = bg }
+    DisposableEffect(Unit) { onDispose { GodjiColors.navBg = null } }
+    val mut = if (target == 0) GodjiColors.TextSecondary else ink.copy(alpha = 0.78f)
+    val line = if (target == 0) GodjiColors.OutlineVariant else ink.copy(alpha = 0.22f)
+    val lang = Loc.lang
+    fun t(ru: String, en: String, zh: String) = when (lang) { AppLanguage.RU -> ru; AppLanguage.EN -> en; AppLanguage.ZH -> zh }
+    val mono = JetBrainsMonoFamily
+    val code = (state.currentGeo?.code ?: Regex("[A-Z]{2,3}$").find(state.currentNodeName.trim())?.value ?: state.currentCode).uppercase().take(3)
 
-    fun toggle() {
-        if (state.connected || state.connecting) {
-            viewModel.stopTunnel(context)
-        } else {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-            ) {
-                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-            val prepareIntent = VpnService.prepare(context)
-            if (prepareIntent != null) vpnPermissionLauncher.launch(prepareIntent) else viewModel.startTunnel(context)
-        }
-    }
-
-    // Экран целиком помещается без прокрутки: все блоки берут свою высоту, а глобус — то, что
-    // осталось (HomeFitColumn). verticalScroll — только страховка для очень низких экранов и
-    // крупного шрифта, когда даже минимальный глобус не влезает.
-    BoxWithConstraints(Modifier.fillMaxSize().background(GodjiColors.Background)) {
-    HomeFitColumn(
-        available = maxHeight - HOME_PAD_TOP - HOME_PAD_BOTTOM,
-        modifier = Modifier
-            .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
-            .padding(start = 16.dp, top = HOME_PAD_TOP, end = 16.dp, bottom = HOME_PAD_BOTTOM)
-    ) {
-        // z-index:2 в эталоне — шапка лежит поверх верхнего края глобуса (он заходит под неё на 24dp).
-        Row(Modifier.fillMaxWidth().zIndex(2f), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Row(
-                Modifier
-                    .godjiGlassPill()
-                    .padding(start = 4.dp, top = 4.dp, end = 12.dp, bottom = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Box(Modifier.size(28.dp).clip(CircleShape).background(GodjiColors.Ink), contentAlignment = Alignment.Center) {
-                    Image(painterResource(R.drawable.ic_notification), contentDescription = null, modifier = Modifier.size(18.dp))
-                }
-                Text("Goji", color = GodjiColors.TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-            }
-            NetworkPill(state.netState)
-        }
-
-        GlobeCard(state, Modifier.layoutId(GLOBE_ID))
-
-        // Кнопка-«печенье» 64dp, под ней заголовок 22sp и строка статуса.
-        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            ConnectButton(state, onClick = { toggle() })
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    Column(Modifier.fillMaxSize().background(bg)) {
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)) {
+            Row(Modifier.fillMaxWidth().padding(top = 22.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(
-                    headline(state),
-                    color = GodjiColors.TextPrimary,
-                    fontFamily = SpaceGroteskFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 22.sp,
-                    lineHeight = 26.sp,
-                    letterSpacing = (-0.4).sp,
-                    textAlign = TextAlign.Center,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    // Смена «Пока без защиты» → «Ты в Финляндии» озвучивается сама.
-                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+                    when (target) {
+                        2 -> t("В ТУННЕЛЕ", "IN TUNNEL", "已加密")
+                        1 -> t("ПОДКЛЮЧЕНИЕ", "CONNECTING", "连接中")
+                        else -> t("НЕТ ЗАЩИТЫ", "NO PROTECTION", "未保护")
+                    },
+                    color = mut, fontFamily = mono, fontSize = 11.sp
                 )
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                    Box(Modifier.size(7.dp).clip(CircleShape).background(dotColor(state)))
-                    Text(
-                        subline(state),
-                        color = GodjiColors.TextSecondary,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 12.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    if (state.connected) {
-                        Text("· ${state.connectedTimeLabel}", color = GodjiColors.TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                    }
-                }
+                Text(counter, color = mut, fontFamily = mono, fontSize = 11.sp)
             }
-        }
+            // Код страны выхода: контур в выключенном состоянии, заливка — когда подключаемся/в сети.
+            BoxWithConstraints(Modifier.fillMaxWidth().padding(top = 6.dp)) {
+                val size = (maxWidth.value * 0.77f).coerceAtMost(262f)
+                Text(
+                    code,
+                    color = if (target == 0) GodjiColors.OutlineVariant else ink,
+                    style = androidx.compose.ui.text.TextStyle(
+                        fontFamily = SpaceGroteskFamily, fontWeight = FontWeight.Bold,
+                        fontSize = size.sp, lineHeight = (size * 0.89f).sp, letterSpacing = (-0.07).em,
+                        drawStyle = if (target == 0) Stroke(width = 4f) else null
+                    ),
+                    maxLines = 1, softWrap = false,
+                    modifier = Modifier
+                        .offset(x = (-10).dp)
+                        .clickable(role = Role.Button, onClick = viewModel::nextServer)
+                        .semantics { contentDescription = state.currentGeo?.displayName(lang) ?: state.currentNodeName }
+                )
+            }
+            Text(
+                homeTitle(state, ::t), color = ink, fontFamily = SpaceGroteskFamily, fontWeight = FontWeight.SemiBold,
+                fontSize = 30.sp, lineHeight = 32.sp, letterSpacing = (-0.02).em,
+                modifier = Modifier.padding(top = 4.dp).semantics { liveRegion = LiveRegionMode.Polite }
+            )
+            Text(homeSub(state, ::t), color = mut, fontSize = 14.sp, modifier = Modifier.padding(top = 6.dp).heightIn(min = 40.dp))
 
-        state.error?.let { message ->
-            // Понятная причина и одна кнопка следующего шага; техническое сообщение — мельче.
-            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+            state.error?.let { message ->
+                // Заметный блок ошибки: красная полоса слева, подложка ошибки, одно действие следующего шага.
                 val hint = when (state.errorAction) {
                     ErrorAction.OPEN_PLANS -> Loc.f.errorHintSubscription
                     ErrorAction.CHANGE_SERVER -> Loc.f.errorHintServer
                     null -> null
                 }
-                hint?.let { Text(it, color = GodjiColors.Danger, fontWeight = FontWeight.Bold, fontSize = 13.sp, textAlign = TextAlign.Center) }
-                Text(message, color = if (hint != null) GodjiColors.TextSecondary else GodjiColors.Danger, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                when (state.errorAction) {
-                    ErrorAction.OPEN_PLANS -> TextButton(onClick = onOpenPlans) { Text(Loc.f.errorActionPlans, color = GodjiColors.TealDeep, fontWeight = FontWeight.Bold) }
-                    ErrorAction.CHANGE_SERVER -> TextButton(onClick = onOpenServers) { Text(Loc.f.errorActionServer, color = GodjiColors.TealDeep, fontWeight = FontWeight.Bold) }
-                    null -> Unit
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp)
+                        .background(GodjiColors.ErrorContainer)
+                        .drawBehind { drawRect(GodjiColors.Danger, size = Size(4.dp.toPx(), size.height)) }
+                        .padding(start = 18.dp, end = 14.dp, top = 12.dp, bottom = 12.dp)
+                ) {
+                    Text(if (lang == AppLanguage.RU) "ОШИБКА" else "ERROR", color = GodjiColors.Danger, fontFamily = mono, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                    hint?.let { Text(it, color = GodjiColors.TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp, modifier = Modifier.padding(top = 6.dp)) }
+                    Text(message, color = GodjiColors.TextPrimary, fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
+                    val (label, action) = when (state.errorAction) {
+                        ErrorAction.OPEN_PLANS -> Loc.f.errorActionPlans to onOpenPlans
+                        ErrorAction.CHANGE_SERVER -> Loc.f.errorActionServer to onOpenServers
+                        null -> null to null
+                    }
+                    if (label != null && action != null) {
+                        Box(
+                            Modifier.padding(top = 12.dp).height(40.dp).background(GodjiColors.Danger)
+                                .clickable(role = Role.Button, onClick = action).padding(horizontal = 14.dp),
+                            contentAlignment = Alignment.Center
+                        ) { Text(label.uppercase(), color = GodjiColors.Surface, fontFamily = mono, fontWeight = FontWeight.Bold, fontSize = 12.sp) }
+                    }
                 }
             }
+
+            state.trialDays?.let { days ->
+                Box(Modifier.padding(top = 10.dp)) { TrialCard(days, activating = state.trialActivating, onActivate = viewModel::activateTrial) }
+            }
+            AnimatedContent(
+                targetState = state.banner to state.bannerKind,
+                transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(150)) },
+                label = "banner"
+            ) { (banner, kind) ->
+                if (banner != null) Box(Modifier.padding(top = 10.dp)) { BannerCard(banner, kind, onDismiss = viewModel::dismissBanner) }
+            }
+
+            // Таблица-прибор: узел, пинг со шкалой, время в сети и скорость.
+            Column(Modifier.padding(top = 14.dp)) {
+                InstrumentRow(t("УЗЕЛ", "NODE", "节点"), line, mut) {
+                    Text(state.currentGeo?.displayCity(lang) ?: state.currentNodeName.ifBlank { Loc.s.defaultNodeName }, color = ink, fontFamily = mono, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                InstrumentRow(t("ПИНГ", "PING", "延迟"), line, mut) {
+                    val ms = state.qualityPingMs
+                    PingScale(ms, ink, Modifier.width(96.dp))
+                    Spacer(Modifier.width(10.dp))
+                    Text(
+                        ms?.toString() ?: "—",
+                        color = ink, fontFamily = mono, fontWeight = FontWeight.SemiBold, fontSize = 13.sp,
+                        modifier = Modifier.semantics {
+                            contentDescription = if (ms == null) "" else t(
+                                "Пинг $ms миллисекунд, ${pingWord(ms, 0)}", "Ping $ms ms, ${pingWord(ms, 1)}", "延迟 $ms 毫秒"
+                            )
+                        }
+                    )
+                }
+                InstrumentRow(t("В СЕТИ", "ONLINE", "时长"), line, mut) {
+                    Text(if (state.connected) state.connectedTimeLabel else "—", color = ink, fontFamily = mono, fontSize = 13.sp)
+                }
+                InstrumentRow(t("СКОРОСТЬ", "SPEED", "速度"), line, mut) {
+                    Text(
+                        if (state.connected) "↓ %.1f  ↑ %.1f %s".format(state.downSpeedMbps, state.upSpeedMbps, Loc.s.speedUnit) else "—",
+                        color = ink, fontFamily = mono, fontSize = 13.sp, maxLines = 1
+                    )
+                }
+            }
+            Spacer(Modifier.height(16.dp))
         }
 
-        state.trialDays?.let { days ->
-            TrialCard(days, activating = state.trialActivating, onActivate = viewModel::activateTrial)
+        Box(
+            Modifier
+                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .fillMaxWidth().heightIn(min = 56.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(if (target == 1 && sage) GodjiColors.Terracotta else GodjiColors.InkBtn)
+                .clickable(role = Role.Button) { toggle() }
+                .semantics {
+                    contentDescription = if (state.connected || state.connecting) Loc.f.a11yDisconnect else Loc.f.a11yConnect
+                    stateDescription = when {
+                        state.connected -> Loc.f.a11yStateOn
+                        state.connecting -> Loc.f.a11yStateConnecting
+                        else -> Loc.f.a11yStateOff
+                    }
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                when (target) {
+                    2 -> t("ОТКЛЮЧИТЬ", "DISCONNECT", "断开")
+                    1 -> t("ОТМЕНА", "CANCEL", "取消")
+                    else -> t("ВКЛЮЧИТЬ", "CONNECT", "连接")
+                },
+                color = GodjiColors.Surface, fontFamily = mono, fontWeight = FontWeight.Bold,
+                fontSize = 14.sp, letterSpacing = 0.06.em
+            )
         }
-
-        SpeedCard(state)
-
-        Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            QualityTile(state, Modifier.weight(1f).fillMaxHeight())
-            SubscriptionTile(state, onClick = onOpenPlans, modifier = Modifier.weight(1f).fillMaxHeight())
-        }
-
-        AnimatedContent(
-            targetState = state.banner to state.bannerKind,
-            transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(150)) },
-            label = "banner"
-        ) { (banner, kind) ->
-            if (banner != null) BannerCard(banner, kind, onDismiss = viewModel::dismissBanner)
-        }
-
-        NodeAndAutoSwitchCard(state, onOpenServers = onOpenServers, onOpenJournal = onOpenJournal)
-
     }
+}
+
+private fun pingWord(ms: Int, l: Int) = when {
+    ms < 500 -> if (l == 0) "хороший" else "good"
+    ms < 1000 -> if (l == 0) "терпимый" else "fair"
+    else -> if (l == 0) "плохой" else "bad"
+}
+
+@Composable
+private fun InstrumentRow(label: String, line: Color, mut: Color, value: @Composable RowScope.() -> Unit) {
+    Column {
+        Box(Modifier.fillMaxWidth().height(1.dp).background(line))
+        Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(label, color = mut, fontFamily = JetBrainsMonoFamily, fontSize = 13.sp, modifier = Modifier.width(96.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, content = value)
+        }
+    }
+}
+
+/** Шкала пинга: три сегмента (<500 · <1000 · ≥1000 мс) и маркер. Цвет не единственный носитель — рядом число. */
+@Composable
+private fun PingScale(ms: Int?, ink: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier.height(14.dp)) {
+        val gap = 2.dp.toPx(); val h = 6.dp.toPx(); val y = (size.height - h) / 2
+        val seg = (size.width - 2 * gap) / 3
+        listOf(Color(0xFF6E8B79), Color(0xFFB39A62), Color(0xFFA5655E)).forEachIndexed { i, c ->
+            drawRect(c, Offset(i * (seg + gap), y), Size(seg, h))
+        }
+        if (ms != null) {
+            val x = (minOf(0.97f, ms / 1000f * 0.97f)) * size.width
+            drawRect(ink, Offset(x, 0f), Size(2.5.dp.toPx(), size.height))
+        }
     }
 }
 
@@ -334,7 +406,7 @@ private fun GlobeCard(state: ConnectUiState, modifier: Modifier = Modifier) {
                     .align(Alignment.TopEnd)
                     .padding(top = 50.dp, end = 14.dp)
                     .widthIn(max = 190.dp)
-                    .godjiGlassPill(RoundedCornerShape(18.dp))
+                    .godjiGlassPill(RoundedCornerShape(2.dp))
                     .padding(horizontal = 9.dp, vertical = 13.dp),
                 horizontalAlignment = Alignment.End
             ) {
@@ -417,7 +489,7 @@ private fun NetworkPill(net: NetState) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(7.dp)
     ) {
-        Box(Modifier.size(8.dp).clip(CircleShape).background(color))
+        Box(Modifier.size(8.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(2.dp)).background(color))
         Text(label, color = color, fontWeight = FontWeight.Bold, fontSize = 12.sp)
     }
 }
@@ -508,7 +580,7 @@ private fun SpeedSparkline(down: List<Float>, up: List<Float>, modifier: Modifie
 @Composable
 private fun TrialCard(days: Int, activating: Boolean, onActivate: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().godjiCard(RoundedCornerShape(24.dp), tint = GodjiColors.TealTint).padding(horizontal = 14.dp, vertical = 12.dp),
+        Modifier.fillMaxWidth().godjiCard(RoundedCornerShape(2.dp), tint = GodjiColors.TealTint).padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -519,7 +591,7 @@ private fun TrialCard(days: Int, activating: Boolean, onActivate: () -> Unit) {
         Box(
             Modifier
                 .height(38.dp)
-                .clip(RoundedCornerShape(50))
+                .clip(RoundedCornerShape(2.dp))
                 .background(GodjiColors.Teal)
                 .clickable(enabled = !activating, onClick = onActivate)
                 .padding(horizontal = 16.dp),
@@ -540,16 +612,16 @@ private fun BannerCard(text: String, kind: BannerKind, onDismiss: () -> Unit) {
     val iconBg = if (ok) GodjiColors.Teal else GodjiColors.Terracotta
     val icon = when (kind) { BannerKind.SUCCESS -> Icons.Filled.Check; BannerKind.WARNING -> Icons.Filled.PriorityHigh; BannerKind.INFO -> Icons.Filled.Info }
     Row(
-        Modifier.fillMaxWidth().godjiGlassPill(RoundedCornerShape(20.dp), tint = bg).padding(horizontal = 12.dp, vertical = 10.dp),
+        Modifier.fillMaxWidth().godjiGlassPill(RoundedCornerShape(2.dp), tint = bg).padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.spacedBy(11.dp)
     ) {
-        Box(Modifier.size(28.dp).clip(CircleShape).background(iconBg), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(28.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(2.dp)).background(iconBg), contentAlignment = Alignment.Center) {
             Icon(icon, contentDescription = null, tint = GodjiColors.Surface, modifier = Modifier.size(15.dp))
         }
         Text(text, color = GodjiColors.TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, lineHeight = 17.sp, modifier = Modifier.weight(1f))
         Box(
-            Modifier.size(24.dp).clip(CircleShape).background(GodjiColors.Hair).clickable { onDismiss() },
+            Modifier.size(24.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(2.dp)).background(GodjiColors.Hair).clickable { onDismiss() },
             contentAlignment = Alignment.Center
         ) {
             Text("×", color = GodjiColors.TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
@@ -561,7 +633,7 @@ private fun BannerCard(text: String, kind: BannerKind, onDismiss: () -> Unit) {
  *  открывает "Серверы" для быстрого выбора другого узла (goServers в эталоне). */
 @Composable
 private fun NodeAndAutoSwitchCard(state: ConnectUiState, onOpenServers: () -> Unit, onOpenJournal: () -> Unit) {
-    val cardShape = RoundedCornerShape(26.dp)
+    val cardShape = RoundedCornerShape(2.dp)
     Column(Modifier.fillMaxWidth().godjiCard(cardShape).clip(cardShape)) {
         val nodeInteraction = remember { MutableInteractionSource() }
         val pressed by nodeInteraction.collectIsPressedAsState()
@@ -577,9 +649,9 @@ private fun NodeAndAutoSwitchCard(state: ConnectUiState, onOpenServers: () -> Un
             Box(
                 Modifier
                     .size(38.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(2.dp))
                     .background(GodjiColors.Chip)
-                    .border(1.dp, GodjiColors.CardBorder, RoundedCornerShape(12.dp)),
+                    .border(1.dp, GodjiColors.CardBorder, RoundedCornerShape(2.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(state.currentFlag, fontSize = 19.sp)
@@ -693,7 +765,7 @@ private fun SubscriptionTile(state: ConnectUiState, onClick: () -> Unit, modifie
                     Box(
                         Modifier
                             .size(width = 5.dp, height = (8 + i * 2).dp)
-                            .clip(RoundedCornerShape(50))
+                            .clip(RoundedCornerShape(2.dp))
                             .background(if (i < filled) barColor else GodjiColors.TrackBg)
                     )
                 }
@@ -728,7 +800,7 @@ private fun AnimatedTrafficBar(pct: Float, modifier: Modifier = Modifier) {
         modifier
             .fillMaxWidth()
             .height(8.dp)
-            .clip(RoundedCornerShape(50))
+            .clip(RoundedCornerShape(2.dp))
             .background(GodjiColors.TrackBg)
     ) {
         val fillWidth = maxWidth * animatedPct
@@ -738,7 +810,7 @@ private fun AnimatedTrafficBar(pct: Float, modifier: Modifier = Modifier) {
                 Modifier
                     .fillMaxHeight()
                     .width(fillWidth)
-                    .clip(RoundedCornerShape(50))
+                    .clip(RoundedCornerShape(2.dp))
                     .background(Brush.verticalGradient(0f to GodjiColors.AccentGradTop, 0.55f to GodjiColors.AccentGradMid, 1f to GodjiColors.AccentGradBottom))
             ) {
                 Box(
@@ -753,6 +825,50 @@ private fun AnimatedTrafficBar(pct: Float, modifier: Modifier = Modifier) {
                         )
                 )
             }
+        }
+    }
+}
+
+private fun homeTitle(s: ConnectUiState, t: (String, String, String) -> String) = when {
+    s.connected -> {
+        val name = s.currentGeo?.displayName(Loc.lang) ?: Loc.s.connectFallbackPlace
+        t("Ты в сети: $name", "You're online: $name", "已连接：$name")
+    }
+    s.connecting -> t("Подключаем…", "Connecting…", "连接中…")
+    else -> t("Без защиты", "Not protected", "未受保护")
+}
+
+private fun homeSub(s: ConnectUiState, t: (String, String, String) -> String) = when {
+    s.connected -> t("Провайдер видит только шифр. Держит тебя в сети", "Your provider sees only ciphertext", "运营商只能看到密文")
+    s.connecting -> t("Ищем лучший путь до узла", "Finding the best path to the node", "正在寻找到节点的最佳路径")
+    else -> t("Провайдер видит всё, что ты открываешь", "Your provider sees everything you open", "运营商能看到你访问的一切")
+}
+
+
+/** Включить/отключить VPN с запросами разрешений — общий для главной и «Серверов». */
+@Composable
+internal fun rememberVpnToggle(viewModel: ConnectViewModel, connected: Boolean, connecting: Boolean): () -> Unit {
+    val context = LocalContext.current
+    val vpnPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) viewModel.startTunnel(context)
+    }
+    // На Android 13+ без рантайм-запроса уведомление службы не показывается; отказ не блокирует подключение.
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { }
+    return {
+        if (connected || connecting) {
+            viewModel.stopTunnel(context)
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+            ) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+            val prepareIntent = VpnService.prepare(context)
+            if (prepareIntent != null) vpnPermissionLauncher.launch(prepareIntent) else viewModel.startTunnel(context)
         }
     }
 }

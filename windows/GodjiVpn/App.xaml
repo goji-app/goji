@@ -41,12 +41,13 @@
                  Include="Assets\Fonts\**\*"), файлы 1:1 скопированы из Android res/font.
                  Family-имена ниже — реальные внутренние имена шрифтов (проверено через
                  System.Drawing.Text.PrivateFontCollection), не имена файлов. -->
-            <FontFamily x:Key="ManropeFamily">pack://application:,,,/Assets/Fonts/#Manrope</FontFamily>
-            <FontFamily x:Key="ManropeExtraLightFamily">pack://application:,,,/Assets/Fonts/#Manrope ExtraLight</FontFamily>
-            <FontFamily x:Key="ManropeLightFamily">pack://application:,,,/Assets/Fonts/#Manrope Light</FontFamily>
-            <FontFamily x:Key="ManropeMediumFamily">pack://application:,,,/Assets/Fonts/#Manrope Medium</FontFamily>
-            <FontFamily x:Key="ManropeSemiBoldFamily">pack://application:,,,/Assets/Fonts/#Manrope SemiBold</FontFamily>
-            <FontFamily x:Key="ManropeExtraBoldFamily">pack://application:,,,/Assets/Fonts/#Manrope ExtraBold</FontFamily>
+            <SolidColorBrush x:Key="NavFillBrush" Color="#F4F5F2"/>
+            <FontFamily x:Key="ManropeFamily">pack://application:,,,/Assets/Fonts/#Golos Text</FontFamily>
+            <FontFamily x:Key="ManropeExtraLightFamily">pack://application:,,,/Assets/Fonts/#Golos Text</FontFamily>
+            <FontFamily x:Key="ManropeLightFamily">pack://application:,,,/Assets/Fonts/#Golos Text</FontFamily>
+            <FontFamily x:Key="ManropeMediumFamily">pack://application:,,,/Assets/Fonts/#Golos Text</FontFamily>
+            <FontFamily x:Key="ManropeSemiBoldFamily">pack://application:,,,/Assets/Fonts/#Golos Text</FontFamily>
+            <FontFamily x:Key="ManropeExtraBoldFamily">pack://application:,,,/Assets/Fonts/#Golos Text</FontFamily>
             <FontFamily x:Key="InstrumentSerifFamily">pack://application:,,,/Assets/Fonts/#Instrument Serif</FontFamily>
 
             <!-- v5 «Стекло»: во всём приложении один шрифт — Manrope (как в эталоне и в Android
@@ -54,8 +55,8 @@
                  чтобы места, которые на них ссылаются, рисовали Manrope без правок. WPF видит
                  все статичные начертания Manrope одним семейством "Manrope" (ExtraLight…ExtraBold),
                  насыщенность задаётся FontWeight. -->
-            <FontFamily x:Key="SpaceGroteskFamily">pack://application:,,,/Assets/Fonts/#Manrope</FontFamily>
-            <FontFamily x:Key="JetBrainsMonoFamily">pack://application:,,,/Assets/Fonts/#Manrope</FontFamily>
+            <FontFamily x:Key="SpaceGroteskFamily">pack://application:,,,/Assets/Fonts/#Golos Text</FontFamily>
+            <FontFamily x:Key="JetBrainsMonoFamily">pack://application:,,,/Assets/Fonts/#JetBrains Mono</FontFamily>
 
             <Style TargetType="TextBlock">
                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
@@ -91,7 +92,7 @@
                             <Border Background="{TemplateBinding Background}"
                                     BorderBrush="{TemplateBinding BorderBrush}"
                                     BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="12">
+                                    CornerRadius="2">
                                 <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
                             </Border>
                         </ControlTemplate>
@@ -119,7 +120,7 @@
                         <ControlTemplate TargetType="Button">
                             <Border x:Name="Bd" Background="{TemplateBinding Background}"
                                     BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="14">
+                                    CornerRadius="2">
                                 <!-- Content обычно задаётся простой строкой ("Включить", "Продолжить через
                                      Google" и т.п.) — WPF заворачивает такую строку в свой собственный
                                      TextBlock. У этого TextBlock нет явного Style, поэтому он подхватывает
@@ -382,7 +383,7 @@
                             <Border Background="{TemplateBinding Background}"
                                     BorderBrush="{TemplateBinding BorderBrush}"
                                     BorderThickness="1"
-                                    CornerRadius="8"
+                                    CornerRadius="2"
                                     Padding="{TemplateBinding Padding}">
                                 <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle"/>
                             </Border>
@@ -401,7 +402,7 @@
                     <Setter.Value>
                         <ControlTemplate TargetType="{x:Type MenuItem}">
                             <Border x:Name="Bd" Background="{TemplateBinding Background}"
-                                    CornerRadius="6" Padding="12,7" SnapsToDevicePixels="True">
+                                    CornerRadius="2" Padding="12,7" SnapsToDevicePixels="True">
                                 <ContentPresenter ContentSource="Header" VerticalAlignment="Center"
                                                   RecognizesAccessKey="True">
                                     <ContentPresenter.Resources>

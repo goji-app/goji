@@ -1,0 +1,291 @@
+01 ГЛАВНАЯ	01 HOME	01 主页
+02 СЕРВЕРЫ	02 SERVERS	02 服务器
+03 АККАУНТ	03 ACCOUNT	03 账户
+04 НАСТРОЙКИ	04 SETTINGS	04 设置
+ узлов в подписке	 nodes in subscription	 个节点
+. Письмо идёт до минуты — загляни в «Спам».	. The email can take up to a minute — check "Spam".	。邮件最多需要一分钟，请查看“垃圾邮件”。
+DNS-резолвер	DNS resolver	DNS 解析器
+ID подписки	Subscription ID	订阅 ID
+IP для сайтов	IP for sites	网站 IP
+PDF-файл	PDF file	PDF 文件
+QR-код ссылки	Link QR code	链接二维码
+URL для теста (через прокси)	Test URL (via proxy)	测试网址（经代理）
+VPN-туннель	VPN tunnel	VPN 隧道
+VPN-ядро	VPN core	VPN 内核
+АВТОМАТИЧЕСКИ	AUTOMATIC	自动
+Аккаунт	Account	账户
+Аккаунта нет? Создадим сами, ничего заполнять не нужно. Создавая аккаунт, вы соглашаетесь с 	No account? We'll create one, nothing to fill in. By creating an account you agree to the 	没有账户？我们会自动创建，无需填写。创建账户即表示您同意
+Аккаунта нет? Создадим сами, ничего заполнять не нужно. Создавая аккаунт, вы соглашаетесь с пользовательским соглашением и политикой конфиденциальности.	No account? We'll create one, nothing to fill in. By creating an account you agree to the terms of use and the privacy policy.	没有账户？我们会自动创建，无需填写。创建账户即表示您同意用户协议和隐私政策。
+Активных	Active	活跃
+Безопасность	Security	安全
+Бонус дней	Bonus days	赠送天数
+В СЕТИ	ONLINE	在线
+ВКЛЮЧИТЬ ПРОБНЫЙ ПЕРИОД	START FREE TRIAL	开启试用
+ВКЛЮЧИТЬ	CONNECT	连接
+ОТМЕНА	CANCEL	取消
+ОТКЛЮЧИТЬ	DISCONNECT	断开
+ВОЙТИ	SIGN IN	登录
+ВЫЙТИ ИЗ АККАУНТА	SIGN OUT	退出账户
+Версии, ID подписки, код устройства, журналы	Versions, subscription ID, device code, logs	版本、订阅 ID、设备码、日志
+Версия XRAY	XRAY version	XRAY 版本
+Версия программы	App version	应用版本
+Версия программы и новые выпуски	App version and new releases	应用版本与新版本
+Включать VPN в чужих сетях	Turn VPN on in other networks	在其他网络中启用 VPN
+Вложение	Attachment	附件
+Внешний вид	Appearance	外观
+Войти по почте	Sign in by email	邮箱登录
+Где выйти в сеть	Where to go online	联网位置
+Готово	Done	完成
+ДОВЕРЕННЫЕ СЕТИ	TRUSTED NETWORKS	受信任网络
+Добавить	Add	添加
+Добавить приложение	Add app	添加应用
+Доверять	Trust	信任
+Домен	Domain	域名
+Домены, которые открываются напрямую	Domains that open directly	直连的域名
+Доступна версия 	Version available: 	可用版本：
+Если VPN оборвётся, интернет закроется, пока VPN не восстановится — без защиты ничего не уйдёт	If the VPN drops, the internet is blocked until it comes back — nothing leaves unprotected	VPN 断开时网络将被阻断，直到恢复——不会有未受保护的流量
+ЖУРНАЛЫ	LOGS	日志
+Журнал пока пуст.	The log is empty for now.	日志暂时为空。
+Журнал сети	Network log	网络日志
+Журнал сети, пинг, сайты мимо VPN	Network log, ping, sites bypassing VPN	网络日志、延迟、绕过 VPN 的网站
+Журнал хранится 7 дней и только на этом компьютере.	The log is kept for 7 days and only on this computer.	日志仅保存在此电脑上，保留 7 天。
+Загрузка обновления…	Downloading update…	正在下载更新…
+Закрыть	Close	关闭
+Идут ли IP и DNS-запросы через VPN	Whether IP and DNS requests go through the VPN	IP 与 DNS 请求是否经过 VPN
+Избранное	Favorites	收藏
+Изменения применятся после переподключения VPN	Changes apply after reconnecting the VPN	更改将在重新连接 VPN 后生效
+КУДА ОБРАТИТЬСЯ	WHERE TO ASK	联系方式
+Когда VPN работал, смены сети и сбои	When the VPN was running, network changes and failures	VPN 运行时间、网络切换与故障
+Код из письма	Code from the email	邮件中的验证码
+Код устройства	Device code	设备码
+Копировать	Copy	复制
+Копировать всё	Copy all	全部复制
+Логи приложения	App logs	应用日志
+НОВАЯ	NEW	新建
+Назад	Back	返回
+Написать в поддержку	Contact support	联系客服
+Например, sberbank.ru	For example, sberbank.ru	例如 sberbank.ru
+Например, дома — VPN выключится сам, когда компьютер подключится к этой сети	For example, home — the VPN turns off by itself when the computer joins this network	例如家里——电脑连接此网络时 VPN 会自动关闭
+Настоящий IP	Real IP	真实 IP
+Настройки	Settings	设置
+Настройки пинга	Ping settings	延迟设置
+Не удалось загрузить вопросы	Could not load the questions	无法加载问题
+Не удалось загрузить обращения	Could not load the tickets	无法加载工单
+Не удалось загрузить переписку	Could not load the conversation	无法加载对话
+Не удалось отправить сообщение	Could not send the message	无法发送消息
+Нет подключённых устройств	No connected devices	没有已连接的设备
+Новое обращение	New ticket	新建工单
+Новостей пока нет.	No news yet.	暂无新闻。
+О ПРОГРАММЕ · НАЖМИ, ЧТОБЫ СКОПИРОВАТЬ	ABOUT · CLICK TO COPY	关于 · 点击复制
+О программе	About	关于
+ОБНОВИТЬ	REFRESH	刷新
+ОПЛАТИТЬ В ЛИЧНОМ КАБИНЕТЕ	PAY IN YOUR ACCOUNT	在个人中心付款
+ОТКРЫТЬ ПОДПИСКУ	OPEN SUBSCRIPTION	打开订阅
+ОШИБКА	ERROR	错误
+Об устройстве	About device	关于设备
+Обновить	Refresh	刷新
+Обновить подписку	Refresh subscription	刷新订阅
+Обновить список серверов	Refresh server list	刷新服务器列表
+Обновления	Updates	更新
+Обращение закрыто	Ticket closed	工单已关闭
+Обращения и переписка прямо в приложении	Tickets and chat right in the app	在应用内提交工单并对话
+Ответ	Reply	回复
+Отключать VPN в доверенных сетях	Turn VPN off in trusted networks	在受信任网络中关闭 VPN
+Открыть папку	Open folder	打开文件夹
+Отмена	Cancel	取消
+Отправили на 	Sent to 	已发送至
+Отправить	Send	发送
+ПИНГ	PING	延迟
+ПОВТОРИТЬ	RETRY	重试
+ПОДПИСКА	PLAN	订阅
+ПОЛУЧИТЬ КОД	GET CODE	获取验证码
+ПОЧТА	EMAIL	邮箱
+ПРИГЛАСИ ДРУЗЕЙ	INVITE FRIENDS	邀请好友
+ПРОВЕРКА СЕРВЕРОВ	SERVER CHECK	服务器检测
+Палитра	Palette	配色
+Переименовать устройство	Rename device	重命名设备
+Перейти к обращению	Go to ticket	前往工单
+Перенести на другое устройство	Move to another device	转移到其他设备
+Пинг	Ping	延迟
+Повторить	Retry	重试
+Под защитой	Protected	受保护
+Поддержка	Support	客服
+Подключение	Connection	连接
+Подписка не продлевается сама — списаний врасплох не будет.	The subscription does not renew itself — no surprise charges.	订阅不会自动续费，不会有意外扣款。
+Пока нет вопросов	No questions yet	暂无问题
+Пока нет. Подключись к своей сети (дом, работа) и нажми «Доверять».	None yet. Connect to your network (home, work) and press "Trust".	暂无。连接你的网络（家、公司）并点击“信任”。
+Пока тихо. События появятся, когда VPN начнёт работать.	Quiet for now. Events will appear once the VPN starts working.	暂时没有事件。VPN 开始工作后会显示在这里。
+Покажи QR-код новому телефону — останется ввести код из письма	Show the QR code to a new phone — then just enter the code from the email	向新手机出示二维码——然后输入邮件中的验证码即可
+Показать ещё	Show more	显示更多
+Политика конфиденциальности	Privacy policy	隐私政策
+Почта	Email	邮箱
+Почта подтверждена	Email confirmed	邮箱已验证
+Правила Wi-Fi	Wi-Fi rules	Wi-Fi 规则
+Правила срабатывают при смене сети, пока приложение запущено — в том числе свёрнутым в трей.	Rules fire when the network changes while the app is running — including minimized to the tray.	应用运行时（包括最小化到托盘）网络切换会触发规则。
+Предыдущая страна	Previous country	上一个国家
+При подключении к любой Wi-Fi не из списка доверенных	When connecting to any Wi-Fi not on the trusted list	连接到不在受信任列表中的任何 Wi-Fi 时
+Приглашено	Invited	已邀请
+Приложение	App	应用
+Приложения мимо VPN	Apps bypassing VPN	绕过 VPN 的应用
+Применить	Apply	应用
+Пришлём код из шести цифр. Пароль не нужен. Первые 3 дня бесплатно.	We'll send a six-digit code. No password. First 3 days are free.	我们会发送六位验证码，无需密码。前 3 天免费。
+Проверить	Check	检测
+Проверить обновления	Check for updates	检查更新
+Проверить пинг	Check ping	检测延迟
+Проверить пинг всех серверов	Check ping of all servers	检测所有服务器延迟
+Проверить утечки	Check for leaks	检测泄漏
+Проверка обновлений…	Checking for updates…	正在检查更新…
+Проверка утечек	Leak check	泄漏检测
+Проверка утечек IP и DNS	IP and DNS leak check	IP 与 DNS 泄漏检测
+Проверяем…	Checking…	检测中…
+Программа приглашений пока недоступна.	The referral program is not available yet.	邀请计划暂不可用。
+Программы, которые работают напрямую	Programs that work directly	直连的程序
+Продолжите переписку в существующем обращении.	Continue the conversation in the existing ticket.	请在现有工单中继续对话。
+Пропустить	Skip	跳过
+Размер шрифта	Font size	字体大小
+Разрешить	Allow	允许
+СКОРОСТЬ	SPEED	速度
+СМЕНИТЬ СЕРВЕР	CHANGE SERVER	更换服务器
+СОБЫТИЯ	EVENTS	事件
+СООБЩЕНИЕ	MESSAGE	消息
+Сайты мимо VPN	Sites bypassing VPN	绕过 VPN 的网站
+Сбои	Failures	故障
+Скачать и установить	Download and install	下载并安装
+Скачать обновление	Download update	下载更新
+Следующая страна	Next country	下一个国家
+Соглашение	Terms	协议
+Сообщение…	Message…	消息…
+Список пуст — весь трафик идёт через VPN.	The list is empty — all traffic goes through the VPN.	列表为空——所有流量都经过 VPN。
+Список пуст — все программы работают через VPN.	The list is empty — all programs go through the VPN.	列表为空——所有程序都经过 VPN。
+Список устройств появится, когда подписка будет активна.	The device list will appear once the subscription is active.	订阅生效后将显示设备列表。
+Способ пинга	Ping method	延迟检测方式
+Способ проверки и URL теста	Check method and test URL	检测方式与测试网址
+ТЕКУЩАЯ СЕТЬ	CURRENT NETWORK	当前网络
+ТЕМА (НЕОБЯЗАТЕЛЬНО)	SUBJECT (OPTIONAL)	主题（可选）
+Тема и размер шрифта	Theme and font size	主题与字体大小
+Тема оформления	Theme	外观主题
+Трафик к этим сайтам (и их поддоменам) пойдёт напрямую через твоего провайдера, остальное — через VPN. Удобно для банков, госуслуг и локальных сервисов, которые не любят VPN.	Traffic to these sites (and their subdomains) goes directly through your provider, the rest through the VPN. Handy for banks, government services and local sites that dislike VPNs.	访问这些网站（及其子域名）的流量将直接经由你的运营商，其余流量走 VPN。适合银行、政务和不喜欢 VPN 的本地服务。
+У вас пока нет приглашённых пользователей	You have no invited users yet	你还没有邀请任何用户
+УЗЕЛ	NODE	节点
+Убрать вложение	Remove attachment	移除附件
+Удалить	Delete	删除
+Удалить устройство	Delete device	删除设备
+Уже есть активное обращение	There is already an active ticket	已有进行中的工单
+Фото/видео	Photo/video	照片/视频
+Часто задаваемые вопросы	Frequently asked questions	常见问题
+Частые вопросы	FAQ	常见问题
+Читать полностью	Read more	阅读全文
+Что случилось? Чем подробнее — тем быстрее поможем	What happened? The more detail, the faster we help	发生了什么？越详细，我们处理越快
+Эти программы будут работать напрямую через твоего провайдера, остальное — через VPN. Удобно для банковских клиентов, игр и программ, которые не любят VPN.	These programs will work directly through your provider, the rest through the VPN. Handy for banking apps, games and programs that dislike VPNs.	这些程序将直接经由你的运营商联网，其余走 VPN。适合银行客户端、游戏和不喜欢 VPN 的程序。
+Это не похоже на адрес сайта	This doesn't look like a website address	这看起来不像网站地址
+вместе с поддоменами	including subdomains	含子域名
+до 	until 	至
+подключения	connections	连接
+политикой конфиденциальности	the privacy policy	隐私政策
+пользовательским соглашением	the terms of use	用户协议
+сбои	failures	故障
+смены сети	network changes	网络切换
+Без защиты	Unprotected	未受保护
+Подключаем…	Connecting…	正在连接…
+Ищем лучший путь до узла	Finding the best route to the node	正在寻找最佳线路
+Провайдер видит всё, что ты открываешь	Your provider sees everything you open	运营商能看到你打开的一切
+Провайдер видит только шифр. Держит тебя в сети	Your provider sees only ciphertext. Keeps you online	运营商只能看到密文，保持你在线
+Ты в сети: 	You're online: 	已连接：
+Выбрать за меня	Choose for me	自动选择
+надёжное место	a safe place	安全之地
+НЕТ ЗАЩИТЫ	NO PROTECTION	未受保护
+ПОДКЛЮЧЕНИЕ	CONNECTING	连接中
+В ТУННЕЛЕ	IN TUNNEL	隧道中
+ПРОВЕРКА ЗАПУСТИТСЯ САМА	THE CHECK WILL START BY ITSELF	将自动开始检测
+ПРОВЕРЯЕМ…	CHECKING…	检测中…
+ и 	 and 	 和 
+ МБ/с	 MB/s	 MB/秒
+Пробный период	Free trial	试用期
+Пробный период — 	Free trial — 	试用期 — 
+Подписка до 	Subscription until 	订阅至 
+ · осталось 	 · remaining 	 · 剩余 
+Устройства	Devices	设备
+Друзья	Friends	好友
+Новости	News	新闻
+Избранные	Favorites	收藏夹
+А–Я	A–Z	A–Z
+Светлая	Light	浅色
+Тёмная	Dark	深色
+Системная	System	跟随系统
+Маленький	Small	小
+Нормальный	Normal	中
+Большой	Large	大
+Через прокси · GET	Via proxy · GET	经代理 · GET
+Через прокси · HEAD	Via proxy · HEAD	经代理 · HEAD
+Серверы	Servers	服务器
+Сеть	Network	网络
+Нет доступного сервера — выберите его на вкладке «Серверы»	No server available — pick one on the "Servers" tab	没有可用服务器——请在“服务器”页选择
+Нет сети	No network	无网络
+Пробный период активирован	Free trial activated	试用已开启
+Подписка не активна	Subscription is not active	订阅未生效
+Сервер не отвечает — попробуй другой	The server isn't responding — try another	服务器无响应——请换一个
+Измеряем…	Measuring…	测量中…
+Подключись — и покажем	Connect and we'll show it	连接后即可显示
+отлично	excellent	极好
+хорошо	good	良好
+средне	fair	一般
+плохо	poor	较差
+Сервер не отвечает	Server not responding	服务器无响应
+Сегодня VPN ещё не включался	The VPN hasn't been on today	今天尚未启用 VPN
+Код отправлен на 	Code sent to 	验证码已发送至 
+Не удалось отправить код: 	Could not send the code: 	无法发送验证码：
+Войти	Sign in	登录
+Нет связи, попробуйте ещё раз	No connection, please try again	无法连接，请重试
+Неверный код: 	Wrong code: 	验证码错误：
+Отправляем…	Sending…	发送中…
+Получить код	Get code	获取验证码
+Сессия истекла — войдите снова. VPN при этом продолжает работать.	Session expired — please sign in again. The VPN keeps running.	会话已过期——请重新登录。VPN 仍在运行。
+Техническая помощь	Technical help	技术支持
+Оплата	Payment	支付
+Введите сообщение	Enter a message	请输入消息
+Выберите, куда задать вопрос	Choose where to ask your question	请选择咨询类别
+Не удалось создать обращение	Could not create the ticket	无法创建工单
+Активен	Active	有效
+Неактивен	Inactive	未生效
+Показать все	Show all	显示全部
+Свернуть	Collapse	收起
+Показать все новости	Show all news	显示全部新闻
+Подробнее	More	详情
+Сохранить	Save	保存
+Название	Name	名称
+Удаление устройства	Delete device	删除设备
+На пробном и бесплатном тарифах удалить устройство можно только через поддержку. Обратитесь к нам — мы поможем.	On the trial and free plans a device can only be removed through support. Contact us — we'll help.	试用和免费套餐只能通过客服删除设备。请联系我们——我们会协助。
+Вы уверены, что хотите удалить это устройство? Это действие нельзя отменить.	Are you sure you want to delete this device? This cannot be undone.	确定要删除此设备吗？此操作无法撤销。
+Вход на другом устройстве	Sign in on another device	在其他设备上登录
+На новом устройстве открой Goji → «Войти по QR-коду» и наведи камеру на код. На твою почту придёт код — введи его там. Устройство займёт одно место в лимите подписки.	On the new device open Goji → "Sign in with QR code" and point the camera at the code. A code will arrive by email — enter it there. The device takes one slot of the subscription limit.	在新设备上打开 Goji →“二维码登录”，对准此码。验证码将发送到你的邮箱，在新设备输入即可。该设备将占用一个订阅名额。
+В коде только адрес почты: без кода из письма по нему не войти.	The code contains only your email address: it can't be used to sign in without the emailed code.	二维码中只有邮箱地址：没有邮件验证码无法登录。
+Не удалось открыть QR-код	Could not open the QR code	无法打开二维码
+Проверь интернет и попробуй ещё раз.	Check your internet and try again.	请检查网络后重试。
+Понятно	Got it	知道了
+Пригласи друга	Invite a friend	邀请好友
+Друг наводит камеру телефона на код и сразу открывает твою пригласительную ссылку.	A friend points their phone camera at the code and instantly opens your invitation link.	好友用手机扫描此码即可打开你的邀请链接。
+проверить	check	检测
+недоступен	unavailable	不可用
+Не удалось обновить подписку — проверьте соединение	Could not refresh the subscription — check your connection	无法刷新订阅——请检查网络
+Подписка обновлена	Subscription refreshed	订阅已刷新
+Всё защищено	All protected	一切受保护
+Найдена утечка	Leak found	发现泄漏
+VPN выключен	VPN is off	VPN 已关闭
+Не удалось проверить	Could not check	无法检测
+Сайты видят IP сервера VPN, DNS-запросы тоже идут через туннель.	Sites see the VPN server's IP, and DNS requests also go through the tunnel.	网站看到的是 VPN 服务器 IP，DNS 请求也经过隧道。
+Сайты и провайдер видят твой настоящий IP. Включи VPN и проверь ещё раз.	Sites and your provider see your real IP. Turn on the VPN and check again.	网站和运营商能看到你的真实 IP。请开启 VPN 后重试。
+Через туннель не пришёл ответ. Проверь соединение и попробуй ещё раз.	No response came through the tunnel. Check the connection and try again.	隧道无响应。请检查连接后重试。
+Сайты видят твой настоящий IP.	Sites see your real IP.	网站能看到你的真实 IP。
+Не удалось связаться с личным кабинетом. Проверьте интернет и нажмите «Обновить».	Could not reach your account. Check your internet and press "Refresh".	无法连接个人中心。请检查网络并点击“刷新”。
+Сегодня	Today	今天
+Вчера	Yesterday	昨天
+Сейчас не Wi-Fi	Not on Wi-Fi now	当前未连接 Wi-Fi
+Имя сети скрыто	Network name hidden	网络名称已隐藏
+Доверенная сеть	Trusted network	受信任网络
+Чужая сеть	Untrusted network	不受信任网络
+Приложение обновлено	App updated	应用已更新
+ из 	 of 	 / 
+Страница 	Page 	页 
+УСТРОЙСТВА	DEVICES	设备
+Журнал сети, пинг, Wi-Fi, сайты мимо VPN	Network log, ping, Wi-Fi, sites bypassing VPN	网络日志、延迟、Wi-Fi、绕过 VPN 的网站
+Действия с устройством	Device actions	设备操作

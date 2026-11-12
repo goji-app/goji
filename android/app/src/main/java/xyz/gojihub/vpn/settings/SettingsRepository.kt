@@ -49,6 +49,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
     private val pingTestUrlKey = stringPreferencesKey("ping_test_url")
     private val darkThemeKey = booleanPreferencesKey("dark_theme_enabled") // legacy, см. themeMode ниже
     private val themeModeKey = stringPreferencesKey("theme_mode")
+    private val paletteKey = stringPreferencesKey("palette_id")
     private val appLanguageKey = stringPreferencesKey("app_language")
     private val logLevelKey = stringPreferencesKey("log_level")
     private val fontSizeKey = stringPreferencesKey("font_size_preset")
@@ -107,6 +108,12 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         context.dataStore.edit { it[themeModeKey] = mode.name }
     }
     suspend fun themeModeNow(): ThemeMode = themeMode.first()
+
+    suspend fun paletteIdNow(): String =
+        context.dataStore.data.first()[paletteKey] ?: xyz.gojihub.vpn.ui.theme.Palettes.DEFAULT_ID
+    suspend fun setPaletteId(id: String) {
+        context.dataStore.edit { it[paletteKey] = id }
+    }
 
     val appLanguage: Flow<AppLanguage> = context.dataStore.data.map { AppLanguage.fromCode(it[appLanguageKey]) }
     suspend fun setAppLanguage(language: AppLanguage) {

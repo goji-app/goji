@@ -47,9 +47,19 @@ import xyz.gojihub.vpn.settings.PingMethod
 import xyz.gojihub.vpn.ui.theme.FontSizePreset
 import xyz.gojihub.vpn.ui.theme.NewBadge
 import xyz.gojihub.vpn.ui.theme.ThemeMode
+import xyz.gojihub.vpn.ui.theme.Palettes
+import xyz.gojihub.vpn.ui.theme.light
+import xyz.gojihub.vpn.ui.theme.dark
+import xyz.gojihub.vpn.ui.theme.localName
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import xyz.gojihub.vpn.ui.theme.GodjiColors
 import xyz.gojihub.vpn.ui.util.BackButton
 import xyz.gojihub.vpn.ui.theme.SpaceGroteskFamily
+import xyz.gojihub.vpn.ui.theme.MonoFamily
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import xyz.gojihub.vpn.ui.theme.godjiCard
 import xyz.gojihub.vpn.ui.util.LogViewerDialog
 import xyz.gojihub.vpn.ui.util.RichContent
@@ -86,16 +96,15 @@ fun SettingsScreen(
     Column(
         Modifier
             .fillMaxSize()
-            .background(GodjiColors.Background)
             .verticalScroll(rememberScrollState())
-            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(start = 20.dp, top = 24.dp, end = 20.dp, bottom = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         if (page == SettingsPage.MAIN) {
             Text(
                 Loc.s.settingsTitle, color = GodjiColors.TextPrimary, fontFamily = SpaceGroteskFamily,
-                fontWeight = FontWeight.Bold, fontSize = 26.sp, lineHeight = 28.sp, letterSpacing = (-0.6).sp,
-                modifier = Modifier.padding(start = 4.dp, end = 4.dp, bottom = 6.dp)
+                fontWeight = FontWeight.SemiBold, fontSize = 30.sp, lineHeight = 32.sp, letterSpacing = (-0.02).em,
+                modifier = Modifier.padding(bottom = 10.dp)
             )
             RefCard {
                 LinkRow(Loc.s.settingsAppearance, Loc.f.setAppearanceDesc) { page = SettingsPage.APPEARANCE }
@@ -118,16 +127,16 @@ fun SettingsScreen(
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .height(46.dp)
+                    .height(56.dp)
                     .scale(outScale.value)
-                    .godjiCard(RoundedCornerShape(24.dp))
-                    .clip(RoundedCornerShape(24.dp))
+                    .border(1.dp, GodjiColors.OutlineVariant, RoundedCornerShape(2.dp))
+                    .clip(RoundedCornerShape(2.dp))
                     .clickable(interactionSource = outInteraction, indication = null, role = Role.Button) {
                         confirmLogout = true
                     },
                 contentAlignment = Alignment.Center
             ) {
-                Text(Loc.s.settingsLogout, color = GodjiColors.Danger, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Text(Loc.s.settingsLogout.uppercase(), color = GodjiColors.Danger, fontFamily = MonoFamily, fontWeight = FontWeight.Bold, fontSize = 14.sp, letterSpacing = 0.06.em)
             }
             if (confirmLogout) {
                 androidx.compose.material3.AlertDialog(
@@ -158,7 +167,7 @@ fun SettingsScreen(
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(2.dp))
                     .clickable { viewModel.clearDeleteAccountError(); confirmDelete = true }
                     .padding(vertical = 10.dp)
             )
@@ -206,7 +215,7 @@ fun SettingsScreen(
                     SettingsPage.ABOUT -> Loc.s.settingsAbout
                     SettingsPage.MAIN -> ""
                 },
-                color = GodjiColors.TextPrimary, fontFamily = SpaceGroteskFamily, fontWeight = FontWeight.SemiBold, fontSize = 24.sp
+                color = GodjiColors.TextPrimary, fontFamily = SpaceGroteskFamily, fontWeight = FontWeight.SemiBold, fontSize = 30.sp
             )
         }
 
@@ -225,6 +234,8 @@ fun SettingsScreen(
                     selectedIndex = ThemeMode.entries.indexOf(state.themeMode),
                     onSelect = { viewModel.setThemeMode(ThemeMode.entries[it]) }
                 )
+                Hair()
+                PaletteGrid(state.paletteId, viewModel::setPalette)
                 Hair()
                 SegmentedRow(
                     title = Loc.s.settingsLanguage, subtitle = Loc.s.settingsLanguageDesc,
@@ -302,8 +313,8 @@ fun SettingsScreen(
                     Column(
                         Modifier
                             .fillMaxWidth()
-                            .godjiCard(RoundedCornerShape(24.dp))
-                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                            .godjiCard(RoundedCornerShape(2.dp))
+                            .padding(horizontal = 14.dp, vertical = 13.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         UpdateSectionContent(state, viewModel)
@@ -341,8 +352,8 @@ private fun LeakCheckCard(state: SettingsUiState, onCheck: () -> Unit) {
     Column(
         Modifier
             .fillMaxWidth()
-            .godjiCard(RoundedCornerShape(24.dp))
-            .padding(horizontal = 14.dp, vertical = 10.dp),
+            .godjiCard(RoundedCornerShape(2.dp))
+            .padding(horizontal = 14.dp, vertical = 13.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -353,9 +364,9 @@ private fun LeakCheckCard(state: SettingsUiState, onCheck: () -> Unit) {
                 Modifier
                     .height(32.dp)
                     .scale(if (pressed) 0.95f else 1f)
-                    .clip(RoundedCornerShape(50))
+                    .clip(RoundedCornerShape(2.dp))
                     .background(GodjiColors.Chip)
-                    .border(1.dp, GodjiColors.CardBorder, RoundedCornerShape(50))
+                    .border(1.dp, GodjiColors.CardBorder, RoundedCornerShape(2.dp))
                     .clickable(interactionSource = interaction, indication = null, enabled = !state.leakChecking, onClick = onCheck)
                     .padding(horizontal = 14.dp),
                 contentAlignment = Alignment.Center
@@ -369,6 +380,16 @@ private fun LeakCheckCard(state: SettingsUiState, onCheck: () -> Unit) {
                     Text(Loc.f.leakButton, color = GodjiColors.TealDeep, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 }
             }
+        }
+        if (report == null && !state.leakChecking) {
+            Text(
+                when (Loc.lang) {
+                    xyz.gojihub.vpn.i18n.AppLanguage.RU -> "Покажем, какой IP видят сайты и чей DNS отвечает. Если они совпадают с данными вашего провайдера — защита протекает."
+                    xyz.gojihub.vpn.i18n.AppLanguage.EN -> "We show which IP sites see and whose DNS answers. If they match your provider, protection is leaking."
+                    xyz.gojihub.vpn.i18n.AppLanguage.ZH -> "我们会显示网站看到的 IP 和响应的 DNS。若与运营商一致，说明保护存在泄漏。"
+                },
+                color = GodjiColors.TextSecondary, fontSize = 12.sp, lineHeight = 17.sp
+            )
         }
         if (report != null && !state.leakChecking) {
             val ok = report.verdict == NetworkDiagnostics.Verdict.SAFE
@@ -385,14 +406,14 @@ private fun LeakCheckCard(state: SettingsUiState, onCheck: () -> Unit) {
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(18.dp))
+                    .clip(RoundedCornerShape(2.dp))
                     .background(if (ok) GodjiColors.TealTint else GodjiColors.TerracottaTint)
                     .padding(horizontal = 12.dp, vertical = 9.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(11.dp)
             ) {
                 Box(
-                    Modifier.size(28.dp).clip(CircleShape).background(if (ok) GodjiColors.Teal else GodjiColors.Terracotta),
+                    Modifier.size(28.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(2.dp)).background(if (ok) GodjiColors.Teal else GodjiColors.Terracotta),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(if (ok) Icons.Filled.Check else Icons.Filled.PriorityHigh, contentDescription = null, tint = GodjiColors.Surface, modifier = Modifier.size(15.dp))
@@ -424,8 +445,8 @@ private fun LeakRow(label: String, value: String) {
 @Composable
 internal fun SectionLabel(title: String) {
     Text(
-        title.uppercase(), color = GodjiColors.TextMuted, fontWeight = FontWeight.SemiBold,
-        fontSize = 11.sp, letterSpacing = 1.sp,
+        title.uppercase(), color = GodjiColors.TextMuted, fontFamily = MonoFamily,
+        fontSize = 11.sp,
         modifier = Modifier.padding(start = 8.dp, top = 8.dp, end = 8.dp)
     )
 }
@@ -433,11 +454,14 @@ internal fun SectionLabel(title: String) {
 /** Стеклянная карточка раздела: радиус 24, без внутренних отступов, overflow hidden. */
 @Composable
 internal fun RefCard(content: @Composable ColumnScope.() -> Unit) {
+    val lineColor = GodjiColors.OutlineVariant
     Column(
         Modifier
             .fillMaxWidth()
-            .godjiCard(RoundedCornerShape(24.dp))
-            .clip(RoundedCornerShape(24.dp)),
+            .drawBehind {
+                drawLine(lineColor, Offset.Zero, Offset(size.width, 0f), 1.dp.toPx())
+                drawLine(lineColor, Offset(0f, size.height), Offset(size.width, size.height), 1.dp.toPx())
+            },
         content = content
     )
 }
@@ -445,22 +469,21 @@ internal fun RefCard(content: @Composable ColumnScope.() -> Unit) {
 @Composable
 // M3 Expressive (настройки Android 16): строки группы разделены зазором цвета фона — карточка
 // читается как стопка отдельных плашек.
-internal fun Hair() = HorizontalDivider(thickness = 2.dp, color = GodjiColors.SurfaceBase)
+internal fun Hair() = HorizontalDivider(thickness = 1.dp, color = GodjiColors.OutlineVariant)
 
 /** Подпись секции + карточка с внутренним padding 16 — для подэкранов (пинг, логирование). */
 @Composable
 fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
     Column {
         Text(
-            title.uppercase(), color = GodjiColors.TextMuted, fontWeight = FontWeight.SemiBold,
-            fontSize = 11.sp, letterSpacing = 1.sp,
+            title.uppercase(), color = GodjiColors.TextMuted, fontFamily = MonoFamily,
+            fontSize = 11.sp,
             modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
         )
         Column(
             Modifier
                 .fillMaxWidth()
-                .godjiCard(RoundedCornerShape(24.dp))
-                .padding(16.dp)
+                .padding(vertical = 8.dp)
         ) {
             content()
         }
@@ -470,8 +493,8 @@ fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) 
 @Composable
 internal fun RowTexts(title: String, subtitle: String?, modifier: Modifier = Modifier) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(title, color = GodjiColors.TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-        subtitle?.let { Text(it, color = GodjiColors.TextSecondary, fontWeight = FontWeight.Medium, fontSize = 11.sp, lineHeight = 15.sp) }
+        Text(title, color = GodjiColors.TextPrimary, fontWeight = FontWeight.Medium, fontSize = 15.sp)
+        subtitle?.let { Text(it, color = GodjiColors.TextSecondary, fontSize = 12.sp, lineHeight = 16.sp) }
     }
 }
 
@@ -492,7 +515,7 @@ internal fun ToggleRow(title: String, subtitle: String?, checked: Boolean, onChe
         Modifier
             .fillMaxWidth()
             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { onCheckedChange(!checked) }
-            .padding(horizontal = 14.dp, vertical = 10.dp),
+            .padding(vertical = 13.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -505,22 +528,20 @@ internal fun ToggleRow(title: String, subtitle: String?, checked: Boolean, onChe
  *  пружина cubic-bezier(.3,1.5,.5,1). */
 @Composable
 internal fun GlassSwitch(checked: Boolean, onToggle: () -> Unit) {
-    val track by animateColorAsState(if (checked) GodjiColors.Teal else GodjiColors.TrackBg, tween(300), label = "swTrack")
-    val knobX by animateDpAsState(if (checked) 15.dp else 3.dp, spring(dampingRatio = 0.55f, stiffness = 500f), label = "swKnob")
+    val knobX by animateDpAsState(if (checked) 23.dp else 3.dp, tween(150), label = "swKnob")
+    val shape = RoundedCornerShape(2.dp)
     Box(
         Modifier
-            .size(width = 54.dp, height = 32.dp)
-            .clip(RoundedCornerShape(50))
-            .background(track)
-            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onToggle)
+            .size(width = 44.dp, height = 24.dp)
+            .background(if (checked) GodjiColors.InkBtn else Color.Transparent, shape)
+            .border(1.dp, if (checked) GodjiColors.InkBtn else GodjiColors.OutlineVariant, shape)
+            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, role = Role.Switch, onClick = onToggle)
     ) {
         Box(
             Modifier
                 .offset(x = knobX, y = 3.dp)
-                .size(width = 36.dp, height = 26.dp)
-                .shadow(3.dp, RoundedCornerShape(50))
-                .clip(RoundedCornerShape(50))
-                .background(Color.White.copy(alpha = 0.95f))
+                .size(16.dp)
+                .background(if (checked) GodjiColors.Surface else GodjiColors.TextMuted)
         )
     }
 }
@@ -528,12 +549,12 @@ internal fun GlassSwitch(checked: Boolean, onToggle: () -> Unit) {
 @Composable
 internal fun LinkRow(title: String, subtitle: String?, onClick: () -> Unit) {
     Row(
-        pressableRow(onClick).padding(horizontal = 14.dp, vertical = 10.dp),
+        pressableRow(onClick).padding(vertical = 13.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         RowTexts(title, subtitle, Modifier.weight(1f))
-        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = GodjiColors.TextSecondary, modifier = Modifier.size(15.dp))
+        Text("›", color = GodjiColors.TextMuted, fontSize = 18.sp)
     }
 }
 
@@ -542,47 +563,24 @@ internal fun LinkRow(title: String, subtitle: String?, onClick: () -> Unit) {
 @Composable
 private fun SegmentedRow(title: String, subtitle: String?, options: List<String>, selectedIndex: Int, onSelect: (Int) -> Unit) {
     Column(
-        Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+        Modifier.fillMaxWidth().padding(vertical = 13.dp),
         verticalArrangement = Arrangement.spacedBy(9.dp)
     ) {
         RowTexts(title, subtitle)
-        BoxWithConstraints(
-            Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(50))
-                .background(GodjiColors.Chip)
-                .border(1.dp, GodjiColors.CardBorder, RoundedCornerShape(50))
-                .padding(3.dp)
-        ) {
-            val slotWidth = maxWidth / options.size
-            val index = selectedIndex.coerceAtLeast(0)
-            val thumbX by animateDpAsState(slotWidth * index, spring(dampingRatio = 0.62f, stiffness = 380f), label = "segThumb")
-            Box(
-                Modifier
-                    .offset(x = thumbX)
-                    .width(slotWidth)
-                    .height(32.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(GodjiColors.Thumb)
-                    .border(1.dp, GodjiColors.CardBorder, RoundedCornerShape(50))
-            )
-            Row(Modifier.fillMaxWidth()) {
-                options.forEachIndexed { i, label ->
-                    Box(
-                        Modifier
-                            .weight(1f)
-                            .height(32.dp)
-                            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { onSelect(i) },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            label,
-                            color = if (i == index) GodjiColors.TextPrimary else GodjiColors.TextSecondary,
-                            fontWeight = FontWeight.Bold, fontSize = 12.5.sp,
-                            maxLines = 1, overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            options.forEachIndexed { i, label ->
+                val on = i == selectedIndex
+                Text(
+                    label.uppercase(),
+                    color = if (on) GodjiColors.SurfaceBase else GodjiColors.TextSecondary,
+                    fontFamily = MonoFamily, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .heightIn(min = 36.dp)
+                        .then(if (on) Modifier.background(GodjiColors.Ink) else Modifier.border(1.dp, GodjiColors.OutlineVariant))
+                        .clickable(role = Role.RadioButton) { onSelect(i) }
+                        .padding(horizontal = 12.dp, vertical = 10.dp)
+                        .wrapContentHeight(Alignment.CenterVertically)
+                )
             }
         }
     }
@@ -597,9 +595,9 @@ private fun CheckUpdatesPill(onClick: () -> Unit) {
         Modifier
             .height(32.dp)
             .scale(if (pressed) 0.95f else 1f)
-            .clip(RoundedCornerShape(50))
+            .clip(RoundedCornerShape(2.dp))
             .background(GodjiColors.Chip)
-            .border(1.dp, GodjiColors.CardBorder, RoundedCornerShape(50))
+            .border(1.dp, GodjiColors.CardBorder, RoundedCornerShape(2.dp))
             .clickable(interactionSource = interaction, indication = null, onClick = onClick)
             .padding(horizontal = 14.dp),
         contentAlignment = Alignment.Center
@@ -671,12 +669,12 @@ private fun UpdateSectionContent(state: SettingsUiState, viewModel: SettingsView
                 Text(Loc.s.updateDownloading, color = GodjiColors.TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 12.5.sp)
                 Text("${state.updateDownloadProgress}%", color = GodjiColors.TextSecondary, fontWeight = FontWeight.SemiBold, fontSize = 12.5.sp)
             }
-            Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(50)).background(GodjiColors.TrackBg)) {
+            Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(2.dp)).background(GodjiColors.TrackBg)) {
                 Box(
                     Modifier
                         .fillMaxHeight()
                         .fillMaxWidth((state.updateDownloadProgress / 100f).coerceIn(0f, 1f))
-                        .clip(RoundedCornerShape(50))
+                        .clip(RoundedCornerShape(2.dp))
                         .background(Brush.verticalGradient(0f to GodjiColors.AccentGradTop, 0.55f to GodjiColors.AccentGradMid, 1f to GodjiColors.AccentGradBottom))
                 )
             }
@@ -690,9 +688,10 @@ private fun UpdateSectionContent(state: SettingsUiState, viewModel: SettingsView
                 Box(
                     Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
+                        .clip(RoundedCornerShape(2.dp))
                         .background(GodjiColors.Chip)
                         .padding(horizontal = 12.dp, vertical = 10.dp)
+                        .wrapContentHeight(Alignment.CenterVertically)
                 ) {
                     RichContent(raw = state.updateAvailable.changelog, collapsedBlocks = 5, readMoreLabel = Loc.s.plansNewsReadMore)
                 }
@@ -703,8 +702,8 @@ private fun UpdateSectionContent(state: SettingsUiState, viewModel: SettingsView
                     .fillMaxWidth()
                     .height(44.dp)
                     .scale(scale.value)
-                    .shadow(10.dp, RoundedCornerShape(50), ambientColor = GodjiColors.AccentGlow, spotColor = GodjiColors.AccentGlow)
-                    .clip(RoundedCornerShape(50))
+                    .shadow(10.dp, RoundedCornerShape(2.dp), ambientColor = GodjiColors.AccentGlow, spotColor = GodjiColors.AccentGlow)
+                    .clip(RoundedCornerShape(2.dp))
                     .background(Brush.verticalGradient(0f to GodjiColors.AccentGradTop, 0.55f to GodjiColors.AccentGradMid, 1f to GodjiColors.AccentGradBottom))
                     .clickable(interactionSource = interaction, indication = null, onClick = viewModel::downloadUpdate),
                 contentAlignment = Alignment.Center
@@ -726,6 +725,44 @@ private fun UpdateSectionContent(state: SettingsUiState, viewModel: SettingsView
                     modifier = Modifier.weight(1f)
                 )
                 CheckUpdatesPill(onClick = viewModel::checkForUpdate)
+            }
+        }
+    }
+}
+
+
+/** Сетка палитр: образец (2dp, как весь «Прибор») + подпись; выбранная — рамка 2dp. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun PaletteGrid(selectedId: String, onSelect: (String) -> Unit) {
+    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            when (Loc.lang) { AppLanguage.RU -> "Палитра"; AppLanguage.EN -> "Palette"; AppLanguage.ZH -> "配色" },
+            color = GodjiColors.TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 15.sp
+        )
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Palettes.all.forEach { p ->
+                val tones = if (GodjiColors.isDark) p.dark() else p.light()
+                val selected = p.id == selectedId
+                Column(
+                    Modifier
+                        .width(72.dp)
+                        .clickable(role = androidx.compose.ui.semantics.Role.RadioButton) { onSelect(p.id) }
+                        .semantics { this.selected = selected },
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(
+                        Modifier.size(width = 72.dp, height = 44.dp)
+                            .border(if (selected) 2.dp else 1.dp, if (selected) GodjiColors.TextPrimary else GodjiColors.Hair, RoundedCornerShape(2.dp))
+                            .padding(3.dp)
+                    ) {
+                        Box(Modifier.weight(1f).fillMaxHeight().background(tones.surface))
+                        Box(Modifier.weight(1f).fillMaxHeight().background(tones.primary))
+                        Box(Modifier.weight(1f).fillMaxHeight().background(tones.tertiary))
+                    }
+                    Text(p.localName(), color = if (selected) GodjiColors.TextPrimary else GodjiColors.TextMuted,
+                        fontSize = 11.sp, maxLines = 1, modifier = Modifier.padding(top = 4.dp))
+                }
             }
         }
     }

@@ -1,9 +1,10 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:GodjiVpn.Controls"
              xmlns:s="using:GodjiVpn.Utils"
              xmlns:c="using:GodjiVpn.Controls"
              xmlns:conv="using:GodjiVpn.Converters"
-             x:Class="GodjiVpn.Views.PlansView">
+             x:Class="GodjiVpn.Views.PlansView" x:Name="PlansRoot">
     <!-- Подписка v5 «Стекло» — как PlansView Windows-клиента. -->
     <UserControl.Styles>
         <Style Selector="ItemsControl.rows ContentPresenter:nth-child(1) Rectangle.sep">
@@ -26,7 +27,7 @@
         <Style Selector="Border.pagerBtn">
             <Setter Property="Width" Value="28"/>
             <Setter Property="Height" Value="28"/>
-            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="CornerRadius" Value="2"/>
             <Setter Property="Background" Value="{DynamicResource ChipBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
@@ -37,69 +38,58 @@
         <Style Selector="TextBlock.expiry.soon"><Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/></Style>
         <!-- Счётчик устройств в заголовке секции: лимит исчерпан — warning. -->
         <Style Selector="TextBlock.section.limit"><Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/></Style>
+        <!-- Плоская кнопка 52: моно капс, угол 2 -->
+        <Style Selector="Button.cta">
+            <Setter Property="Height" Value="52"/>
+            <Setter Property="CornerRadius" Value="2"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Background" Value="{DynamicResource InkBtnBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource InkBtnTextBrush}"/>
+        </Style>
+        <Style Selector="Button.cta:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource InkBtnBrush}"/>
+            <Setter Property="Opacity" Value="0.92"/>
+        </Style>
     </UserControl.Styles>
     <!-- Без прокрутки: сверху шапка и карточка подписки, под ними переключатель разделов
          (устройства · друзья · новости); раздел занимает оставшееся место, длинные
          списки листаются страницами (PagedItems). -->
-    <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="16">
-            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="4,0">
-                <StackPanel>
-                    <TextBlock Classes="title" Text="Твоя подписка"/>
-                    <!-- Сообщение «нет автопродления» — контрастнее: primary + SemiBold (1.0.132). -->
-                    <TextBlock Text="Продлевается вручную — списаний врасплох не будет" FontWeight="SemiBold" FontSize="{s:Fs 12}"
-                               Foreground="{DynamicResource PrimaryBrush}" Margin="0,3,0,0"/>
-                </StackPanel>
-                <!-- Подписанная кнопка — как «Обновить» на вкладке «Серверы» (2026-10-16). -->
-                <Button Grid.Column="1" Classes="bare" VerticalAlignment="Top" Margin="10,0,0,0" Command="{Binding RefreshCommand}"
-                        AutomationProperties.Name="Обновить подписку">
-                    <Border Background="{DynamicResource SurfaceContainerHighBrush}" CornerRadius="20" Height="40" Padding="14,0">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="6">
-                            <Panel Width="16" Height="16" VerticalAlignment="Center">
-                                <Path Classes="icon teal" Data="{StaticResource IconRefresh}" Width="16" Height="16" IsVisible="{Binding !Refreshing}"/>
-                                <c:Spinner Foreground="{DynamicResource TealDeepBrush}" IsVisible="{Binding Refreshing}"/>
-                            </Panel>
-                            <TextBlock Text="Обновить" FontWeight="Bold" FontSize="{s:Fs 13}" Foreground="{DynamicResource TealDeepBrush}" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Border>
-                </Button>
-            </Grid>
+    <!-- Аккаунт — десктопный макет 9a: слева колонка 260 («N дней», срок, пояснение, полоса остатка, кнопка в
+         кабинет), справа переключатель разделов и список (без прокрутки, постранично). -->
+    <Grid ColumnDefinitions="260,*" RowDefinitions="Auto,Auto,Auto,*" Margin="28,26,28,20">
+        <StackPanel Grid.Column="0" Grid.Row="0" Grid.RowSpan="4" Margin="0,0,28,0">
+            <TextBlock Text="{loc:T 'Аккаунт'}" FontWeight="SemiBold" FontSize="{s:Fs 30}" Foreground="{DynamicResource InkBrush}"/>
+            <TextBlock Text="{Binding DaysLabel}" FontWeight="SemiBold" FontSize="{s:Fs 52}" Foreground="{DynamicResource InkBrush}" Margin="0,22,0,0"/>
+            <TextBlock FontSize="{s:Fs 14}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0">
+                <Run Text="{loc:T 'до '}"/><Run Text="{Binding ExpiryLabel}"/>
+            </TextBlock>
+            <TextBlock Text="{loc:T 'Подписка не продлевается сама — списаний врасплох не будет.'}" FontSize="{s:Fs 13}"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+            <ProgressBar Minimum="0" Maximum="{Binding DaysTotal}" Value="{Binding DaysLeft}" Height="4" MinHeight="4" CornerRadius="0" Margin="0,18,0,0"
+                         Foreground="{DynamicResource InkBtnBrush}" Background="{DynamicResource OutlineVariantBrush}"/>
+            <Button Classes="cta" Margin="0,22,0,0" Command="{Binding OpenCabinetCommand}">
+                <TextBlock Text="{loc:T 'ОПЛАТИТЬ В ЛИЧНОМ КАБИНЕТЕ'}" FontFamily="{DynamicResource Mono}" FontWeight="Bold" FontSize="{s:Fs 12}"
+                           TextWrapping="Wrap" TextAlignment="Center"/>
+            </Button>
+            <Button Classes="bare" Command="{Binding RefreshCommand}" HorizontalAlignment="Left" Padding="0,14" AutomationProperties.Name="{loc:T 'Обновить подписку'}">
+                <TextBlock Text="{loc:T 'ОБНОВИТЬ'}" FontFamily="{DynamicResource Mono}" FontSize="{s:Fs 11}" Foreground="{DynamicResource InkBrush}"/>
+            </Button>
+        </StackPanel>
 
-            <c:GlassPanel Grid.Row="1" Classes="card" CornerRadius="28" Tint="{DynamicResource TealTintBrush}" Margin="0,12,0,0">
-                <Panel>
-                    <!-- Плотнее группировка (1.0.132): внутренние поля 16 → 14, отступ кнопки 12 → 10. -->
-                    <StackPanel Margin="14">
-                        <Grid ColumnDefinitions="Auto,*,Auto">
-                            <c:DaysRing Days="{Binding DaysLeft}" TotalDays="{Binding DaysTotal}"/>
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="14,0,10,0">
-                                <TextBlock FontWeight="Medium" FontSize="{s:Fs 13}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap">
-                                    <Run Text="Ваш тариф: "/><Run Text="{Binding PlanName}" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                </TextBlock>
-                                <TextBlock Classes="expiry" Classes.soon="{Binding IsExpiringSoon}" FontWeight="SemiBold" FontSize="{s:Fs 11.5}" Margin="0,2,0,0"
-                                           Text="{Binding ExpiryLabel, StringFormat='До {0}'}"/>
-                            </StackPanel>
-                            <c:ActiveBadge Grid.Column="2" Text="АКТИВНА" IsVisible="{Binding IsSubscriptionActive}"/>
-                        </Grid>
-                        <Button Classes="accent" Margin="0,10,0,0" Command="{Binding OpenCabinetCommand}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="Оплатить в личном кабинете" FontSize="{s:Fs 14}" FontWeight="Bold" Foreground="{DynamicResource SurfaceBrush}" VerticalAlignment="Center"/>
-                                <Path Classes="icon white" Data="{StaticResource IconNorthEast}" Width="13" Height="13" Margin="7,0,0,0"/>
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </Panel>
-            </c:GlassPanel>
+        <c:SegmentedControl Grid.Column="1" Grid.Row="2" ItemsSource="{Binding Sections}" DisplayMemberPath="Label"
+                            SelectedIndex="{Binding SectionIndex, Mode=TwoWay}" ItemHeight="34" LabelFontSize="12" Margin="0,0,0,0"/>
 
-        <c:SegmentedControl Grid.Row="2" ItemsSource="{Binding Sections}" DisplayMemberPath="Label"
-                            SelectedIndex="{Binding SectionIndex, Mode=TwoWay}" ItemHeight="34" LabelFontSize="12" Margin="0,12,0,0"/>
-
-        <Panel Grid.Row="3">
+        <Panel Grid.Column="1" Grid.Row="3" Margin="0,4,0,0">
             <Grid RowDefinitions="Auto,*,Auto" IsVisible="{Binding IsDevicesSection}">
                 <TextBlock Grid.Row="0" IsVisible="{Binding HasDevices}" Classes="section" Classes.limit="{Binding DevicesAtLimit}"
                            Text="{Binding DevicesSectionLabel}" Margin="8,14,8,0"/>
-                <TextBlock Grid.Row="1" Classes="muted" Text="Список устройств появится, когда подписка будет активна." FontSize="{s:Fs 12.5}" Margin="8,16,8,0" IsVisible="{Binding !HasDevices}"/>
+                <TextBlock Grid.Row="1" Classes="muted" Text="{loc:T 'Список устройств появится, когда подписка будет активна.'}" FontSize="{s:Fs 12.5}" Margin="8,16,8,0" IsVisible="{Binding !HasDevices}"/>
                 <c:GlassPanel Grid.Row="1" Classes="card" Margin="0,8,0,0" VerticalAlignment="Top" IsVisible="{Binding HasDevices}">
                     <Panel>
-                        <TextBlock Classes="muted" Text="Нет подключённых устройств" Margin="14"
+                        <TextBlock Classes="muted" Text="{loc:T 'Нет подключённых устройств'}" Margin="14"
                                    IsVisible="{Binding Devices.Count, Converter={x:Static conv:Conv.IsZero}}"/>
                         <c:PagedItems ItemsSource="{Binding Devices}">
                             <c:PagedItems.ItemTemplate>
@@ -113,16 +103,16 @@
                                                            TextTrimming="CharacterEllipsis" IsVisible="{Binding Subtitle, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                                             </StackPanel>
                                             <c:Spinner Grid.Column="1" IsVisible="{Binding IsBusy}"/>
-                                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" IsVisible="{Binding !IsBusy}">
-                                                <Button Classes="bare" Padding="7" Margin="0,0,2,0" ToolTip.Tip="Переименовать" AutomationProperties.Name="Переименовать устройство"
-                                                        Command="{Binding $parent[UserControl].DataContext.RenameDeviceCommand}" CommandParameter="{Binding}">
-                                                    <Path Classes="icon teal" Data="{StaticResource IconEdit}" Width="16" Height="16"/>
-                                                </Button>
-                                                <Button Classes="bare" Padding="7" ToolTip.Tip="Удалить" AutomationProperties.Name="Удалить устройство"
-                                                        Command="{Binding $parent[UserControl].DataContext.DeleteDeviceCommand}" CommandParameter="{Binding}">
-                                                    <Path Classes="icon danger" Data="{StaticResource IconClose}" Width="16" Height="16"/>
-                                                </Button>
-                                            </StackPanel>
+                                            <Button Grid.Column="1" Classes="bare" Padding="10,4" VerticalAlignment="Center" IsVisible="{Binding !IsBusy}"
+                                                    AutomationProperties.Name="{loc:T 'Действия с устройством'}">
+                                                <TextBlock Text="···" FontFamily="{DynamicResource Mono}" FontWeight="Bold" FontSize="{s:Fs 18}" Foreground="{DynamicResource InkBrush}"/>
+                                                <Button.Flyout>
+                                                    <MenuFlyout Placement="BottomEdgeAlignedRight">
+                                                        <MenuItem Header="{loc:T 'Переименовать устройство'}" Command="{Binding #PlansRoot.DataContext.RenameDeviceCommand}" CommandParameter="{Binding}"/>
+                                                        <MenuItem Header="{loc:T 'Удалить устройство'}" Command="{Binding #PlansRoot.DataContext.DeleteDeviceCommand}" CommandParameter="{Binding}"/>
+                                                    </MenuFlyout>
+                                                </Button.Flyout>
+                                            </Button>
                                         </Grid>
                                     </StackPanel>
                                 </DataTemplate>
@@ -131,14 +121,14 @@
                     </Panel>
                 </c:GlassPanel>
                 <Button Grid.Row="2" Classes="bare" HorizontalAlignment="Stretch" Margin="0,12,0,0" Command="{Binding ShowTransferQrCommand}">
-                    <c:GlassPanel Classes="card" CornerRadius="24" Padding="14">
+                    <c:GlassPanel Classes="card" CornerRadius="2" Padding="14">
                         <Grid ColumnDefinitions="Auto,*,Auto">
-                            <Border Width="36" Height="36" CornerRadius="18" Background="{DynamicResource TealTintBrush}">
+                            <Border Width="36" Height="36" CornerRadius="2" Background="{DynamicResource TealTintBrush}">
                                 <Path Classes="icon teal" Data="{StaticResource IconQr}" Width="17" Height="17"/>
                             </Border>
                             <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center">
-                                <TextBlock Text="Перенести на другое устройство" FontWeight="Bold" FontSize="{s:Fs 13.5}"/>
-                                <TextBlock Classes="rowSub" Text="Покажи QR-код новому телефону — останется ввести код из письма"/>
+                                <TextBlock Text="{loc:T 'Перенести на другое устройство'}" FontWeight="Bold" FontSize="{s:Fs 13.5}"/>
+                                <TextBlock Classes="rowSub" Text="{loc:T 'Покажи QR-код новому телефону — останется ввести код из письма'}"/>
                             </StackPanel>
                             <Path Grid.Column="2" Classes="icon secondary" Data="{StaticResource IconChevronRight}" Width="16" Height="16"/>
                         </Grid>
@@ -147,24 +137,24 @@
             </Grid>
 
             <Grid RowDefinitions="Auto,*,Auto" IsVisible="{Binding IsFriendsSection}">
-                <TextBlock Grid.Row="0" Classes="section" Text="ПРИГЛАСИ ДРУЗЕЙ" Margin="8,14,8,0" IsVisible="{Binding HasReferral}"/>
-                <TextBlock Classes="muted" Text="Программа приглашений пока недоступна." FontSize="{s:Fs 12.5}" Margin="8,16,8,0" IsVisible="{Binding !HasReferral}"/>
+                <TextBlock Grid.Row="0" Classes="section" Text="{loc:T 'ПРИГЛАСИ ДРУЗЕЙ'}" Margin="8,14,8,0" IsVisible="{Binding HasReferral}"/>
+                <TextBlock Classes="muted" Text="{loc:T 'Программа приглашений пока недоступна.'}" FontSize="{s:Fs 12.5}" Margin="8,16,8,0" IsVisible="{Binding !HasReferral}"/>
                 <c:GlassPanel Grid.Row="1" Classes="card" Padding="14" Margin="0,8,0,0" VerticalAlignment="Top" IsVisible="{Binding HasReferral}">
                     <Grid RowDefinitions="Auto,Auto,Auto,Auto,*">
-                        <Border Height="44" Padding="14,0,6,0" CornerRadius="22" Background="{DynamicResource ChipBrush}"
+                        <Border Height="44" Padding="14,0,6,0" CornerRadius="2" Background="{DynamicResource ChipBrush}"
                                 BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
                             <Grid ColumnDefinitions="*,Auto,Auto">
                                 <TextBlock Text="{Binding Referral.Link}" FontWeight="SemiBold" FontSize="{s:Fs 12.5}" TextTrimming="CharacterEllipsis"
                                            VerticalAlignment="Center" Margin="0,0,10,0"/>
                                 <Button Grid.Column="1" Classes="bare" Command="{Binding ShowReferralQrCommand}" VerticalAlignment="Center"
                                         Width="32" Height="32" Margin="0,0,6,0" ToolTip.Tip="QR-код ссылки">
-                                    <Border CornerRadius="16" Background="{DynamicResource ThumbBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
+                                    <Border CornerRadius="2" Background="{DynamicResource ThumbBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
                                         <Path Classes="icon teal" Data="{StaticResource IconQr}" Width="15" Height="15"/>
                                     </Border>
                                 </Button>
                                 <Button Grid.Column="2" Classes="bare" Command="{Binding CopyReferralLinkCommand}" VerticalAlignment="Center">
-                                    <Border Height="32" Padding="12,0" CornerRadius="16" Background="{DynamicResource AccentGradientBrush}">
-                                        <TextBlock Text="Копировать" FontWeight="Bold" FontSize="{s:Fs 11.5}" Foreground="{DynamicResource SurfaceBrush}" VerticalAlignment="Center"/>
+                                    <Border Height="32" Padding="12,0" CornerRadius="2" Background="{DynamicResource AccentGradientBrush}">
+                                        <TextBlock Text="{loc:T 'Копировать'}" FontWeight="Bold" FontSize="{s:Fs 11.5}" Foreground="{DynamicResource SurfaceBrush}" VerticalAlignment="Center"/>
                                     </Border>
                                 </Button>
                             </Grid>
@@ -172,27 +162,27 @@
                         <Grid Grid.Row="1" ColumnDefinitions="*,Auto,*,Auto,*" Margin="0,12,0,0">
                             <StackPanel HorizontalAlignment="Center">
                                 <TextBlock Text="{Binding Referral.TotalReferrals}" FontWeight="Bold" FontSize="{s:Fs 20}" HorizontalAlignment="Center"/>
-                                <TextBlock Classes="muted" Text="Приглашено" FontWeight="SemiBold" FontSize="{s:Fs 10.5}" HorizontalAlignment="Center"/>
+                                <TextBlock Classes="muted" Text="{loc:T 'Приглашено'}" FontWeight="SemiBold" FontSize="{s:Fs 10.5}" HorizontalAlignment="Center"/>
                             </StackPanel>
                             <Rectangle Grid.Column="1" Classes="vhair"/>
                             <StackPanel Grid.Column="2" HorizontalAlignment="Center">
                                 <TextBlock Text="{Binding Referral.ActiveReferrals}" FontWeight="Bold" FontSize="{s:Fs 20}" HorizontalAlignment="Center"/>
-                                <TextBlock Classes="muted" Text="Активных" FontWeight="SemiBold" FontSize="{s:Fs 10.5}" HorizontalAlignment="Center"/>
+                                <TextBlock Classes="muted" Text="{loc:T 'Активных'}" FontWeight="SemiBold" FontSize="{s:Fs 10.5}" HorizontalAlignment="Center"/>
                             </StackPanel>
                             <Rectangle Grid.Column="3" Classes="vhair"/>
                             <StackPanel Grid.Column="4" HorizontalAlignment="Center">
                                 <TextBlock FontWeight="Bold" FontSize="{s:Fs 20}" Foreground="{DynamicResource TealDeepBrush}" HorizontalAlignment="Center"
                                            Text="{Binding Referral.TotalBonusDays, StringFormat='+{0}'}"/>
-                                <TextBlock Classes="muted" Text="Бонус дней" FontWeight="SemiBold" FontSize="{s:Fs 10.5}" HorizontalAlignment="Center"/>
+                                <TextBlock Classes="muted" Text="{loc:T 'Бонус дней'}" FontWeight="SemiBold" FontSize="{s:Fs 10.5}" HorizontalAlignment="Center"/>
                             </StackPanel>
                         </Grid>
                         <Rectangle Grid.Row="2" Classes="hair" Margin="0,12,0,4"/>
-                        <TextBlock Grid.Row="3" Classes="muted" Text="У вас пока нет приглашённых пользователей" Margin="0,7" IsVisible="{Binding !Referral.HasEntries}"/>
+                        <TextBlock Grid.Row="3" Classes="muted" Text="{loc:T 'У вас пока нет приглашённых пользователей'}" Margin="0,7" IsVisible="{Binding !Referral.HasEntries}"/>
                         <c:PagedItems Grid.Row="4" ItemsSource="{Binding Referral.Entries}">
                             <c:PagedItems.ItemTemplate>
                                 <DataTemplate>
                                     <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,7">
-                                        <Border Width="28" Height="28" CornerRadius="14" Background="{DynamicResource ChipBrush}"
+                                        <Border Width="28" Height="28" CornerRadius="2" Background="{DynamicResource ChipBrush}"
                                                 BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
                                             <TextBlock Text="{Binding Initial}" FontWeight="Bold" FontSize="{s:Fs 11}" Foreground="{DynamicResource TextSecondaryBrush}"
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -201,7 +191,7 @@
                                                    TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="10,0"/>
                                         <TextBlock Grid.Column="2" Text="{Binding BonusLabel}" FontWeight="Bold" FontSize="{s:Fs 10.5}" Foreground="{DynamicResource TealDeepBrush}"
                                                    VerticalAlignment="Center" Margin="0,0,10,0" IsVisible="{Binding HasBonusLabel}"/>
-                                        <Border Grid.Column="3" Classes="refStatus" Classes.active="{Binding IsActive}" Height="22" CornerRadius="11"
+                                        <Border Grid.Column="3" Classes="refStatus" Classes.active="{Binding IsActive}" Height="22" CornerRadius="2"
                                                 BorderThickness="1" VerticalAlignment="Center">
                                             <StackPanel Orientation="Horizontal" Margin="7,0,9,0" VerticalAlignment="Center">
                                                 <Ellipse Width="6" Height="6" VerticalAlignment="Center"/>
@@ -217,18 +207,18 @@
             </Grid>
 
             <Grid RowDefinitions="*" IsVisible="{Binding IsNewsSection}">
-                <TextBlock Classes="muted" Text="Новостей пока нет." FontSize="{s:Fs 12.5}" Margin="8,10,8,0" IsVisible="{Binding !HasNews}"/>
+                <TextBlock Classes="muted" Text="{loc:T 'Новостей пока нет.'}" FontSize="{s:Fs 12.5}" Margin="8,10,8,0" IsVisible="{Binding !HasNews}"/>
                 <c:PagedItems ItemsSource="{Binding AllNews}">
                     <c:PagedItems.ItemTemplate>
                         <DataTemplate>
                             <!-- Компактные строки (1.0.132): поля и отступы теснее; листание «Ещё» — прежний PagedItems. -->
-                            <c:GlassPanel Classes="card" CornerRadius="20" Padding="12" Margin="0,8,0,0">
+                            <c:GlassPanel Classes="card" CornerRadius="2" Padding="12" Margin="0,8,0,0">
                                 <StackPanel>
                                     <TextBlock Classes="muted" Text="{Binding DateLabel}" FontWeight="SemiBold" FontSize="{s:Fs 10.5}"/>
                                     <SelectableTextBlock Text="{Binding Text}" FontSize="{s:Fs 12.5}" LineHeight="{s:Fs 17}" TextWrapping="Wrap" Margin="0,4,0,0"
                                                          Foreground="{DynamicResource TextPrimaryBrush}"/>
                                     <Button Classes="link" HorizontalAlignment="Left" Padding="0,4,0,0" FontSize="{s:Fs 12}" FontWeight="Bold"
-                                            Content="Читать полностью" Command="{Binding ExpandCommand}" IsVisible="{Binding CanExpand}"/>
+                                            Content="{loc:T 'Читать полностью'}" Command="{Binding ExpandCommand}" IsVisible="{Binding CanExpand}"/>
                                     <ItemsControl ItemsSource="{Binding Buttons}" Margin="0,6,0,0"
                                                   IsVisible="{Binding Buttons.Count, Converter={x:Static conv:Conv.NonZero}}">
                                         <ItemsControl.ItemsPanel>

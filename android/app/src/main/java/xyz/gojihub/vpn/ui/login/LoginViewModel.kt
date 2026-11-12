@@ -25,11 +25,17 @@ data class LoginUiState(
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val settingsRepository: xyz.gojihub.vpn.settings.SettingsRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(LoginUiState())
     val state: StateFlow<LoginUiState> = _state
+
+    fun setLanguage(language: xyz.gojihub.vpn.i18n.AppLanguage) {
+        Loc.lang = language
+        viewModelScope.launch { settingsRepository.setAppLanguage(language) }
+    }
 
     fun onEmailChange(value: String) { _state.value = _state.value.copy(email = value, error = null) }
     fun toggleEmailMode(enabled: Boolean) { _state.value = _state.value.copy(emailMode = enabled, error = null) }

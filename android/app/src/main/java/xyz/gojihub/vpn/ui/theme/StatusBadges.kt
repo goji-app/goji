@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 private fun Pill(bg: Color, height: androidx.compose.ui.unit.Dp, content: @Composable RowScope.() -> Unit) {
     Row(
-        Modifier.height(height).clip(RoundedCornerShape(50)).background(bg).padding(horizontal = 10.dp),
+        Modifier.height(height).clip(RoundedCornerShape(2.dp)).background(bg).padding(horizontal = 10.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
         content = content
     )
@@ -41,7 +41,7 @@ private fun Pill(bg: Color, height: androidx.compose.ui.unit.Dp, content: @Compo
 @Composable
 fun ActiveBadge(label: String = "АКТИВНА") {
     Pill(GodjiColors.Teal, 26.dp) {
-        Box(Modifier.size(7.dp).background(GodjiColors.Surface, CircleShape))
+        Box(Modifier.size(7.dp).background(GodjiColors.Surface, androidx.compose.foundation.shape.RoundedCornerShape(2.dp)))
         Text(label, color = GodjiColors.Surface, fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.8.sp)
     }
 }

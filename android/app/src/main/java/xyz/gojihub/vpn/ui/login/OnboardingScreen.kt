@@ -1,5 +1,13 @@
 package xyz.gojihub.vpn.ui.login
 
+import xyz.gojihub.vpn.ui.theme.MonoFamily
+import androidx.compose.ui.unit.em
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.ui.semantics.Role
 import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -53,84 +61,61 @@ fun OnboardingScreen(onDone: () -> Unit) {
     var page by rememberSaveable { mutableIntStateOf(0) }
     val last = page == pages.lastIndex
 
-    GlassBackdrop {
-        Column(
-            Modifier.fillMaxSize().padding(start = 18.dp, top = 16.dp, end = 18.dp, bottom = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Row(
-                Modifier.godjiGlassPill().padding(start = 5.dp, top = 5.dp, end = 13.dp, bottom = 5.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(9.dp)
-            ) {
-                Box(Modifier.size(30.dp).clip(CircleShape).background(GodjiColors.Ink), contentAlignment = Alignment.Center) {
-                    Image(painterResource(R.drawable.ic_notification), contentDescription = null, modifier = Modifier.size(19.dp))
-                }
-                Text("Goji", color = GodjiColors.TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-            }
-
-            Box(Modifier.fillMaxWidth().weight(1f).heightIn(min = 200.dp)) {
-                GojiGlobe(
-                    status = "off", node = null, satellites = true,
-                    modifier = Modifier.layout { measurable, constraints ->
-                        val dx = 18.dp.roundToPx()
-                        val dy = 20.dp.roundToPx()
-                        val placeable = measurable.measure(
-                            Constraints.fixed(constraints.maxWidth + dx * 2, constraints.maxHeight + dy * 2)
-                        )
-                        layout(constraints.maxWidth, constraints.maxHeight) { placeable.place(-dx, -dy) }
-                    }
+    // Макет 9a «Знакомство»: «Пропустить», панель с огромным кодом, заголовок, текст, три сегмента и кнопка.
+    val codes = listOf("DE", "LTE", "0")
+    val captions = listOf("СТРАНА, ИЗ КОТОРОЙ ТЫ ВЫХОДИШЬ В СЕТЬ", "РОССИЙСКИЕ УЗЛЫ, КОГДА МОБИЛЬНУЮ СВЯЗЬ ГЛУШАТ", "БЕЗ ПАРОЛЯ И АВТОСПИСАНИЙ")
+    Column(Modifier.fillMaxSize().background(GodjiColors.SurfaceBase).statusBarsPadding()) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), horizontalArrangement = Arrangement.End) {
+            Text(
+                if (last) "" else Loc.f.onboardingSkip, color = GodjiColors.TextSecondary, fontSize = 14.sp,
+                modifier = Modifier.heightIn(min = 48.dp).clickable(enabled = !last, role = Role.Button, onClick = onDone).padding(vertical = 14.dp)
+            )
+        }
+        Box(Modifier.fillMaxWidth().height(230.dp).background(GodjiColors.SecondaryContainer), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    codes[page], color = GodjiColors.OnSecondaryContainer, fontFamily = SpaceGroteskFamily, fontWeight = FontWeight.Bold,
+                    fontSize = 120.sp, lineHeight = 120.sp, letterSpacing = (-0.06).em, maxLines = 1, softWrap = false
+                )
+                Text(
+                    captions[page], color = GodjiColors.OnSecondaryContainer, fontFamily = MonoFamily, fontSize = 11.sp,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 10.dp)
                 )
             }
-
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .godjiGlassStrong(RoundedCornerShape(32.dp))
-                    .padding(start = 18.dp, top = 22.dp, end = 18.dp, bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                val (title, body) = pages[page]
-                Text(title, color = GodjiColors.TextPrimary, fontFamily = SpaceGroteskFamily, fontWeight = FontWeight.SemiBold, fontSize = 28.sp, lineHeight = 31.sp)
-                Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                    body.lines().filter { it.isNotBlank() }.forEach { line ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Box(Modifier.padding(top = 7.dp).size(6.dp).clip(CircleShape).background(GodjiColors.Teal))
-                            Text(line, color = GodjiColors.TextPrimary, fontWeight = FontWeight.Medium, fontSize = 14.sp, lineHeight = 19.sp)
-                        }
-                    }
-                }
-
-                // Точки страниц: «1 из 3» — для экранного диктора.
-                Row(
-                    Modifier.fillMaxWidth().semantics { contentDescription = "${page + 1} / ${pages.size}" },
-                    horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)
-                ) {
-                    pages.indices.forEach { i ->
-                        Box(Modifier.height(6.dp).width(if (i == page) 18.dp else 6.dp).clip(CircleShape)
-                            .background(if (i == page) GodjiColors.TealDeep else GodjiColors.Hair))
-                    }
-                }
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (!last) {
-                        TextButton(onClick = onDone, modifier = Modifier.heightIn(min = 48.dp)) {
-                            Text(Loc.f.onboardingSkip, color = GodjiColors.TextSecondary, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                        }
-                    }
-                    Spacer(Modifier.weight(1f))
-                    val (interaction, scale) = rememberPressScale()
-                    Button(
-                        onClick = { if (last) onDone() else page++ },
-                        interactionSource = interaction,
-                        colors = ButtonDefaults.buttonColors(containerColor = GodjiColors.Ink),
-                        shape = RoundedCornerShape(50),
-                        modifier = Modifier.height(52.dp).scale(scale.value)
-                    ) {
-                        Text(if (last) Loc.f.onboardingStart else Loc.f.onboardingNext, color = GodjiColors.Surface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                    }
-                }
+        }
+        val (title, body) = pages[page]
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)) {
+            Text(
+                title, color = GodjiColors.Ink, fontFamily = SpaceGroteskFamily, fontWeight = FontWeight.SemiBold,
+                fontSize = 30.sp, lineHeight = 32.sp, letterSpacing = (-0.02).em, modifier = Modifier.padding(top = 26.dp)
+            )
+            body.lines().filter { it.isNotBlank() }.forEach { line ->
+                Text(line, color = GodjiColors.TextSecondary, fontSize = 15.sp, lineHeight = 22.sp, modifier = Modifier.padding(top = 10.dp))
             }
+        }
+        // «1 из 3» — для экранного диктора.
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 16.dp).semantics { contentDescription = "${page + 1} / ${pages.size}" },
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            pages.indices.forEach { i ->
+                Box(Modifier.weight(1f).height(2.dp).background(if (i == page) GodjiColors.Ink else GodjiColors.OutlineVariant))
+            }
+        }
+        Box(
+            Modifier
+                .padding(start = 20.dp, end = 20.dp, bottom = 24.dp)
+                .navigationBarsPadding()
+                .fillMaxWidth().heightIn(min = 56.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(GodjiColors.InkBtn)
+                .clickable(role = Role.Button) { if (last) onDone() else page++ },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                (if (last) Loc.f.onboardingStart else Loc.f.onboardingNext).uppercase(),
+                color = GodjiColors.Surface, fontFamily = MonoFamily, fontWeight = FontWeight.Bold, fontSize = 14.sp, letterSpacing = 0.06.em
+            )
         }
     }
 }

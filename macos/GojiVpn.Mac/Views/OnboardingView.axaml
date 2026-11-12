@@ -1,67 +1,83 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:GodjiVpn.Controls"
              xmlns:s="using:GodjiVpn.Utils"
              xmlns:c="using:GodjiVpn.Controls"
              x:Class="GodjiVpn.Views.OnboardingView">
-    <!-- Первый запуск — три экрана до входа, в стиле экрана входа (как Windows/Android/iOS). -->
+    <!-- Знакомство — макет 9a: «Пропустить», панель «шалфей» с огромным кодом, заголовок, текст, три сегмента и кнопка. -->
     <UserControl.Styles>
-        <Style Selector="Border.dot">
-            <Setter Property="Width" Value="6"/>
-            <Setter Property="Height" Value="6"/>
-            <Setter Property="CornerRadius" Value="3"/>
-            <Setter Property="Margin" Value="3,0"/>
-            <Setter Property="Background" Value="{DynamicResource HairBrush}"/>
+        <!-- Поле только с нижней линией (макет 9a «Вход») -->
+        <Style Selector="TextBox.line">
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="Foreground" Value="{DynamicResource InkBrush}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="CornerRadius" Value="0"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource InkBrush}"/>
+            <Setter Property="Padding" Value="0,0,0,12"/>
         </Style>
-        <Style Selector="Border.dot.active">
-            <Setter Property="Width" Value="18"/>
-            <Setter Property="Background" Value="{DynamicResource TealDeepBrush}"/>
+        <Style Selector="TextBox.line:pointerover /template/ Border#PART_BorderElement, TextBox.line:focus /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource InkBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        </Style>
+        <!-- Плоская кнопка 56: моно капс, угол 2 -->
+        <Style Selector="Button.cta">
+            <Setter Property="Height" Value="56"/>
+            <Setter Property="CornerRadius" Value="2"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Background" Value="{DynamicResource InkBtnBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource InkBtnTextBrush}"/>
+            <Setter Property="FontFamily" Value="{DynamicResource Mono}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+        <Style Selector="Button.cta:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource InkBtnBrush}"/>
+            <Setter Property="Opacity" Value="0.92"/>
+        </Style>
+        <Style Selector="Button.cta:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource InkBtnBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource InkBtnTextBrush}"/>
+            <Setter Property="Opacity" Value="0.5"/>
         </Style>
     </UserControl.Styles>
-    <Grid RowDefinitions="Auto,*,Auto" Margin="18,16,18,20">
-        <c:Globe Grid.Row="0" Grid.RowSpan="2" Satellites="True" RadiusFactor="0.34" Margin="-18,-16,-18,-8"/>
 
-        <c:GlassPanel Classes="pill" HorizontalAlignment="Left" Padding="5,5,13,5">
-            <StackPanel Orientation="Horizontal">
-                <Border Width="30" Height="30" CornerRadius="15" Background="{DynamicResource InkBrush}">
-                    <Image Source="avares://GojiVpn/Assets/Images/logo.png" Width="20" Height="20"/>
-                </Border>
-                <TextBlock Text="Goji" FontWeight="Bold" FontSize="{s:Fs 15}" VerticalAlignment="Center" Margin="9,0,0,0"/>
-            </StackPanel>
-        </c:GlassPanel>
-
-        <c:GlassPanel Grid.Row="2" Classes="strong" CornerRadius="32" Margin="0,12,0,0">
-            <StackPanel Margin="18,22,18,16">
-                <TextBlock Text="{Binding Current.Title}" FontWeight="SemiBold" FontSize="{s:Fs 28}" LineHeight="{s:Fs 31}" TextWrapping="Wrap"/>
-                <ItemsControl ItemsSource="{Binding Current.Points}" Margin="0,14,0,0">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Grid ColumnDefinitions="Auto,*" Margin="0,0,0,9">
-                                <Ellipse Width="6" Height="6" Fill="{DynamicResource TealBrush}" VerticalAlignment="Top" Margin="0,7,10,0"/>
-                                <TextBlock Grid.Column="1" Text="{Binding}" FontWeight="Medium" FontSize="{s:Fs 14}" LineHeight="{s:Fs 19}" TextWrapping="Wrap"/>
-                            </Grid>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-
-                <ItemsControl ItemsSource="{Binding Dots}" HorizontalAlignment="Center" Margin="0,6,0,0">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border Classes="dot" Classes.active="{Binding}"/>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-
-                <Grid ColumnDefinitions="Auto,*" Margin="0,16,0,0">
-                    <Button Classes="bare" Command="{Binding SkipCommand}" VerticalAlignment="Center" Padding="6,12" IsVisible="{Binding !IsLast}">
-                        <TextBlock Classes="muted" Text="Пропустить" FontWeight="SemiBold" FontSize="{s:Fs 14}"/>
-                    </Button>
-                    <Button Grid.Column="1" Classes="accent" Height="52" MinWidth="150" Padding="24,0" FontSize="{s:Fs 15}"
-                            HorizontalAlignment="Right" Content="{Binding NextLabel}" Command="{Binding NextCommand}"/>
-                </Grid>
-            </StackPanel>
-        </c:GlassPanel>
-    </Grid>
+    <Panel Background="{DynamicResource BgSolidBrush}">
+        <StackPanel Width="460" VerticalAlignment="Center">
+            <Button Classes="bare" Command="{Binding SkipCommand}" HorizontalAlignment="Right" Padding="0,8" IsVisible="{Binding !IsLast}">
+                <TextBlock Text="{loc:T 'Пропустить'}" FontSize="{s:Fs 14}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+            </Button>
+            <Border Height="180" Background="{DynamicResource SecondaryContainerBrush}" Margin="0,6,0,0">
+                <StackPanel VerticalAlignment="Center">
+                    <c:CountryCodeText Text="{Binding Code}" MaxFontSize="100" Centered="True" Fill="{DynamicResource OnSecondaryContainerBrush}"/>
+                    <TextBlock Text="{Binding CodeCaption}" FontFamily="{DynamicResource Mono}" FontSize="{s:Fs 11}" TextAlignment="Center"
+                               TextWrapping="Wrap" Foreground="{DynamicResource OnSecondaryContainerBrush}" Margin="16,12,16,0"/>
+                </StackPanel>
+            </Border>
+            <TextBlock Text="{Binding Current.Title}" FontWeight="SemiBold" FontSize="{s:Fs 30}" TextWrapping="Wrap"
+                       Foreground="{DynamicResource InkBrush}" Margin="0,22,0,0"/>
+            <ItemsControl ItemsSource="{Binding Current.Points}" Margin="0,2,0,0">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}" FontSize="{s:Fs 15}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <ItemsControl ItemsSource="{Binding Dots}" Margin="0,22,0,0" Focusable="False">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><UniformGrid Rows="1"/></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Classes="seg" Classes.on="{Binding}" Height="2" Margin="0,0,6,0" Background="{DynamicResource OutlineVariantBrush}"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Button Classes="cta" Margin="0,16,0,0" Content="{Binding NextLabelUpper}" Command="{Binding NextCommand}"/>
+        </StackPanel>
+    </Panel>
 </UserControl>

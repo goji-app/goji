@@ -55,7 +55,7 @@ fun SupportListScreen(
             Modifier
                 .fillMaxWidth()
                 .scale(newScale.value)
-                .clip(RoundedCornerShape(50))
+                .clip(RoundedCornerShape(2.dp))
                 .background(GodjiColors.Ink)
                 .clickable(interactionSource = newInteraction, indication = androidx.compose.foundation.LocalIndication.current) { onNewTicket() }
                 .padding(vertical = 10.dp),
@@ -73,7 +73,7 @@ fun SupportListScreen(
         )
 
         Row(
-            Modifier.fillMaxWidth().background(GodjiColors.Chip, RoundedCornerShape(16.dp)).padding(5.dp),
+            Modifier.fillMaxWidth().background(GodjiColors.Chip, RoundedCornerShape(2.dp)).padding(5.dp),
             horizontalArrangement = Arrangement.spacedBy(5.dp)
         ) {
             SupportTab(Loc.s.support.supportTabOpen, selected = state.tab == "open", modifier = Modifier.weight(1f)) { viewModel.selectTab("open") }
@@ -135,7 +135,7 @@ private fun SupportTab(label: String, selected: Boolean, modifier: Modifier = Mo
     Box(
         modifier
             .height(34.dp)
-            .clip(RoundedCornerShape(50))
+            .clip(RoundedCornerShape(2.dp))
             .background(bg)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
@@ -163,7 +163,7 @@ private fun TicketRow(ticket: SupportTicketUi, onClick: () -> Unit) {
         }
         if (ticket.unreadCount > 0) {
             Box(
-                Modifier.clip(RoundedCornerShape(50)).background(GodjiColors.Danger).padding(horizontal = 7.dp, vertical = 3.dp)
+                Modifier.clip(RoundedCornerShape(2.dp)).background(GodjiColors.Danger).padding(horizontal = 7.dp, vertical = 3.dp)
             ) {
                 Text(ticket.unreadCount.toString(), color = GodjiColors.Surface, fontWeight = FontWeight.Bold, fontSize = 10.sp)
             }

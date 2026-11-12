@@ -1,6 +1,7 @@
 <UserControl x:Class="GodjiVpn.Views.PlansView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:GodjiVpn.Controls"
              xmlns:s="clr-namespace:GodjiVpn.Utils"
              xmlns:controls="clr-namespace:GodjiVpn.Controls"
              xmlns:utils="clr-namespace:GodjiVpn.Utils">
@@ -9,7 +10,40 @@
     <!-- Без прокрутки: сверху шапка и карточка подписки, под ними переключатель разделов
          (устройства · друзья · новости); раздел занимает оставшееся место, длинные
          списки листаются страницами (PagedItems). -->
-    <Grid Margin="16" Background="{DynamicResource BgBrush}">
+    <UserControl.Resources>
+        <!-- Плоская кнопка: угол 2, моно капс, перенос длинной подписи -->
+        <Style x:Key="FlatCta" TargetType="Button">
+            <Setter Property="Height" Value="52"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="{DynamicResource InkBtnTextBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource InkBtnBrush}"/>
+            <Setter Property="FontFamily" Value="{StaticResource JetBrainsMonoFamily}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="{s:Fs 12}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" CornerRadius="2" Background="{TemplateBinding Background}" Padding="10,0">
+                            <TextBlock Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}" FontFamily="{TemplateBinding FontFamily}"
+                                       FontWeight="{TemplateBinding FontWeight}" FontSize="{TemplateBinding FontSize}" TextWrapping="Wrap" TextAlignment="Center"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Opacity" Value="0.92"/></Trigger>
+                            <Trigger Property="IsPressed" Value="True"><Setter TargetName="Bd" Property="Opacity" Value="0.8"/></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+    <!-- Аккаунт — десктопный макет 9a: слева колонка 260 («N дней», срок, пояснение, полоса остатка, кнопка в
+         кабинет), справа переключатель разделов и список (без прокрутки, постранично). -->
+    <Grid Margin="28,26,28,20" Background="{DynamicResource BgBrush}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="260"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -17,83 +51,29 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-            <!-- Шапка: заголовок, подзаголовок, ID-чип (копирует) + круглая кнопка обновления. -->
-            <Grid Grid.Row="0" Margin="4,0,4,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel>
-                    <TextBlock Text="Твоя подписка" Style="{StaticResource ScreenTitle}"/>
-                    <!-- Отсутствие автопродления — заметнее (1.0.132): SemiBold + primary вместо серого. -->
-                    <TextBlock Text="Продлевается вручную — списаний врасплох не будет" FontWeight="SemiBold" FontSize="{s:Fs 12}"
-                               Foreground="{DynamicResource TealDeepBrush}" Margin="0,3,0,0" TextWrapping="Wrap"/>
-                </StackPanel>
-                <!-- Подписанная кнопка — как «Обновить» на вкладке «Серверы» (2026-10-16). -->
-                <Button Grid.Column="1" Style="{StaticResource BareButton}" VerticalAlignment="Top" Margin="10,0,0,0"
-                        Command="{Binding RefreshCommand}" AutomationProperties.Name="Обновить подписку">
-                    <Border Background="{DynamicResource SurfaceContainerHighBrush}" CornerRadius="20" Height="40" Padding="14,0">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Grid Width="16" Height="16" VerticalAlignment="Center">
-                                <Path Data="{StaticResource IconRefresh}" Style="{StaticResource Icon}" Width="16" Height="16" Fill="{DynamicResource TealDeepBrush}"
-                                      Visibility="{Binding Refreshing, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
-                                <controls:Spinner Foreground="{DynamicResource TealDeepBrush}"
-                                                  Visibility="{Binding Refreshing, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                            </Grid>
-                            <TextBlock Text="Обновить" FontWeight="Bold" FontSize="{s:Fs 13}" Foreground="{DynamicResource TealDeepBrush}"
-                                       VerticalAlignment="Center" Margin="6,0,0,0"/>
-                        </StackPanel>
-                    </Border>
-                </Button>
+        <StackPanel Grid.Column="0" Grid.Row="0" Grid.RowSpan="4" Margin="0,0,28,0">
+            <TextBlock Text="{loc:T 'Аккаунт'}" FontWeight="SemiBold" FontSize="{s:Fs 30}" Foreground="{DynamicResource InkBrush}"/>
+            <TextBlock Text="{Binding DaysLabel}" FontWeight="SemiBold" FontSize="{s:Fs 52}" Foreground="{DynamicResource InkBrush}" Margin="0,22,0,0"/>
+            <TextBlock FontSize="{s:Fs 14}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0">
+                <Run Text="{loc:T 'до '}"/><Run Text="{Binding ExpiryLabel, Mode=OneWay}"/>
+            </TextBlock>
+            <TextBlock Text="{loc:T 'Подписка не продлевается сама — списаний врасплох не будет.'}" FontSize="{s:Fs 13}"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+            <Grid Height="4" Margin="0,18,0,0">
+                <Border Background="{DynamicResource OutlineVariantBrush}"/>
+                <ProgressBar Minimum="0" Maximum="{Binding DaysTotal}" Value="{Binding DaysLeft, Mode=OneWay}" Height="4" BorderThickness="0"
+                             Foreground="{DynamicResource InkBtnBrush}" Background="Transparent"/>
             </Grid>
+            <Button Style="{StaticResource FlatCta}" Margin="0,22,0,0" Content="{loc:T 'ОПЛАТИТЬ В ЛИЧНОМ КАБИНЕТЕ'}" Command="{Binding OpenCabinetCommand}"/>
+            <Button Style="{StaticResource BareButton}" Command="{Binding RefreshCommand}" HorizontalAlignment="Left" Padding="0,14" AutomationProperties.Name="{loc:T 'Обновить подписку'}">
+                <TextBlock Text="{loc:T 'ОБНОВИТЬ'}" FontFamily="{StaticResource JetBrainsMonoFamily}" FontSize="{s:Fs 11}" Foreground="{DynamicResource InkBrush}"/>
+            </Button>
+        </StackPanel>
 
-            <!-- Карточка подписки: primaryContainer r28, кольцо дней, тариф, АКТИВНА, «Оплатить в личном кабинете ↗».
-                 Строки сгруппированы плотнее (1.0.132), срок при ≤7 днях — warning SemiBold. -->
-            <controls:GlassPanel Grid.Row="1" Style="{StaticResource GlassCard}" CornerRadius="28" Tint="{DynamicResource TealTintBrush}" Margin="0,12,0,0">
-                <Grid>
-                    <StackPanel Margin="14,12">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <controls:DaysRing Days="{Binding DaysLeft}" TotalDays="{Binding DaysTotal}"/>
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="14,0,10,0">
-                                <TextBlock FontWeight="Medium" FontSize="{s:Fs 13}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap">
-                                    <Run Text="Ваш тариф: "/><Run Text="{Binding PlanName, Mode=OneWay}" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                </TextBlock>
-                                <TextBlock FontWeight="SemiBold" FontSize="{s:Fs 11.5}" Margin="0,2,0,0">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsExpiringSoon}" Value="True">
-                                                    <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                    <Run Text="До "/><Run Text="{Binding ExpiryLabel, Mode=OneWay}" FontWeight="Bold"/>
-                                </TextBlock>
-                            </StackPanel>
-                            <controls:ActiveBadge Grid.Column="2" Text="АКТИВНА" VerticalAlignment="Center"
-                                                  Visibility="{Binding IsSubscriptionActive, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                        </Grid>
-                        <Button Style="{StaticResource AccentPillButton}" Margin="0,10,0,0" Command="{Binding OpenCabinetCommand}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="Оплатить в личном кабинете" FontSize="{s:Fs 14}" FontWeight="Bold" Foreground="{DynamicResource SurfaceBrush}" VerticalAlignment="Center"/>
-                                <Path Data="{StaticResource IconNorthEast}" Style="{StaticResource Icon}" Width="13" Height="13" Fill="{DynamicResource SurfaceBrush}" Margin="7,0,0,0"/>
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </Grid>
-            </controls:GlassPanel>
+        <controls:SegmentedControl Grid.Column="1" Grid.Row="2" ItemsSource="{Binding Sections}" DisplayMemberPath="Label"
+                                   SelectedIndex="{Binding SectionIndex, Mode=TwoWay}" ItemHeight="34" LabelFontSize="12" Margin="0,0,0,0"/>
 
-        <controls:SegmentedControl Grid.Row="2" ItemsSource="{Binding Sections}" DisplayMemberPath="Label"
-                                   SelectedIndex="{Binding SectionIndex, Mode=TwoWay}" ItemHeight="34" LabelFontSize="12" Margin="0,12,0,0"/>
-
-        <Grid Grid.Row="3">
+        <Grid Grid.Column="1" Grid.Row="3" Margin="0,4,0,0">
             <Grid Visibility="{Binding IsDevicesSection, Converter={StaticResource BoolToVisibilityConverter}}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -113,12 +93,12 @@
                         </Style>
                     </TextBlock.Style>
                 </TextBlock>
-                <TextBlock Grid.Row="1" Text="Список устройств появится, когда подписка будет активна." FontWeight="Medium" FontSize="{s:Fs 12.5}" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" Margin="8,16,8,0"
+                <TextBlock Grid.Row="1" Text="{loc:T 'Список устройств появится, когда подписка будет активна.'}" FontWeight="Medium" FontSize="{s:Fs 12.5}" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" Margin="8,16,8,0"
                            Visibility="{Binding HasDevices, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
                 <controls:GlassPanel Grid.Row="1" Style="{StaticResource GlassCard}" Margin="0,8,0,0" VerticalAlignment="Top"
                                      Visibility="{Binding HasDevices, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Grid>
-                        <TextBlock Text="Нет подключённых устройств" FontWeight="Medium" FontSize="{s:Fs 12}" Foreground="{DynamicResource TextSecondaryBrush}"
+                        <TextBlock Text="{loc:T 'Нет подключённых устройств'}" FontWeight="Medium" FontSize="{s:Fs 12}" Foreground="{DynamicResource TextSecondaryBrush}"
                                    Margin="14" Visibility="{Binding Devices.Count, Converter={StaticResource InverseZeroToVisibilityConverter}}"/>
                         <controls:PagedItems ItemsSource="{Binding Devices}">
                             <controls:PagedItems.ItemTemplate>
@@ -138,19 +118,22 @@
                                             </StackPanel>
                                             <controls:Spinner Grid.Column="1" Foreground="{DynamicResource TealBrush}"
                                                               Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
-                                                        Visibility="{Binding IsBusy, Converter={StaticResource InverseBoolToVisibilityConverter}}">
-                                                <Button Style="{StaticResource BareButton}" Padding="7" Margin="0,0,2,0"
-                                                        Command="{Binding DataContext.RenameDeviceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" AutomationProperties.Name="Переименовать устройство"
-                                                        CommandParameter="{Binding}">
-                                                    <Path Data="{StaticResource IconEdit}" Style="{StaticResource Icon}" Width="16" Height="16" Fill="{DynamicResource TealDeepBrush}"/>
-                                                </Button>
-                                                <Button Style="{StaticResource BareButton}" Padding="7"
-                                                        Command="{Binding DataContext.DeleteDeviceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" AutomationProperties.Name="Удалить устройство"
-                                                        CommandParameter="{Binding}">
-                                                    <Path Data="{StaticResource IconClose}" Style="{StaticResource Icon}" Width="16" Height="16" Fill="{DynamicResource DangerBrush}"/>
-                                                </Button>
-                                            </StackPanel>
+                                            <Button Grid.Column="1" Style="{StaticResource BareButton}" Padding="10,4" VerticalAlignment="Center"
+                                                    Click="DeviceMenu_Click" Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    AutomationProperties.Name="{loc:T 'Действия с устройством'}"
+                                                    Visibility="{Binding IsBusy, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                                                <TextBlock Text="···" FontFamily="{StaticResource JetBrainsMonoFamily}" FontWeight="Bold" FontSize="{s:Fs 18}" Foreground="{DynamicResource InkBrush}"/>
+                                                <Button.ContextMenu>
+                                                    <ContextMenu>
+                                                        <MenuItem Header="{loc:T 'Переименовать устройство'}"
+                                                                  Command="{Binding PlacementTarget.Tag.RenameDeviceCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                        <MenuItem Header="{loc:T 'Удалить устройство'}"
+                                                                  Command="{Binding PlacementTarget.Tag.DeleteDeviceCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                    </ContextMenu>
+                                                </Button.ContextMenu>
+                                            </Button>
                                         </Grid>
                                     </StackPanel>
                                 </DataTemplate>
@@ -160,20 +143,20 @@
                 </controls:GlassPanel>
                 <!-- Перенос входа на другое устройство по QR: в коде почта, дальше код из письма. -->
                 <Button Grid.Row="2" Style="{StaticResource BareButton}" controls:Press.Scale="0.98" Margin="0,12,0,0" Command="{Binding ShowTransferQrCommand}"
-                        AutomationProperties.Name="Перенести на другое устройство">
-                    <controls:GlassPanel Style="{StaticResource GlassCard}" CornerRadius="24" Padding="14">
+                        AutomationProperties.Name="{loc:T 'Перенести на другое устройство'}">
+                    <controls:GlassPanel Style="{StaticResource GlassCard}" CornerRadius="2" Padding="14">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <Border Width="36" Height="36" CornerRadius="18" Background="{DynamicResource TealTintBrush}">
+                            <Border Width="36" Height="36" CornerRadius="2" Background="{DynamicResource TealTintBrush}">
                                 <Path Data="{StaticResource IconQr}" Style="{StaticResource Icon}" Width="17" Height="17" Fill="{DynamicResource TealDeepBrush}"/>
                             </Border>
                             <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center">
-                                <TextBlock Text="Перенести на другое устройство" FontWeight="Bold" FontSize="{s:Fs 13.5}"/>
-                                <TextBlock Text="Покажи QR-код новому телефону — останется ввести код из письма" FontWeight="Medium" FontSize="{s:Fs 11}"
+                                <TextBlock Text="{loc:T 'Перенести на другое устройство'}" FontWeight="Bold" FontSize="{s:Fs 13.5}"/>
+                                <TextBlock Text="{loc:T 'Покажи QR-код новому телефону — останется ввести код из письма'}" FontWeight="Medium" FontSize="{s:Fs 11}"
                                            Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0" LineHeight="{s:Fs 15.4}"/>
                             </StackPanel>
                             <Path Grid.Column="2" Data="{StaticResource IconChevronRight}" Style="{StaticResource Icon}" Width="16" Height="16"
@@ -189,9 +172,9 @@
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="ПРИГЛАСИ ДРУЗЕЙ" Style="{StaticResource SectionLabel}" Margin="8,14,8,0"
+                <TextBlock Grid.Row="0" Text="{loc:T 'ПРИГЛАСИ ДРУЗЕЙ'}" Style="{StaticResource SectionLabel}" Margin="8,14,8,0"
                            Visibility="{Binding HasReferral, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                <TextBlock Text="Программа приглашений пока недоступна." FontWeight="Medium" FontSize="{s:Fs 12.5}" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" Margin="8,16,8,0"
+                <TextBlock Text="{loc:T 'Программа приглашений пока недоступна.'}" FontWeight="Medium" FontSize="{s:Fs 12.5}" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" Margin="8,16,8,0"
                            Visibility="{Binding HasReferral, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
                 <controls:GlassPanel Grid.Row="1" Visibility="{Binding HasReferral, Converter={StaticResource BoolToVisibilityConverter}}" Style="{StaticResource GlassCard}" Padding="14" Margin="0,8,0,0" VerticalAlignment="Top">
                     <Grid>
@@ -214,14 +197,14 @@
                                            VerticalAlignment="Center" Margin="0,0,10,0"/>
                                 <!-- QR ссылки: друг сканирует камерой прямо с экрана (порт 79b3e4b). -->
                                 <Button Grid.Column="1" Style="{StaticResource BareButton}" Command="{Binding ShowReferralQrCommand}" VerticalAlignment="Center"
-                                        Width="32" Height="32" Margin="0,0,6,0" ToolTip="QR-код ссылки" AutomationProperties.Name="QR-код ссылки">
-                                    <Border CornerRadius="16" Background="{DynamicResource ThumbBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
+                                        Width="32" Height="32" Margin="0,0,6,0" ToolTip="{loc:T 'QR-код ссылки'}" AutomationProperties.Name="{loc:T 'QR-код ссылки'}">
+                                    <Border CornerRadius="2" Background="{DynamicResource ThumbBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
                                         <Path Data="{StaticResource IconQr}" Style="{StaticResource Icon}" Width="15" Height="15" Fill="{DynamicResource TealDeepBrush}"/>
                                     </Border>
                                 </Button>
                                 <Button Grid.Column="2" Style="{StaticResource BareButton}" Command="{Binding CopyReferralLinkCommand}" VerticalAlignment="Center">
                                     <controls:PillBorder Height="32" Padding="12,0" Background="{DynamicResource AccentGradientBrush}">
-                                        <TextBlock Text="Копировать" FontWeight="Bold" FontSize="{s:Fs 11.5}" Foreground="{DynamicResource SurfaceBrush}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{loc:T 'Копировать'}" FontWeight="Bold" FontSize="{s:Fs 11.5}" Foreground="{DynamicResource SurfaceBrush}" VerticalAlignment="Center"/>
                                     </controls:PillBorder>
                                 </Button>
                             </Grid>
@@ -236,23 +219,23 @@
                             </Grid.ColumnDefinitions>
                             <StackPanel HorizontalAlignment="Center">
                                 <TextBlock Text="{Binding Referral.TotalReferrals}" FontWeight="Bold" FontSize="{s:Fs 20}" HorizontalAlignment="Center"/>
-                                <TextBlock Text="Приглашено" FontWeight="SemiBold" FontSize="{s:Fs 10.5}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="{loc:T 'Приглашено'}" FontWeight="SemiBold" FontSize="{s:Fs 10.5}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
                             </StackPanel>
                             <Rectangle Grid.Column="1" Style="{StaticResource VHair}"/>
                             <StackPanel Grid.Column="2" HorizontalAlignment="Center">
                                 <TextBlock Text="{Binding Referral.ActiveReferrals}" FontWeight="Bold" FontSize="{s:Fs 20}" HorizontalAlignment="Center"/>
-                                <TextBlock Text="Активных" FontWeight="SemiBold" FontSize="{s:Fs 10.5}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="{loc:T 'Активных'}" FontWeight="SemiBold" FontSize="{s:Fs 10.5}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
                             </StackPanel>
                             <Rectangle Grid.Column="3" Style="{StaticResource VHair}"/>
                             <StackPanel Grid.Column="4" HorizontalAlignment="Center">
                                 <TextBlock FontWeight="Bold" FontSize="{s:Fs 20}" Foreground="{DynamicResource TealDeepBrush}" HorizontalAlignment="Center">
                                     <Run Text="+"/><Run Text="{Binding Referral.TotalBonusDays, Mode=OneWay}"/>
                                 </TextBlock>
-                                <TextBlock Text="Бонус дней" FontWeight="SemiBold" FontSize="{s:Fs 10.5}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="{loc:T 'Бонус дней'}" FontWeight="SemiBold" FontSize="{s:Fs 10.5}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
                             </StackPanel>
                         </Grid>
                         <Rectangle Grid.Row="2" Style="{StaticResource Hair}" Margin="0,12,0,4"/>
-                        <TextBlock Grid.Row="3" Text="У вас пока нет приглашённых пользователей" FontWeight="Medium" FontSize="{s:Fs 12}"
+                        <TextBlock Grid.Row="3" Text="{loc:T 'У вас пока нет приглашённых пользователей'}" FontWeight="Medium" FontSize="{s:Fs 12}"
                                    Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,7" TextWrapping="Wrap"
                                    Visibility="{Binding Referral.HasEntries, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
                         <controls:PagedItems Grid.Row="4" ItemsSource="{Binding Referral.Entries}">
@@ -265,7 +248,7 @@
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <Border Width="28" Height="28" CornerRadius="14" Background="{DynamicResource ChipBrush}"
+                                        <Border Width="28" Height="28" CornerRadius="2" Background="{DynamicResource ChipBrush}"
                                                 BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
                                             <TextBlock Text="{Binding Initial}" FontWeight="Bold" FontSize="{s:Fs 11}" Foreground="{DynamicResource TextSecondaryBrush}"
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -306,7 +289,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <TextBlock Text="Новостей пока нет." FontWeight="Medium" FontSize="{s:Fs 12.5}" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" Margin="8,16,8,0"
+                <TextBlock Text="{loc:T 'Новостей пока нет.'}" FontWeight="Medium" FontSize="{s:Fs 12.5}" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" Margin="8,16,8,0"
                            Visibility="{Binding HasNews, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
                 <!-- Компактные строки вместо крупных карточек (1.0.132): одна карточка со
                      строками «заголовок + дата»; полный текст и кнопки раскрываются под строкой.

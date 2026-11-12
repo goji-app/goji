@@ -32,7 +32,8 @@ struct GlassSurface: View {
     var strong = false
 
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        // Макет 9a: углы везде 2 pt — прежние радиусы 16–28 схлопнуты, сигнатура сохранена ради вызовов по всему приложению.
+        let shape = RoundedRectangle(cornerRadius: min(radius, GojiMetrics.cardRadius), style: .continuous)
         shape
             .fill(strong ? GojiColor.glassStrong : GojiColor.glass)
             .overlay {
@@ -163,32 +164,28 @@ struct PillSegmented<T: Hashable>: View {
     @Environment(\.colorScheme) private var scheme
 
     var body: some View {
-        let dark = scheme == .dark
-        HStack(spacing: 4) {
+        // Макет 9a: прямоугольные чипы — активный залит ink, остальные в рамке; моно 11 капсом.
+        HStack(spacing: 8) {
             ForEach(options, id: \.self) { option in
                 let selected = option == selection
                 Button {
                     withAnimation(.easeInOut(duration: 0.2)) { selection = option }
                 } label: {
-                    Text(label(option))
-                        .font(GojiFont.manrope(13, .bold))
-                        .foregroundStyle(selected ? GojiColor.onSecondaryContainer : GojiColor.textSecondary)
-                        .frame(maxWidth: .infinity, minHeight: 34)
-                        .background(
-                            Capsule().fill(selected ? GojiColor.secondaryContainer : .clear)
-                        )
+                    Text(label(option).uppercased())
+                        .font(GojiFont.mono(11))
+                        .foregroundStyle(selected ? GojiColor.surface : GojiColor.textSecondary)
+                        .padding(.horizontal, 10)
+                        .frame(minHeight: 36)
+                        .background(Rectangle().fill(selected ? GojiColor.textPrimary : Color.clear))
                         .overlay {
-                            if selected && dark {
-                                Capsule().strokeBorder(GojiColor.outline, lineWidth: 1)
-                            }
+                            if !selected { Rectangle().strokeBorder(GojiColor.outlineVariant, lineWidth: 1) }
                         }
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(selected ? .isSelected : [])
             }
+            Spacer(minLength: 0)
         }
-        .padding(3)
-        .background(Capsule().fill(dark ? GojiColor.outlineVariant : GojiColor.chip))
     }
 }
 

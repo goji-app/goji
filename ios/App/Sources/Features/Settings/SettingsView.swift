@@ -54,6 +54,11 @@ struct SettingsView: View {
                         .font(GojiFont.caption())
                         .foregroundStyle(GojiColor.textSecondary)
                     PillSegmented(options: ThemeMode.allCases, selection: $settings.themeMode) { $0.title }
+                    Text(AppLanguage.isRussian ? "Палитра" : "Palette")
+                        .font(GojiFont.caption())
+                        .foregroundStyle(GojiColor.textSecondary)
+                        .padding(.top, 6)
+                    PaletteGrid(selected: $settings.paletteId)
                 }
                 divider
                 Button {
@@ -150,5 +155,42 @@ struct SubScreen<Content: View>: View {
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
+    }
+}
+
+
+/// Сетка образцов палитр: фон · акцент · тёплый акцент; выбранная — рамка.
+struct PaletteGrid: View {
+    @Binding var selected: String
+    @Environment(\.colorScheme) private var scheme
+
+    var body: some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 72), spacing: 8)], alignment: .leading, spacing: 8) {
+            ForEach(Palettes.all) { palette in
+                let tones = Palettes.tones(palette, dark: scheme == .dark)
+                Button {
+                    selected = palette.id
+                    Haptics.light()
+                } label: {
+                    VStack(spacing: 4) {
+                        HStack(spacing: 0) {
+                            Rectangle().fill(Color(UIColor(argb: tones.surface)))
+                            Rectangle().fill(Color(UIColor(argb: tones.primary)))
+                            Rectangle().fill(Color(UIColor(argb: tones.tertiary)))
+                        }
+                        .frame(height: 38)
+                        .padding(3)
+                        .overlay(Rectangle().stroke(palette.id == selected ? GojiColor.textPrimary : GojiColor.outlineVariant, lineWidth: palette.id == selected ? 2 : 1))
+                        Text(palette.name)
+                            .font(GojiFont.manrope(11, .regular, relativeTo: .caption))
+                            .foregroundStyle(GojiColor.textSecondary)
+                            .lineLimit(1)
+                    }
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(palette.name)
+                .accessibilityAddTraits(palette.id == selected ? .isSelected : [])
+            }
+        }
     }
 }

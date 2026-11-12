@@ -134,9 +134,9 @@ fun BypassDomainsScreen(onBack: () -> Unit, viewModel: BypassDomainsViewModel = 
             Modifier
                 .fillMaxWidth()
                 .height(46.dp)
-                .clip(RoundedCornerShape(50))
+                .clip(RoundedCornerShape(2.dp))
                 .background(GodjiColors.Chip)
-                .border(1.dp, if (error) GodjiColors.Danger else GodjiColors.CardBorder, RoundedCornerShape(50))
+                .border(1.dp, if (error) GodjiColors.Danger else GodjiColors.CardBorder, RoundedCornerShape(2.dp))
                 .padding(start = 16.dp, end = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -157,7 +157,7 @@ fun BypassDomainsScreen(onBack: () -> Unit, viewModel: BypassDomainsViewModel = 
             Box(
                 Modifier
                     .height(34.dp)
-                    .clip(RoundedCornerShape(50))
+                    .clip(RoundedCornerShape(2.dp))
                     .background(Brush.verticalGradient(0f to GodjiColors.AccentGradTop, 0.55f to GodjiColors.AccentGradMid, 1f to GodjiColors.AccentGradBottom))
                     .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { submit() }
                     .padding(horizontal = 16.dp),
@@ -174,7 +174,7 @@ fun BypassDomainsScreen(onBack: () -> Unit, viewModel: BypassDomainsViewModel = 
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
+                    .clip(RoundedCornerShape(2.dp))
                     .background(GodjiColors.TealTint)
                     .padding(start = 14.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -184,9 +184,9 @@ fun BypassDomainsScreen(onBack: () -> Unit, viewModel: BypassDomainsViewModel = 
                 Box(
                     Modifier
                         .height(32.dp)
-                        .clip(RoundedCornerShape(50))
+                        .clip(RoundedCornerShape(2.dp))
                         .background(GodjiColors.Thumb)
-                        .border(1.dp, GodjiColors.CardBorder, RoundedCornerShape(50))
+                        .border(1.dp, GodjiColors.CardBorder, RoundedCornerShape(2.dp))
                         .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = viewModel::applyNow)
                         .padding(horizontal = 14.dp),
                     contentAlignment = Alignment.Center
@@ -217,7 +217,7 @@ fun BypassDomainsScreen(onBack: () -> Unit, viewModel: BypassDomainsViewModel = 
                         Text(Loc.f.bypassWithSubdomains, color = GodjiColors.TextSecondary, fontWeight = FontWeight.Medium, fontSize = 11.sp)
                     }
                     Box(
-                        Modifier.size(28.dp).clip(CircleShape).background(GodjiColors.Hair)
+                        Modifier.size(28.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(2.dp)).background(GodjiColors.Hair)
                             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { viewModel.remove(domain) },
                         contentAlignment = Alignment.Center
                     ) {

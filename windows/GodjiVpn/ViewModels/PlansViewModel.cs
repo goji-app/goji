@@ -69,7 +69,7 @@ public sealed class ReferralEntryItem
     public required string DisplayName { get; init; }
     public required bool IsActive { get; init; }
     public required int BonusDays { get; init; }
-    public string StatusBadge => IsActive ? "Активен" : "Неактивен";
+    public string StatusBadge => IsActive ? Loc.T("Активен") : Loc.T("Неактивен");
     public string Initial => DisplayName.Length > 0 ? DisplayName[..1].ToUpperInvariant() : "?";
     public string BonusLabel => BonusDays > 0 ? $"+{BonusDays} дн." : "";
     public bool HasBonusLabel => BonusDays > 0;
@@ -143,8 +143,11 @@ public sealed partial class PlansViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSubscriptionActive))]
     [NotifyPropertyChangedFor(nameof(IsExpiringSoon))]
+    [NotifyPropertyChangedFor(nameof(DaysLabel))]
     private int daysLeft;
     /// <summary>«АКТИВНА» — только при настоящей подписке с остатком дней (как на Android).</summary>
+    /// <summary>Крупная подпись «24 дня» (макет 9a).</summary>
+    public string DaysLabel => $"{DaysLeft} {RuPlural.Days(DaysLeft)}";
     public bool IsSubscriptionActive => DaysLeft > 0;
     /// <summary>Подписка на исходе (≤7 дней) — строка «До …» в карточке красится warning (1.0.132).</summary>
     public bool IsExpiringSoon => DaysLeft > 0 && DaysLeft <= 7;
@@ -178,7 +181,7 @@ public sealed partial class PlansViewModel : ObservableObject
     public bool HasDevices => _subscriptionId != null;
     /// <summary>"N из M" рядом с заголовком "Устройства" — DeviceLimit уже приходит с
     /// /api/subscriptions, просто раньше нигде не показывался. Пусто, если лимита нет (0).</summary>
-    public string DevicesCountLabel => DeviceLimit > 0 ? $"{Devices.Count} из {DeviceLimit}" : "";
+    public string DevicesCountLabel => DeviceLimit > 0 ? $"{Devices.Count}{Loc.T(" из ")}{DeviceLimit}" : "";
 
     public ObservableCollection<DeviceItem> Devices { get; } = new();
 
@@ -189,8 +192,8 @@ public sealed partial class PlansViewModel : ObservableObject
     public int NewsTotalPages => _allNews.Count == 0 ? 1 : (int)Math.Ceiling(_allNews.Count / (double)NewsPageSize);
     public bool NewsHasMultiplePages => IsNewsExpanded && NewsTotalPages > 1;
     public bool HasHiddenNews => _allNews.Count > CollapsedNewsCount;
-    public string NewsToggleLabel => IsNewsExpanded ? "Свернуть" : "Показать все новости";
-    public string NewsPageLabel => $"Страница {NewsPageIndex + 1} из {NewsTotalPages}";
+    public string NewsToggleLabel => IsNewsExpanded ? Loc.T("Свернуть") : Loc.T("Показать все новости");
+    public string NewsPageLabel => $"{Loc.T("Страница ")}{NewsPageIndex + 1}{Loc.T(" из ")}{NewsTotalPages}";
     /// <summary>Пейджер в шапке секции новостей v5: "‹ 1 / 3 ›".</summary>
     public string NewsPagerLabel => $"{NewsPageIndex + 1} / {NewsTotalPages}";
     public bool ShowNewsShowAll => !IsNewsExpanded && HasHiddenNews;
@@ -198,7 +201,7 @@ public sealed partial class PlansViewModel : ObservableObject
     public bool HasNews => _allNews.Count > 0;
 
     /// <summary>Подпись секции устройств v5: "УСТРОЙСТВА · 1 из 5".</summary>
-    public string DevicesSectionLabel => DeviceLimit > 0 ? $"УСТРОЙСТВА · {Devices.Count} из {DeviceLimit}" : "УСТРОЙСТВА";
+    public string DevicesSectionLabel => DeviceLimit > 0 ? $"{Loc.T("УСТРОЙСТВА")} · {Devices.Count}{Loc.T(" из ")}{DeviceLimit}" : Loc.T("УСТРОЙСТВА");
 
     /// <summary>Лимит устройств исчерпан — счётчик секции подсвечивается warning (1.0.132).</summary>
     public bool IsDeviceLimitReached => DeviceLimit > 0 && Devices.Count >= DeviceLimit;
@@ -382,7 +385,7 @@ public sealed partial class PlansViewModel : ObservableObject
         OnPropertyChanged(nameof(DevicesSectionLabel));
         _allNews = new List<NewsItem>
         {
-            new() { Id = "1", RawContent = "**Новый узел в Стамбуле**\n\nДобавили сервер в Турции — удобно, если нужен близкий к России выход с низким пингом.", DateLabel = "25 сентября", Buttons = new List<BroadcastButtonDto> { new() { Text = "Подробнее", Url = "кабинет" } } },
+            new() { Id = "1", RawContent = "**Новый узел в Стамбуле**\n\nДобавили сервер в Турции — удобно, если нужен близкий к России выход с низким пингом.", DateLabel = "25 сентября", Buttons = new List<BroadcastButtonDto> { new() { Text = Loc.T("Подробнее"), Url = "кабинет" } } },
             new() { Id = "2", RawContent = "Обновили приложение для Windows: новый дизайн «Стекло».", DateLabel = "20 сентября", Buttons = new List<BroadcastButtonDto>() },
             new() { Id = "3", RawContent = "Третья новость.", DateLabel = "10 сентября", Buttons = new List<BroadcastButtonDto>() },
         };
@@ -438,10 +441,10 @@ public sealed partial class PlansViewModel : ObservableObject
         var dialog = new PromptDialog
         {
             Owner = Application.Current.MainWindow,
-            PromptTitle = "Переименовать устройство",
-            InputLabel = "Название",
+            PromptTitle = Loc.T("Переименовать устройство"),
+            InputLabel = Loc.T("Название"),
             InputValue = device.Name,
-            PrimaryText = "Сохранить"
+            PrimaryText = Loc.T("Сохранить")
         };
         if (dialog.ShowDialog() != true) return;
         var newName = dialog.InputValue.Trim();
@@ -472,10 +475,10 @@ public sealed partial class PlansViewModel : ObservableObject
             var supportDialog = new PromptDialog
             {
                 Owner = Application.Current.MainWindow,
-                PromptTitle = "Удаление устройства",
-                Message = "На пробном и бесплатном тарифах удалить устройство можно только через поддержку. Обратитесь к нам — мы поможем.",
+                PromptTitle = Loc.T("Удаление устройства"),
+                Message = Loc.T("На пробном и бесплатном тарифах удалить устройство можно только через поддержку. Обратитесь к нам — мы поможем."),
                 ShowInput = false,
-                PrimaryText = "Написать в поддержку"
+                PrimaryText = Loc.T("Написать в поддержку")
             };
             if (supportDialog.ShowDialog() == true) OpenSupport();
             return;
@@ -484,10 +487,10 @@ public sealed partial class PlansViewModel : ObservableObject
         var confirmDialog = new PromptDialog
         {
             Owner = Application.Current.MainWindow,
-            PromptTitle = "Удаление устройства",
-            Message = "Вы уверены, что хотите удалить это устройство? Это действие нельзя отменить.",
+            PromptTitle = Loc.T("Удаление устройства"),
+            Message = Loc.T("Вы уверены, что хотите удалить это устройство? Это действие нельзя отменить."),
             ShowInput = false,
-            PrimaryText = "Удалить",
+            PrimaryText = Loc.T("Удалить"),
             IsPrimaryDanger = true
         };
         if (confirmDialog.ShowDialog() != true) return;
@@ -553,10 +556,10 @@ public sealed partial class PlansViewModel : ObservableObject
             return;
         }
         var uri = "godjivpn://transfer?e=" + Uri.EscapeDataString(email);
-        new QrWindow("Вход на другом устройстве",
-            "На новом устройстве открой Goji → «Войти по QR-коду» и наведи камеру на код. На твою почту придёт код — введи его там. Устройство займёт одно место в лимите подписки.",
+        new QrWindow(Loc.T("Вход на другом устройстве"),
+            Loc.T("На новом устройстве открой Goji → «Войти по QR-коду» и наведи камеру на код. На твою почту придёт код — введи его там. Устройство займёт одно место в лимите подписки."),
             uri,
-            warning: "В коде только адрес почты: без кода из письма по нему не войти.") { Owner = Application.Current.MainWindow }.ShowDialog();
+            warning: Loc.T("В коде только адрес почты: без кода из письма по нему не войти.")) { Owner = Application.Current.MainWindow }.ShowDialog();
     }
 
     private static Task ShowTransferErrorAsync()
@@ -564,10 +567,10 @@ public sealed partial class PlansViewModel : ObservableObject
         new PromptDialog
         {
             Owner = Application.Current.MainWindow,
-            PromptTitle = "Не удалось открыть QR-код",
-            Message = "Проверь интернет и попробуй ещё раз.",
+            PromptTitle = Loc.T("Не удалось открыть QR-код"),
+            Message = Loc.T("Проверь интернет и попробуй ещё раз."),
             ShowInput = false,
-            PrimaryText = "Понятно"
+            PrimaryText = Loc.T("Понятно")
         }.ShowDialog();
         return Task.CompletedTask;
     }
@@ -576,8 +579,8 @@ public sealed partial class PlansViewModel : ObservableObject
     private void ShowReferralQr()
     {
         if (Referral is not { } r || string.IsNullOrEmpty(r.Link)) return;
-        new QrWindow("Пригласи друга",
-            "Друг наводит камеру телефона на код и сразу открывает твою пригласительную ссылку.",
+        new QrWindow(Loc.T("Пригласи друга"),
+            Loc.T("Друг наводит камеру телефона на код и сразу открывает твою пригласительную ссылку."),
             r.Link, r.Link) { Owner = Application.Current.MainWindow }.ShowDialog();
     }
 

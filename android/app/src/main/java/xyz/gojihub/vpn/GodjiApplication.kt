@@ -105,12 +105,13 @@ class GodjiApplication : Application(), Configuration.Provider, ImageLoaderFacto
         runBlocking {
             val mode = settingsRepository.themeModeNow()
             GodjiColors.themeMode = mode
+            GodjiColors.paletteId = settingsRepository.paletteIdNow()
             val dark = when (mode) {
                 ThemeMode.DARK -> true
                 ThemeMode.LIGHT -> false
                 ThemeMode.SYSTEM -> isSystemInDarkMode(this@GodjiApplication)
             }
-            if (dark) GodjiColors.applyDark()
+            if (dark) GodjiColors.applyDark() else GodjiColors.applyLight()
             GodjiColors.fontSizePreset = settingsRepository.fontSizeNow()
             Loc.lang = settingsRepository.appLanguageNow()
             AppLogger.level = settingsRepository.logLevelNow()

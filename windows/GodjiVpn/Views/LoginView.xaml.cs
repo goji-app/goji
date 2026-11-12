@@ -10,11 +10,10 @@ public partial class LoginView : UserControl
     public LoginView()
     {
         InitializeComponent();
-        Loaded += async (_, _) =>
+        Loaded += (_, _) =>
         {
             // Экран кода может оказаться открыт уже при загрузке View — фокус в первую клетку.
             if (DataContext is LoginViewModel { OtpSent: true }) Otp.FocusFirst();
-            await Globe.SetStatusAsync("off");
         };
 
         // Автопроверка по заполнению всех 6 клеток (см. Controls/OtpInput.Completed) и

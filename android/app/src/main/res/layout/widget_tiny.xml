@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Виджет 1×1: только кнопка подключения (макет 9a: моно капс, угол 2). См. GojiTinyWidgetProvider. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/wt_button"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_button_teal"
+    android:fontFamily="monospace"
+    android:gravity="center"
+    android:text="ВКЛ"
+    android:textColor="@color/widget_button_text"
+    android:textSize="13sp"
+    android:textStyle="bold" />

@@ -52,7 +52,7 @@ fun AppTunnelingScreen(onBack: () -> Unit, viewModel: AppTunnelingViewModel = hi
         ) {
             item {
                 Row(
-                    Modifier.fillMaxWidth().background(GodjiColors.Chip, RoundedCornerShape(14.dp)).padding(4.dp),
+                    Modifier.fillMaxWidth().background(GodjiColors.Chip, RoundedCornerShape(2.dp)).padding(4.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     ModeTab(Loc.s.appTunnelingModeOff, PerAppProxyMode.OFF, state.mode, Modifier.weight(1f), viewModel::setMode)
@@ -73,7 +73,7 @@ fun AppTunnelingScreen(onBack: () -> Unit, viewModel: AppTunnelingViewModel = hi
                     lineHeight = 15.sp,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .godjiGlassFlat(RoundedCornerShape(14.dp))
+                        .godjiGlassFlat(RoundedCornerShape(2.dp))
                         .padding(12.dp)
                 )
             }
@@ -122,7 +122,7 @@ private fun ModeTab(label: String, mode: PerAppProxyMode, selected: PerAppProxyM
     Box(
         modifier
             .height(34.dp)
-            .clip(RoundedCornerShape(50))
+            .clip(RoundedCornerShape(2.dp))
             .background(if (active) GodjiColors.Ink else Color.Transparent)
             .clickable { onSelect(mode) },
         contentAlignment = Alignment.Center
@@ -140,14 +140,14 @@ private fun AppRow(app: InstalledAppUi, checked: Boolean, onToggle: () -> Unit) 
     Row(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(2.dp))
             .clickable(onClick = onToggle)
             .padding(vertical = 2.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Box(
-            Modifier.size(26.dp).clip(CircleShape).background(GodjiColors.Chip),
+            Modifier.size(26.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(2.dp)).background(GodjiColors.Chip),
             contentAlignment = Alignment.Center
         ) {
             app.icon?.let { Image(it, contentDescription = null, modifier = Modifier.size(20.dp)) }

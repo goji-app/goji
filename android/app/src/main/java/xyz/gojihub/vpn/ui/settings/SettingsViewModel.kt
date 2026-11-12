@@ -46,6 +46,7 @@ data class SettingsUiState(
     val updateDownloadProgress: Int = 0,
     val pinNotification: Boolean = true,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val paletteId: String = GodjiColors.paletteId,
     val language: AppLanguage = AppLanguage.RU,
     val fontSize: FontSizePreset = FontSizePreset.NORMAL,
     val autoConnectOnWifi: Boolean = false,
@@ -137,6 +138,13 @@ class SettingsViewModel @Inject constructor(
         }
         if (dark) GodjiColors.applyDark() else GodjiColors.applyLight()
         viewModelScope.launch { settingsRepository.setThemeMode(mode) }
+    }
+
+    fun setPalette(id: String) {
+        _state.value = _state.value.copy(paletteId = id)
+        GodjiColors.paletteId = id
+        if (GodjiColors.isDark) GodjiColors.applyDark() else GodjiColors.applyLight()
+        viewModelScope.launch { settingsRepository.setPaletteId(id) }
     }
 
     fun setFontSize(preset: FontSizePreset) {

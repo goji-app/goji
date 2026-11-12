@@ -13,6 +13,6 @@ public class PillBorder : Border
     {
         base.OnRenderSizeChanged(sizeInfo);
         var r = Math.Min(ActualWidth, ActualHeight) / 2;
-        CornerRadius = new CornerRadius(r);
+        CornerRadius = new CornerRadius(Math.Min(r, 2));
     }
 }

@@ -45,11 +45,16 @@ public sealed partial class OnboardingViewModel : ObservableObject
     };
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Current), nameof(IsLast), nameof(NextLabel), nameof(Dots))]
+    [NotifyPropertyChangedFor(nameof(Current), nameof(IsLast), nameof(NextLabel), nameof(Dots), nameof(Code), nameof(CodeCaption), nameof(NextLabelUpper))]
     private int index;
 
     public OnboardingPage Current => Pages[Index];
     public bool IsLast => Index == Pages.Count - 1;
+    /// <summary>Крупный код на панели: DE · LTE · GO по шагам (макет 9a).</summary>
+    public string Code => Index switch { 0 => "DE", 1 => "LTE", _ => "0" };
+    /// <summary>Что значит код на панели: страна выхода, российские узлы, отсутствие паролей и автосписаний.</summary>
+    public string CodeCaption => Index switch { 0 => "СТРАНА, ИЗ КОТОРОЙ ТЫ ВЫХОДИШЬ В СЕТЬ", 1 => "РОССИЙСКИЕ УЗЛЫ, КОГДА МОБИЛЬНУЮ СВЯЗЬ ГЛУШАТ", _ => "БЕЗ ПАРОЛЯ И АВТОСПИСАНИЙ" };
+    public string NextLabelUpper => NextLabel.ToUpperInvariant();
     public string NextLabel => IsLast ? "Начать" : "Далее";
     /// <summary>Точки страниц: true — текущая.</summary>
     public IReadOnlyList<bool> Dots => Pages.Select((_, i) => i == Index).ToList();

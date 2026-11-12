@@ -41,6 +41,10 @@ public class PagedItems : ItemsControl
     public bool HasPages { get => _hasPages; private set => SetAndRaise(HasPagesProperty, ref _hasPages, value); }
     public string PagerText { get => _pagerText; private set => SetAndRaise(PagerTextProperty, ref _pagerText, value); }
 
+    /// <summary>Число колонок сетки (макет 9a «Серверы»: 2 колонки × строки); 1 — обычный список.</summary>
+    public static readonly StyledProperty<int> ColumnsProperty = AvaloniaProperty.Register<PagedItems, int>(nameof(Columns), 1);
+    public int Columns { get => GetValue(ColumnsProperty); set => SetValue(ColumnsProperty, value); }
+
     public IRelayCommand PrevCommand { get; }
     public IRelayCommand NextCommand { get; }
 
@@ -50,6 +54,7 @@ public class PagedItems : ItemsControl
     public PagedItems()
     {
         ItemsPanel = new FuncTemplate<Panel?>(() => new PagedPanel());
+        ColumnsProperty.Changed.AddClassHandler<PagedItems>((o, _) => o.Panel?.InvalidateMeasure());
         PrevCommand = new RelayCommand(() => PageIndex--, () => PageIndex > 0);
         NextCommand = new RelayCommand(() => PageIndex++, () => PageIndex < PageCount - 1);
         // Превью-экземпляр: стартовая страница списков для сверки (GODJI_UI_PREVIEW_LIST_PAGE=1).
@@ -100,7 +105,7 @@ public class PagedItems : ItemsControl
 
     private void UpdatePager()
     {
-        PagerText = $"{Math.Min(PageIndex + 1, PageCount)} / {PageCount}";
+        PagerText = $"СТРАНИЦА {Math.Min(PageIndex + 1, PageCount)} ИЗ {PageCount}";
         PrevCommand.NotifyCanExecuteChanged();
         NextCommand.NotifyCanExecuteChanged();
     }
@@ -135,55 +140,64 @@ public class PagedPanel : Panel
         }
     }
 
+    private readonly List<double> _rowHeights = new();
+
     protected override Size MeasureOverride(Size available)
     {
+        var cols = Math.Max(1, Owner?.Columns ?? 1);
+        var cellW = double.IsInfinity(available.Width) ? available.Width : available.Width / cols;
         _pageStarts.Clear();
         _pageStarts.Add(0);
+        _rowHeights.Clear();
         double used = 0;
-        for (var i = 0; i < Children.Count; i++)
+        var n = Children.Count;
+        for (var r = 0; r * cols < n; r++)
         {
-            var child = Children[i];
-            child.Measure(new Size(available.Width, double.PositiveInfinity));
-            var h = child.DesiredSize.Height;
-            if (used > 0 && used + h > available.Height)
+            double rowH = 0;
+            for (var c = 0; c < cols && r * cols + c < n; c++)
             {
-                _pageStarts.Add(i);
+                var child = Children[r * cols + c];
+                child.Measure(new Size(cellW, double.PositiveInfinity));
+                rowH = Math.Max(rowH, child.DesiredSize.Height);
+            }
+            _rowHeights.Add(rowH);
+            if (used > 0 && used + rowH > available.Height)
+            {
+                _pageStarts.Add(r * cols);
                 used = 0;
             }
-            used += h;
+            used += rowH;
         }
         var owner = Owner;
-        // Предварительные проходы с бесконечной высотой (так сетка меряет строки со звёздочкой)
-        // не считаются: иначе 1 и N страниц чередовались бы и раскладка не останавливалась.
+        // Предварительные проходы с бесконечной высотой не считаются: иначе 1 и N страниц чередовались бы.
         if (!double.IsInfinity(available.Height)) owner?.ReportPages(_pageStarts.Count);
-        for (var i = 0; i < Children.Count; i++)
-            SetIsPageStart(Children[i], _pageStarts.Contains(i));
+        for (var i = 0; i < n; i++)
+            SetIsPageStart(Children[i], _pageStarts.Contains(i - i % cols));
 
         var (from, to) = PageRange(CurrentPage());
-        double height = 0, maxWidth = 0;
-        for (var i = from; i < to; i++)
-        {
-            height += Children[i].DesiredSize.Height;
-            maxWidth = Math.Max(maxWidth, Children[i].DesiredSize.Width);
-        }
-        return new Size(double.IsInfinity(available.Width) ? maxWidth : available.Width, height);
+        double height = 0;
+        for (var r = from / cols; r * cols < to; r++) height += _rowHeights[r];
+        return new Size(double.IsInfinity(available.Width) ? 0 : available.Width, height);
     }
 
     protected override Size ArrangeOverride(Size finalSize)
     {
+        var cols = Math.Max(1, Owner?.Columns ?? 1);
+        var cellW = finalSize.Width / cols;
         var (from, to) = PageRange(CurrentPage());
-        double y = 0;
         for (var i = 0; i < Children.Count; i++)
         {
             var child = Children[i];
-            if (i >= from && i < to)
+            var r = i / cols;
+            if (i >= from && i < to && r < _rowHeights.Count)
             {
-                child.Arrange(new Rect(0, y, finalSize.Width, child.DesiredSize.Height));
-                y += child.DesiredSize.Height;
+                double top = 0;
+                for (var q = from / cols; q < r; q++) top += _rowHeights[q];
+                child.Arrange(new Rect((i % cols) * cellW, top, cellW, _rowHeights[r]));
             }
             else
             {
-                child.Arrange(new Rect(0, finalSize.Height + 10000, finalSize.Width, child.DesiredSize.Height));
+                child.Arrange(new Rect(0, finalSize.Height + 10000, cellW, child.DesiredSize.Height));
             }
         }
         return finalSize;

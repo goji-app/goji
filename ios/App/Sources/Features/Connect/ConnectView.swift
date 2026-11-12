@@ -12,42 +12,175 @@ struct ConnectView: View {
     @StateObject private var quality = QualityProbe()
     @ObservedObject private var journal = NetworkJournal.shared
 
+    // Главная — макет 9a «Афиша × Прибор»: гигантский код страны, заливка всего поля цветом состояния,
+    // волосяная таблица, плоская кнопка. Нижняя панель — системный TabView iOS.
     var body: some View {
-        ScrollView {
-            VStack(spacing: 8) {
-                header
-                GlobeView(status: globeStatus, node: displayGeo)
-                    .frame(height: 270)
-                    .frame(maxWidth: .infinity)
-                VStack(spacing: 8) {
-                    CookieButton(phase: vpn.phase) { Task { await vpn.toggle() } }
-                        .disabled(store.nodes.isEmpty && vpn.phase == .disconnected)
-                        .accessibilityLabel(vpn.phase == .disconnected ? L("connect.cta.on") : L("connect.cta.off"))
-                        .accessibilityHint(vpn.phase == .disconnected ? L("connect.a11y.connect") : L("connect.a11y.disconnect"))
-                    headline
+        let state = homeState
+        let fill = state == 2 ? GojiColor.homeOnFill : state == 1 ? GojiColor.homeBusyFill : GojiColor.surface
+        let ink = state == 2 ? GojiColor.homeOnInk : state == 1 ? GojiColor.homeBusyInk : GojiColor.textPrimary
+        let mut = state == 0 ? GojiColor.textSecondary : ink.opacity(0.78)
+        let line = state == 0 ? GojiColor.outlineVariant : ink.opacity(0.22)
+        let button = state == 1 ? GojiColor.homeBusyButton : GojiColor.inkButton
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack {
+                        Text(stateTag).font(GojiFont.mono(11)).foregroundStyle(mut)
+                        Spacer()
+                        Text(counter).font(GojiFont.mono(11)).foregroundStyle(mut)
+                    }
+                    .padding(.top, 14)
+                    CodeText(text: codeLabel, filled: state != 0, ink: ink, outline: GojiColor.outlineVariant, background: fill)
+                        .frame(height: 205)
+                        .padding(.top, 6)
+                        .onTapGesture { nextNode() }
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(displayGeo?.displayName ?? codeLabel)
+                        .accessibilityAddTraits(.isButton)
+                    Text(titleText)
+                        .font(GojiFont.manrope(30, .semibold, relativeTo: .largeTitle))
+                        .foregroundStyle(ink)
+                        .padding(.top, 4)
+                    Text(subtitleText)
+                        .font(GojiFont.manrope(14))
+                        .foregroundStyle(mut)
+                        .padding(.top, 6)
+                        .frame(minHeight: 40, alignment: .topLeading)
+                    if let banner = currentBanner {
+                        BannerView(text: banner.text, kind: banner.kind, action: errorAction) { dismissBanner() }
+                            .padding(.top, 10)
+                    }
+                    if store.subscription == nil && store.subscriptionLoaded { NoSubscriptionCard().padding(.top, 10) }
+                    VStack(spacing: 0) {
+                        row(AppLanguage.isRussian ? "УЗЕЛ" : "NODE", line: line, mut: mut) {
+                            Text(store.selectedNode?.geo?.displayCity ?? store.selectedNode?.displayName ?? "—")
+                                .font(GojiFont.mono(13)).foregroundStyle(ink).lineLimit(1)
+                        }
+                        row(AppLanguage.isRussian ? "ПИНГ" : "PING", line: line, mut: mut) {
+                            HStack(spacing: 10) {
+                                PingScale(ms: quality.pingMs, marker: ink).frame(width: 96)
+                                Text(quality.pingMs.map { String($0) } ?? "—")
+                                    .font(GojiFont.mono(13, .semibold)).foregroundStyle(ink)
+                            }
+                            .accessibilityElement(children: .combine)
+                        }
+                        row(AppLanguage.isRussian ? "В СЕТИ" : "ONLINE", line: line, mut: mut) {
+                            if vpn.phase == .connected, let since = vpn.connectedSince {
+                                Text(since, style: .timer).font(GojiFont.mono(13)).foregroundStyle(ink)
+                            } else {
+                                Text("—").font(GojiFont.mono(13)).foregroundStyle(ink)
+                            }
+                        }
+                        row(AppLanguage.isRussian ? "СКОРОСТЬ" : "SPEED", line: line, mut: mut) {
+                            Text(vpn.phase == .connected
+                                 ? String(format: "↓ %.1f  ↑ %.1f", vpn.downBytesPerSec / 1_000_000, vpn.upBytesPerSec / 1_000_000) + (AppLanguage.isRussian ? " МБ/с" : " MB/s")
+                                 : "—")
+                                .font(GojiFont.mono(13)).foregroundStyle(ink)
+                        }
+                        Rectangle().fill(line).frame(height: 1)
+                    }
+                    .padding(.top, 14)
                 }
-                if let banner = currentBanner {
-                    BannerView(text: banner.text, kind: banner.kind, action: errorAction) { dismissBanner() }
-                }
-                speedCard
-                HStack(alignment: .top, spacing: 8) {
-                    qualityTile
-                    subscriptionTile
-                }
-                .fixedSize(horizontal: false, vertical: true)
-                if store.subscription == nil && store.subscriptionLoaded { NoSubscriptionCard() }
-                nodeAndJournalCard
+                .padding(.horizontal, 20)
+                .padding(.bottom, 16)
             }
-            .padding(.horizontal, GojiMetrics.screenPadding)
-            .padding(.top, 6)
-            .padding(.bottom, 16)
+            .scrollIndicators(.hidden)
+            .refreshable { await store.refresh() }
+
+            Button { Task { await vpn.toggle() } } label: {
+                Text(buttonText)
+                    .font(GojiFont.mono(14, .bold))
+                    .tracking(0.8)
+                    .foregroundStyle(GojiColor.inkButtonText)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(RoundedRectangle(cornerRadius: 2).fill(button))
+            }
+            .buttonStyle(.plain)
+            .disabled(store.nodes.isEmpty && vpn.phase == .disconnected)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 12)
+            .accessibilityLabel(vpn.phase == .disconnected ? L("connect.cta.on") : L("connect.cta.off"))
+            .accessibilityHint(vpn.phase == .disconnected ? L("connect.a11y.connect") : L("connect.a11y.disconnect"))
         }
-        .scrollIndicators(.hidden)
-        .refreshable { await store.refresh() }
+        .background(fill.ignoresSafeArea())
+        .animation(.easeInOut(duration: 0.5), value: state)
         .toolbar(.hidden, for: .navigationBar)
         .onAppear { quality.setActive(vpn.phase == .connected) }
         .onDisappear { quality.setActive(false) }
         .onChange(of: vpn.phase) { phase in quality.setActive(phase == .connected) }
+    }
+
+    // MARK: - Состояние главной (макет 9a)
+
+    /// 0 — выкл, 1 — подключение, 2 — в сети.
+    private var homeState: Int {
+        switch vpn.phase {
+        case .connected: return 2
+        case .connecting, .disconnecting: return 1
+        case .disconnected: return 0
+        }
+    }
+
+    private var codeLabel: String { displayGeo?.code ?? store.selectedNode?.codeLabel ?? "—" }
+
+    private var counter: String {
+        guard let id = store.selectedNode?.id, let i = store.nodes.firstIndex(where: { $0.id == id }) else { return "" }
+        return "\(i + 1) / \(store.nodes.count)"
+    }
+
+    private var stateTag: String {
+        switch homeState {
+        case 2: return AppLanguage.isRussian ? "В ТУННЕЛЕ" : "IN TUNNEL"
+        case 1: return AppLanguage.isRussian ? "ПОДКЛЮЧЕНИЕ" : "CONNECTING"
+        default: return AppLanguage.isRussian ? "НЕТ ЗАЩИТЫ" : "NO PROTECTION"
+        }
+    }
+
+    private var buttonText: String {
+        switch homeState {
+        case 2: return AppLanguage.isRussian ? "ОТКЛЮЧИТЬ" : "DISCONNECT"
+        case 1: return AppLanguage.isRussian ? "ОТМЕНА" : "CANCEL"
+        default: return AppLanguage.isRussian ? "ВКЛЮЧИТЬ" : "CONNECT"
+        }
+    }
+
+    private var titleText: String {
+        switch homeState {
+        case 2:
+            let name = displayGeo?.displayName ?? (AppLanguage.isRussian ? "надёжное место" : "a safe place")
+            return AppLanguage.isRussian ? "Ты в сети: \(name)" : "You're online: \(name)"
+        case 1: return AppLanguage.isRussian ? "Подключаем…" : "Connecting…"
+        default: return AppLanguage.isRussian ? "Без защиты" : "Not protected"
+        }
+    }
+
+    private var subtitleText: String {
+        switch homeState {
+        case 2: return AppLanguage.isRussian ? "Провайдер видит только шифр. Держит тебя в сети" : "Your provider sees only ciphertext"
+        case 1: return AppLanguage.isRussian ? "Ищем лучший путь до узла" : "Finding the best path to the node"
+        default: return AppLanguage.isRussian ? "Провайдер видит всё, что ты открываешь" : "Your provider sees everything you open"
+        }
+    }
+
+    /// Тап по коду страны: следующий узел списка (пока не идёт подключение).
+    private func nextNode() {
+        guard vpn.phase == .disconnected, store.nodes.count > 1 else { return }
+        let i = store.nodes.firstIndex(where: { $0.id == store.selectedNode?.id }) ?? -1
+        store.select(store.nodes[(i + 1) % store.nodes.count].id)
+        Haptics.light()
+    }
+
+    private func row<V: View>(_ label: String, line: Color, mut: Color, @ViewBuilder value: () -> V) -> some View {
+        VStack(spacing: 0) {
+            Rectangle().fill(line).frame(height: 1)
+            HStack(spacing: 0) {
+                Text(label).font(GojiFont.mono(13)).foregroundStyle(mut).frame(width: 96, alignment: .leading)
+                value()
+                Spacer(minLength: 0)
+            }
+            .padding(.vertical, 10)
+        }
     }
 
     // MARK: - Состояние
@@ -643,50 +776,43 @@ struct BannerView: View {
     let onClose: () -> Void
 
     var body: some View {
-        let ok = kind == .success
-        let icon: String = {
-            switch kind {
-            case .warning: return "exclamationmark"
-            case .success: return "checkmark"
-            case .info: return "info"
-            }
-        }()
-        HStack(alignment: .top, spacing: 11) {
-            Image(systemName: icon)
-                .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(GojiColor.onPrimary)
-                .frame(width: 28, height: 28)
-                .background(Circle().fill(ok ? GojiColor.teal : GojiColor.terracotta))
-            VStack(alignment: .leading, spacing: 6) {
+        // Заметный баннер: цветная полоса слева, подложка по смыслу, действие — плоская кнопка.
+        let bar: Color = kind == .warning ? GojiColor.danger : GojiColor.primary
+        let fill: Color = kind == .warning ? GojiColor.errorContainer : (kind == .success ? GojiColor.tealTint : GojiColor.surfaceContainerHigh)
+        HStack(alignment: .top, spacing: 10) {
+            VStack(alignment: .leading, spacing: 10) {
                 Text(text)
-                    .font(GojiFont.manrope(12, .semibold))
+                    .font(GojiFont.manrope(13, .semibold))
                     .foregroundStyle(GojiColor.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
                 if let action {
                     Button(action: action.run) {
-                        Text(action.title)
-                            .font(GojiFont.manrope(12, .bold))
-                            .foregroundStyle(GojiColor.tealDeep)
+                        Text(action.title.uppercased())
+                            .font(GojiFont.mono(12, .bold))
+                            .foregroundStyle(GojiColor.onPrimary)
+                            .padding(.horizontal, 14)
+                            .frame(minHeight: 44)
+                            .background(Rectangle().fill(bar))
                     }
-                    .frame(minHeight: 44)
+                    .buttonStyle(.plain)
                 }
             }
             Spacer(minLength: 4)
             Button(action: onClose) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 10, weight: .bold))
+                    .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(GojiColor.textPrimary)
-                    .frame(width: 24, height: 24)
-                    .background(Circle().fill(GojiColor.surfaceContainerHighest))
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
             .accessibilityLabel(L("common.close"))
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(ok ? GojiColor.tealTint : GojiColor.terracottaTint)
-        )
+        .padding(.leading, 18)
+        .padding(.trailing, 4)
+        .padding(.vertical, 8)
+        .background(fill)
+        .overlay(alignment: .leading) { Rectangle().fill(bar).frame(width: 4) }
     }
 }
 
@@ -724,5 +850,42 @@ struct NoSubscriptionCard: View {
                 .disabled(activating)
             }
         }
+    }
+}
+
+
+/// Огромный код страны макета 9a: Golos Bold. Выключено — контур (восемь сдвинутых копий цвета обводки и
+/// копия цвета фона сверху: в SwiftUI у текста нет обводки), подключение и в сети — заливка ink. Кегль
+/// ужимается под ширину, буквы не обрезаются («LTE»).
+private struct CodeText: View {
+    let text: String
+    let filled: Bool
+    let ink: Color
+    let outline: Color
+    let background: Color
+
+    var body: some View {
+        ZStack(alignment: .leading) {
+            if filled {
+                label(ink)
+            } else {
+                ForEach(0..<8, id: \.self) { i in
+                    label(outline).offset(x: cos(Double(i) * .pi / 4) * 1.5, y: sin(Double(i) * .pi / 4) * 1.5)
+                }
+                label(background)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.leading, -8)
+        .clipped()
+    }
+
+    private func label(_ color: Color) -> some View {
+        Text(text)
+            .font(.custom("GolosText-Bold", fixedSize: 230))
+            .tracking(-16)
+            .lineLimit(1)
+            .minimumScaleFactor(0.2)
+            .foregroundStyle(color)
     }
 }

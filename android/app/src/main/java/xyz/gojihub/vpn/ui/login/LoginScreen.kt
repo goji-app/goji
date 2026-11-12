@@ -1,5 +1,16 @@
 package xyz.gojihub.vpn.ui.login
 
+import xyz.gojihub.vpn.ui.theme.MonoFamily
+import xyz.gojihub.vpn.i18n.AppLanguage
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import android.content.Intent
 import android.net.Uri
 import xyz.gojihub.vpn.BuildConfig
@@ -63,159 +74,101 @@ fun LoginScreen(
         viewModel.loginWithTransfer(text, onCodeSent)
     }
 
-    GlassBackdrop {
-      // Эталон: колонка padding 16/18/20, gap 12 — плашка "Goji", глобус со спутниками
-      // (flex:1, min-height 250, холст вынесен на −20dp по вертикали и −18dp по бокам),
-      // стеклянный лист снизу.
-      Column(
-        Modifier.fillMaxSize().padding(start = 18.dp, top = 16.dp, end = 18.dp, bottom = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-      ) {
-        Row(
-            Modifier.godjiGlassPill().padding(start = 5.dp, top = 5.dp, end = 13.dp, bottom = 5.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(9.dp)
-        ) {
-            Box(Modifier.size(30.dp).clip(CircleShape).background(GodjiColors.Ink), contentAlignment = Alignment.Center) {
-                Image(painterResource(R.drawable.ic_notification), contentDescription = null, modifier = Modifier.size(19.dp))
-            }
-            Text("Goji", color = GodjiColors.TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-        }
-
-        Box(Modifier.fillMaxWidth().weight(1f).heightIn(min = 250.dp)) {
-            GojiGlobe(
-                status = "off", node = null, satellites = true,
-                modifier = Modifier.layout { measurable, constraints ->
-                    val dx = 18.dp.roundToPx()
-                    val dy = 20.dp.roundToPx()
-                    val placeable = measurable.measure(
-                        Constraints.fixed(constraints.maxWidth + dx * 2, constraints.maxHeight + dy * 2)
+    // Макет 9a «Вход»: сразу поле почты (без выбора способа), код придёт в письме.
+    LaunchedEffect(Unit) { if (!state.emailMode) viewModel.toggleEmailMode(true) }
+    val lang = Loc.lang
+    fun t(ru: String, en: String, zh: String) = when (lang) { AppLanguage.RU -> ru; AppLanguage.EN -> en; AppLanguage.ZH -> zh }
+    Column(Modifier.fillMaxSize().background(GodjiColors.SurfaceBase).statusBarsPadding().imePadding()) {
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)) {
+            // Язык приложения выбирается до входа: RU · EN · 中文 (макет 9a).
+            Row(Modifier.padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                AppLanguage.entries.forEach { l ->
+                    Text(
+                        l.displayName.uppercase(), fontFamily = MonoFamily, fontSize = 12.sp,
+                        fontWeight = if (l == lang) FontWeight.Bold else FontWeight.Normal,
+                        color = if (l == lang) GodjiColors.Ink else GodjiColors.TextSecondary,
+                        modifier = Modifier.clickable { viewModel.setLanguage(l) }.padding(vertical = 8.dp)
                     )
-                    layout(constraints.maxWidth, constraints.maxHeight) { placeable.place(-dx, -dy) }
                 }
+            }
+            Text(
+                t("Войти по почте", "Sign in by email", "邮箱登录"), color = GodjiColors.Ink, fontFamily = SpaceGroteskFamily,
+                fontWeight = FontWeight.SemiBold, fontSize = 30.sp, lineHeight = 32.sp, letterSpacing = (-0.02).em,
+                modifier = Modifier.padding(top = 24.dp)
             )
+            Text(
+                t("Пришлём код из шести цифр. Пароль не нужен. Первые 3 дня бесплатно.",
+                    "We'll send a six-digit code. No password. First 3 days are free.",
+                    "我们会发送六位验证码，无需密码。前 3 天免费。"),
+                color = GodjiColors.TextSecondary, fontSize = 15.sp, lineHeight = 22.sp, modifier = Modifier.padding(top = 10.dp)
+            )
+            Text(t("ПОЧТА", "EMAIL", "邮箱"), color = GodjiColors.TextSecondary, fontFamily = MonoFamily, fontSize = 11.sp, modifier = Modifier.padding(top = 34.dp))
+            androidx.compose.foundation.text.BasicTextField(
+                value = state.email,
+                onValueChange = viewModel::onEmailChange,
+                singleLine = true,
+                textStyle = androidx.compose.ui.text.TextStyle(color = GodjiColors.Ink, fontSize = 18.sp, fontFamily = SpaceGroteskFamily),
+                cursorBrush = androidx.compose.ui.graphics.SolidColor(GodjiColors.Ink),
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Email),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+                    .semantics { contentDescription = Loc.s.loginEmailLabel }
+                    .drawBehind {
+                        drawLine(GodjiColors.Ink, androidx.compose.ui.geometry.Offset(0f, size.height), androidx.compose.ui.geometry.Offset(size.width, size.height), 1.dp.toPx())
+                    }
+                    .padding(bottom = 12.dp)
+            )
+            state.error?.let {
+                Text(it, color = GodjiColors.Danger, fontSize = 12.sp, modifier = Modifier.fillMaxWidth().padding(top = 10.dp))
+            }
+            // Согласие с документами: те же два документа, что и на сайте кабинета.
+            val consentText = remember(Loc.lang) {
+                buildAnnotatedString {
+                    append(Loc.s.loginConsentPrefix)
+                    withLink(LinkAnnotation.Url("https://telegra.ph/Polzovatelskoe-soglashenie-Goji-VPN-09-20")) {
+                        withStyle(SpanStyle(color = GodjiColors.Ink, fontWeight = FontWeight.SemiBold)) { append(Loc.s.loginConsentTerms) }
+                    }
+                    append(Loc.s.loginConsentAnd)
+                    withLink(LinkAnnotation.Url("https://telegra.ph/Politika-konfidencialnosti-Goji-VPN-09-20")) {
+                        withStyle(SpanStyle(color = GodjiColors.Ink, fontWeight = FontWeight.SemiBold)) { append(Loc.s.loginConsentPrivacy) }
+                    }
+                    append(Loc.s.loginConsentSuffix)
+                }
+            }
+            Text(Loc.s.loginNoAccount, color = GodjiColors.TextSecondary, fontSize = 12.sp, modifier = Modifier.padding(top = 24.dp))
+            Text(consentText, color = GodjiColors.TextSecondary, fontSize = 12.sp, lineHeight = 17.sp, modifier = Modifier.padding(top = 6.dp))
         }
-
-        // verticalScroll — на невысоких экранах (особенно в режиме email с показанной
-        // ошибкой) лист не помещается по высоте целиком.
-        Column(
+        Box(
             Modifier
-                .fillMaxWidth()
-                .godjiGlassStrong(RoundedCornerShape(32.dp))
-                .padding(start = 16.dp, top = 20.dp, end = 16.dp, bottom = 16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+                .padding(horizontal = 20.dp)
+                .fillMaxWidth().heightIn(min = 56.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(GodjiColors.InkBtn.copy(alpha = if (state.loading) 0.5f else 1f))
+                .clickable(enabled = !state.loading, role = Role.Button) { viewModel.sendOtp(onSent = onCodeSent) },
+            contentAlignment = Alignment.Center
         ) {
             Text(
-                Loc.s.loginGreeting,
-                color = GodjiColors.TextPrimary,
-                fontFamily = SpaceGroteskFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 30.sp,
-                lineHeight = 32.sp
+                (if (state.loading) Loc.s.loginSendingOtp else Loc.s.loginGetCode).uppercase(),
+                color = GodjiColors.Surface, fontFamily = MonoFamily, fontWeight = FontWeight.Bold, fontSize = 14.sp, letterSpacing = 0.06.em
             )
-
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (!state.emailMode) {
-                    // Вход только по email-коду (и QR-переносом ниже): приложение распространяется
-                    // через Google Play, вход через сайт и сторонние сервисы убраны.
-                    val (emailInteraction, emailScale) = rememberPressScale()
-                    Button(
-                        onClick = { viewModel.toggleEmailMode(true) },
-                        enabled = !state.loading,
-                        interactionSource = emailInteraction,
-                        colors = ButtonDefaults.buttonColors(containerColor = GodjiColors.Ink),
-                        shape = RoundedCornerShape(50),
-                        modifier = Modifier.fillMaxWidth().height(54.dp).scale(emailScale.value)
-                    ) {
-                        Text(
-                            Loc.s.loginEmailMode,
-                            color = GodjiColors.Surface, fontWeight = FontWeight.Bold, fontSize = 15.sp
-                        )
-                    }
-
-                    // Перенос входа со старого устройства: там Подписка → "Перенести на другое
-                    // устройство" показывает QR, здесь его сканируем — без почты и паролей.
-                    TextButton(
-                        onClick = {
-                            qrScanner.launch(
-                                ScanOptions()
-                                    .setDesiredBarcodeFormats(ScanOptions.QR_CODE)
-                                    .setPrompt(Loc.f.loginQrPrompt)
-                                    .setBeepEnabled(false)
-                                    .setOrientationLocked(true)
-                            )
-                        },
-                        enabled = !state.loading,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(Icons.Filled.QrCodeScanner, contentDescription = null, tint = GodjiColors.TealDeep, modifier = Modifier.size(17.dp))
-                        Spacer(Modifier.width(7.dp))
-                        Text(Loc.f.loginByQr, color = GodjiColors.TealDeep, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                    }
-                } else {
-                    OutlinedTextField(
-                        value = state.email,
-                        onValueChange = viewModel::onEmailChange,
-                        label = { Text(Loc.s.loginEmailLabel) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    val (otpInteraction, otpScale) = rememberPressScale()
-                    Button(
-                        onClick = { viewModel.sendOtp(onSent = onCodeSent) },
-                        enabled = !state.loading,
-                        interactionSource = otpInteraction,
-                        colors = ButtonDefaults.buttonColors(containerColor = GodjiColors.Teal),
-                        shape = RoundedCornerShape(50),
-                        modifier = Modifier.fillMaxWidth().height(54.dp).scale(otpScale.value)
-                    ) { Text(if (state.loading) Loc.s.loginSendingOtp else Loc.s.loginGetCode, color = GodjiColors.Surface, fontWeight = FontWeight.Bold, fontSize = 15.sp) }
-                    TextButton(onClick = { viewModel.toggleEmailMode(false) }, modifier = Modifier.fillMaxWidth()) {
-                        Text(Loc.s.loginOtherMethods, color = GodjiColors.TextSecondary, fontSize = 12.sp)
-                    }
-                }
-
-                state.error?.let {
-                    Text(it, color = GodjiColors.Danger, fontSize = 12.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                }
-
-                Text(
-                    Loc.s.loginNoAccount,
-                    color = GodjiColors.TextSecondary,
-                    fontSize = 10.5.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
-                )
-
-                // Те же два документа и та же формулировка, что и на сайте кабинета — раньше
-                // приложение отправляло согласие на бэкенд молча, не показывая пользователю
-                // ни текста, ни самих документов.
-                val consentText = remember(Loc.lang) {
-                    buildAnnotatedString {
-                        append(Loc.s.loginConsentPrefix)
-                        withLink(LinkAnnotation.Url("https://telegra.ph/Polzovatelskoe-soglashenie-Goji-VPN-09-20")) {
-                            withStyle(SpanStyle(color = GodjiColors.TealDeep, fontWeight = FontWeight.SemiBold)) {
-                                append(Loc.s.loginConsentTerms)
-                            }
-                        }
-                        append(Loc.s.loginConsentAnd)
-                        withLink(LinkAnnotation.Url("https://telegra.ph/Politika-konfidencialnosti-Goji-VPN-09-20")) {
-                            withStyle(SpanStyle(color = GodjiColors.TealDeep, fontWeight = FontWeight.SemiBold)) {
-                                append(Loc.s.loginConsentPrivacy)
-                            }
-                        }
-                        append(Loc.s.loginConsentSuffix)
-                    }
-                }
-                Text(
-                    consentText,
-                    color = GodjiColors.TextSecondary,
-                    fontSize = 10.5.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
         }
-      }
+        Text(
+            t("ВОЙТИ ПО QR С ДРУГОГО УСТРОЙСТВА", "SIGN IN WITH QR FROM ANOTHER DEVICE", "用其他设备扫码登录"),
+            color = GodjiColors.TextSecondary, fontFamily = MonoFamily, fontSize = 12.sp, textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(enabled = !state.loading, role = Role.Button) {
+                    qrScanner.launch(
+                        ScanOptions()
+                            .setDesiredBarcodeFormats(ScanOptions.QR_CODE)
+                            .setPrompt(Loc.f.loginQrPrompt)
+                            .setBeepEnabled(false)
+                            .setOrientationLocked(true)
+                    )
+                }
+                .padding(vertical = 18.dp)
+                .navigationBarsPadding()
+        )
     }
 }

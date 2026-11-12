@@ -106,7 +106,7 @@ public sealed partial class TicketChatViewModel : ObservableObject
         SendError = false;
         ShowLogPicker = false;
         ShowAttachMenu = false;
-        Title = "Поддержка";
+        Title = Loc.T("Поддержка");
         IsClosed = false;
 
         // Только для превью-экземпляра (GODJI_UI_PREVIEW_DEMO=1): вёрстка без API и поллинга.
@@ -123,7 +123,7 @@ public sealed partial class TicketChatViewModel : ObservableObject
         try
         {
             var ticket = await _api.GetSupportTicketAsync(ticketId);
-            Title = !string.IsNullOrWhiteSpace(ticket.Subject) ? ticket.Subject! : "Поддержка";
+            Title = !string.IsNullOrWhiteSpace(ticket.Subject) ? ticket.Subject! : Loc.T("Поддержка");
             IsClosed = ticket.Status == "closed";
         }
         catch { /* заголовок — второстепенная деталь, сами сообщения важнее */ }
@@ -168,7 +168,7 @@ public sealed partial class TicketChatViewModel : ObservableObject
     private async Task PickPdfAsync()
     {
         ShowAttachMenu = false;
-        AddAttachments(await Ui.PickFilesAsync("PDF-файл", "PDF-файлы", "*.pdf"));
+        AddAttachments(await Ui.PickFilesAsync(Loc.T("PDF-файл"), "PDF-файлы", "*.pdf"));
     }
 
     private void AddAttachments(IEnumerable<string> paths)

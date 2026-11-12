@@ -245,7 +245,7 @@ private fun ImageBlockView(url: String, caption: String?) {
             model = url,
             contentDescription = caption,
             contentScale = ContentScale.FillWidth,
-            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(2.dp))
         )
         if (!caption.isNullOrBlank()) {
             Spacer(Modifier.height(4.dp))
@@ -269,7 +269,7 @@ private fun CollageView(urls: List<String>) {
                 model = urls[i],
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.aspectRatio(1f).clip(RoundedCornerShape(10.dp))
+                modifier = Modifier.aspectRatio(1f).clip(RoundedCornerShape(2.dp))
             )
         }
     }
@@ -285,7 +285,7 @@ private fun SlideshowView(urls: List<String>) {
                 model = urls[page],
                 contentDescription = null,
                 contentScale = ContentScale.FillWidth,
-                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(2.dp))
             )
         }
         if (urls.size > 1) {
@@ -296,7 +296,7 @@ private fun SlideshowView(urls: List<String>) {
                         Modifier
                             .padding(horizontal = 3.dp)
                             .size(6.dp)
-                            .clip(RoundedCornerShape(50))
+                            .clip(RoundedCornerShape(2.dp))
                             .background(if (i == pagerState.currentPage) GodjiColors.TealDeep else GodjiColors.CardBorder)
                     )
                 }
@@ -311,7 +311,7 @@ private fun MapButtonView(block: RichBlock.MapBlock) {
     Row(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(2.dp))
             .background(GodjiColors.TealTint)
             .clickable {
                 val zoomPart = block.zoom?.let { "?z=$it" }.orEmpty()

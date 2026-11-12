@@ -67,6 +67,13 @@
 		<string>Manrope-ExtraBold.ttf</string>
 		<string>InstrumentSerif-Regular.ttf</string>
 		<string>InstrumentSerif-Italic.ttf</string>
+		<string>GolosText-Regular.ttf</string>
+		<string>GolosText-Medium.ttf</string>
+		<string>GolosText-SemiBold.ttf</string>
+		<string>GolosText-Bold.ttf</string>
+		<string>JetBrainsMono-Regular.ttf</string>
+		<string>JetBrainsMono-SemiBold.ttf</string>
+		<string>JetBrainsMono-Bold.ttf</string>
 	</array>
 	<key>UILaunchScreen</key>
 	<dict>

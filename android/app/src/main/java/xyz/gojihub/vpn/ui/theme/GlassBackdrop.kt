@@ -1,5 +1,6 @@
 package xyz.gojihub.vpn.ui.theme
 
+import androidx.compose.runtime.getValue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -19,5 +20,9 @@ fun GlassBackdrop(
     @Suppress("UNUSED_PARAMETER") connected: Boolean = false,
     content: @Composable BoxScope.() -> Unit
 ) {
-    Box(modifier.fillMaxSize().background(GodjiColors.BackgroundSolid), content = content)
+    // На главной заливка по состоянию идёт и под статус-бар и панель навигации (GodjiColors.navBg).
+    val fill by androidx.compose.animation.animateColorAsState(
+        GodjiColors.navBg ?: GodjiColors.BackgroundSolid, androidx.compose.animation.core.tween(500), label = "backdrop"
+    )
+    Box(modifier.fillMaxSize().background(fill), content = content)
 }

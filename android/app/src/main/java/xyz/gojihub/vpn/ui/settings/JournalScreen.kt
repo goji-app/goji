@@ -74,7 +74,7 @@ fun JournalScreen(onBack: () -> Unit) {
         if (day.events.isEmpty()) {
             Text(
                 Loc.f.journalEmpty, color = GodjiColors.TextSecondary, fontSize = 12.5.sp, lineHeight = 17.sp,
-                modifier = Modifier.fillMaxWidth().godjiCard(RoundedCornerShape(24.dp)).padding(horizontal = 16.dp, vertical = 14.dp)
+                modifier = Modifier.fillMaxWidth().godjiCard(RoundedCornerShape(2.dp)).padding(horizontal = 16.dp, vertical = 14.dp)
             )
         } else {
             RefCard {
@@ -94,7 +94,7 @@ fun JournalScreen(onBack: () -> Unit) {
 @Composable
 private fun DaySwitch(selected: Int, onSelect: (Int) -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(50)).background(GodjiColors.Chip).padding(3.dp),
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(2.dp)).background(GodjiColors.Chip).padding(3.dp),
         horizontalArrangement = Arrangement.spacedBy(3.dp)
     ) {
         listOf(Loc.f.journalToday, Loc.f.journalYesterday).forEachIndexed { i, label ->
@@ -103,7 +103,7 @@ private fun DaySwitch(selected: Int, onSelect: (Int) -> Unit) {
                 Modifier
                     .weight(1f)
                     .height(34.dp)
-                    .clip(RoundedCornerShape(50))
+                    .clip(RoundedCornerShape(2.dp))
                     .background(if (on) GodjiColors.Thumb else Color.Transparent)
                     .clickable(remember { MutableInteractionSource() }, null) { onSelect(i) },
                 contentAlignment = Alignment.Center
@@ -123,7 +123,7 @@ private fun duration(ms: Long): String {
 private fun UptimeCard(day: NetworkJournal.Day) {
     val pct = if (day.elapsedMs > 0) (day.protectedMs * 1000 / day.elapsedMs) / 10.0 else 0.0
     Column(
-        Modifier.fillMaxWidth().godjiCard(RoundedCornerShape(24.dp)).padding(horizontal = 16.dp, vertical = 12.dp),
+        Modifier.fillMaxWidth().godjiCard(RoundedCornerShape(2.dp)).padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
@@ -153,7 +153,7 @@ private fun UptimeCard(day: NetworkJournal.Day) {
                     else -> GodjiColors.Teal
                 }
                 val height = if (up == null || up <= 0f) 4.dp else (6 + 50 * up).dp
-                Box(Modifier.weight(1f).height(height).clip(RoundedCornerShape(3.dp)).background(color))
+                Box(Modifier.weight(1f).height(height).clip(RoundedCornerShape(2.dp)).background(color))
             }
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -167,7 +167,7 @@ private fun UptimeCard(day: NetworkJournal.Day) {
 @Composable
 private fun CounterTile(value: Int, label: String, color: Color, modifier: Modifier = Modifier) {
     Column(
-        modifier.godjiCard(RoundedCornerShape(20.dp)).padding(horizontal = 12.dp, vertical = 10.dp),
+        modifier.godjiCard(RoundedCornerShape(2.dp)).padding(horizontal = 12.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(1.dp)
     ) {
         Text(value.toString(), color = color, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
@@ -192,7 +192,7 @@ private fun EventRow(e: NetworkJournal.Event) {
         verticalAlignment = Alignment.Top
     ) {
         Text(timeFormat.format(Date(e.at)), color = GodjiColors.TextSecondary, fontWeight = FontWeight.Bold, fontSize = 12.sp, modifier = Modifier.width(40.dp))
-        Box(Modifier.padding(top = 5.dp).size(8.dp).clip(CircleShape).background(dot))
+        Box(Modifier.padding(top = 5.dp).size(8.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(2.dp)).background(dot))
         Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
             Text(title, color = GodjiColors.TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 13.5.sp)
             if (text.isNotBlank()) {

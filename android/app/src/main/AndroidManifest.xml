@@ -140,22 +140,39 @@
             android:process=":ping"
             android:exported="false" />
 
-        <!-- Виджет на главный экран (см. GojiWidgetProvider) — статус + кнопка подключения.
-             exported=true обязателен для AppWidgetProvider: APPWIDGET_UPDATE шлёт system_server
-             от имени лончера, и на части прошивок/версий Android такая доставка не проходит до
-             ресивера с exported=false, несмотря на то что сам intent-action защищённый. Сюда
-             приходят только системные широковещания жизненного цикла виджета (APPWIDGET_UPDATE/
-             OPTIONS_CHANGED) — сам провайдер только перерисовывает виджет по внутреннему
-             состоянию, никаких действий с реальным эффектом не выполняет. -->
+        <!-- Виджет с логотипом (GojiWidgetProvider) убран из списка: класс остался как хозяин общих PendingIntent. -->
         <receiver
-            android:name=".widget.GojiWidgetProvider"
+            android:name=".widget.GojiTinyWidgetProvider"
+            android:label="@string/widget_tiny_label"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/widget_goji_info" />
+                android:resource="@xml/widget_tiny_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.GojiStripWidgetProvider"
+            android:label="@string/widget_strip_label"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_strip_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.GojiWideWidgetProvider"
+            android:label="@string/widget_wide_label"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_wide_info" />
         </receiver>
 
         <!-- Виджеты «Статус» и «Подписка» 2×2 (концепт Goji 2.0) — так же, как GojiWidgetProvider,

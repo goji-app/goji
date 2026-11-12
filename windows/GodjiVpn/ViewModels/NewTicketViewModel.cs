@@ -56,8 +56,8 @@ public sealed partial class NewTicketViewModel : ObservableObject
         // Только для превью-экземпляра (GODJI_UI_PREVIEW_DEMO=1): вёрстка без API.
         if (Environment.GetEnvironmentVariable("GODJI_UI_PREVIEW_DEMO") == "1")
         {
-            Queues.Add(new QueueItem { Id = 1, Name = "Техническая помощь", IsSelected = true });
-            Queues.Add(new QueueItem { Id = 2, Name = "Оплата" });
+            Queues.Add(new QueueItem { Id = 1, Name = Loc.T("Техническая помощь"), IsSelected = true });
+            Queues.Add(new QueueItem { Id = 2, Name = Loc.T("Оплата") });
             OnPropertyChanged(nameof(ShowQueuePicker));
             Loading = false;
             return;
@@ -102,7 +102,7 @@ public sealed partial class NewTicketViewModel : ObservableObject
         ErrorMessage = null;
         var trimmed = Message.Trim();
         if (trimmed.Length == 0) { ErrorMessage = "Введите сообщение"; return; }
-        if (ShowQueuePicker && Queues.All(q => !q.IsSelected)) { ErrorMessage = "Выберите, куда задать вопрос"; return; }
+        if (ShowQueuePicker && Queues.All(q => !q.IsSelected)) { ErrorMessage = Loc.T("Выберите, куда задать вопрос"); return; }
 
         Submitting = true;
         try
@@ -112,7 +112,7 @@ public sealed partial class NewTicketViewModel : ObservableObject
                 string.IsNullOrWhiteSpace(Subject) ? null : Subject.Trim(), trimmed, queueId);
             Created?.Invoke(ticket.Id);
         }
-        catch { ErrorMessage = "Не удалось создать обращение"; }
+        catch { ErrorMessage = Loc.T("Не удалось создать обращение"); }
         finally { Submitting = false; }
     }
 

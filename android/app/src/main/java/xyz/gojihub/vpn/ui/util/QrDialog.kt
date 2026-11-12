@@ -63,9 +63,9 @@ fun QrDialog(
         Column(
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(28.dp))
+                .clip(RoundedCornerShape(2.dp))
                 .background(GodjiColors.Surface)
-                .border(1.dp, GodjiColors.CardBorder, RoundedCornerShape(28.dp))
+                .border(1.dp, GodjiColors.CardBorder, RoundedCornerShape(2.dp))
                 .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -75,9 +75,9 @@ fun QrDialog(
             Box(
                 Modifier
                     .size(236.dp)
-                    .clip(RoundedCornerShape(20.dp))
+                    .clip(RoundedCornerShape(2.dp))
                     .background(Color.White)
-                    .border(1.dp, GodjiColors.CardBorder, RoundedCornerShape(20.dp))
+                    .border(1.dp, GodjiColors.CardBorder, RoundedCornerShape(2.dp))
                     .padding(14.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -90,7 +90,7 @@ fun QrDialog(
                 Text(
                     it, color = GodjiColors.Danger, fontWeight = FontWeight.SemiBold, fontSize = 11.5.sp, lineHeight = 16.sp,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.clip(RoundedCornerShape(14.dp)).background(GodjiColors.TerracottaTint).padding(horizontal = 12.dp, vertical = 9.dp)
+                    modifier = Modifier.clip(RoundedCornerShape(2.dp)).background(GodjiColors.TerracottaTint).padding(horizontal = 12.dp, vertical = 9.dp)
                 )
             }
             extraAction?.invoke()
@@ -98,9 +98,9 @@ fun QrDialog(
                 Modifier
                     .fillMaxWidth()
                     .height(44.dp)
-                    .clip(RoundedCornerShape(50))
+                    .clip(RoundedCornerShape(2.dp))
                     .background(GodjiColors.Chip)
-                    .border(1.dp, GodjiColors.CardBorder, RoundedCornerShape(50))
+                    .border(1.dp, GodjiColors.CardBorder, RoundedCornerShape(2.dp))
                     .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
                 contentAlignment = Alignment.Center
             ) {

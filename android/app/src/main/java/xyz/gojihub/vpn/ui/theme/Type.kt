@@ -13,28 +13,37 @@ import xyz.gojihub.vpn.R
 // v5 «Стекло»: во всём приложении один шрифт — Manrope (как в эталоне).
 // SpaceGroteskFamily / JetBrainsMonoFamily оставлены как ПСЕВДОНИМЫ Manrope, чтобы экраны 1.0.77,
 // которые их импортируют, компилировались без правок, но рисовали Manrope.
+// Макет 9a: Golos Text — текст, JetBrains Mono — подписи, цифры, кнопки, навигация.
+// Имя ManropeFamily оставлено ради экранов, которые его импортируют, шрифт под ним — Golos.
 val ManropeFamily = FontFamily(
-    Font(R.font.manrope_extralight, FontWeight.ExtraLight),
-    Font(R.font.manrope_light, FontWeight.Light),
-    Font(R.font.manrope_regular, FontWeight.Normal),
-    Font(R.font.manrope_medium, FontWeight.Medium),
-    Font(R.font.manrope_semibold, FontWeight.SemiBold),
-    Font(R.font.manrope_bold, FontWeight.Bold),
-    Font(R.font.manrope_extrabold, FontWeight.ExtraBold)
+    Font(R.font.golos_400, FontWeight.Light), Font(R.font.golos_400, FontWeight.Normal),
+    Font(R.font.golos_500, FontWeight.Medium), Font(R.font.golos_600, FontWeight.SemiBold),
+    Font(R.font.golos_700, FontWeight.Bold), Font(R.font.golos_700, FontWeight.ExtraBold)
+)
+val MonoFamily = FontFamily(
+    Font(R.font.jbmono_400, FontWeight.Normal), Font(R.font.jbmono_400, FontWeight.Medium),
+    Font(R.font.jbmono_600, FontWeight.SemiBold), Font(R.font.jbmono_700, FontWeight.Bold)
 )
 val InstrumentSerifFamily = FontFamily(
     Font(R.font.instrument_serif, FontWeight.Normal, FontStyle.Normal),
     Font(R.font.instrument_serif_italic, FontWeight.Normal, FontStyle.Italic)
 )
 val SpaceGroteskFamily = ManropeFamily
-val JetBrainsMonoFamily = ManropeFamily
+val JetBrainsMonoFamily = MonoFamily
 
 private val base = Typography()
 /** Стиль текста по умолчанию (LocalTextStyle) для всех Text без явного lineHeight. У M3 bodyLarge
  *  интервал фиксированный 24sp — у текста 11–13sp он давал двойные промежутки между строками при
  *  переносе. Относительный интервал растёт вместе со шрифтом. В типографику (её смешивают поля
  *  ввода) его не кладём — только в LocalTextStyle, см. GodjiVpnTheme. */
-val DefaultTextStyle = TextStyle(fontFamily = ManropeFamily, fontSize = 16.sp, lineHeight = 1.3.em)
+val DefaultTextStyle = TextStyle(
+    fontFamily = ManropeFamily, fontSize = 16.sp, lineHeight = 1.3.em,
+    platformStyle = androidx.compose.ui.text.PlatformTextStyle(includeFontPadding = false),
+    lineHeightStyle = androidx.compose.ui.text.style.LineHeightStyle(
+        alignment = androidx.compose.ui.text.style.LineHeightStyle.Alignment.Center,
+        trim = androidx.compose.ui.text.style.LineHeightStyle.Trim.None
+    )
+)
 
 val GodjiTypography = Typography(
     displayLarge = base.displayLarge.copy(fontFamily = ManropeFamily),

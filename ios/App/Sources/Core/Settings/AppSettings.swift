@@ -47,6 +47,9 @@ final class AppSettings: ObservableObject {
     private let defaults = UserDefaults.standard
 
     @Published var themeMode: ThemeMode { didSet { defaults.set(themeMode.rawValue, forKey: "theme") } }
+    /// Выбранная палитра (см. DesignSystem/Palettes.swift); по умолчанию «Шалфей» из макета 9a.
+    @Published var languageCode: String = AppLanguage.code.hasPrefix("ru") ? "ru" : "en" { didSet { AppLanguage.override = languageCode } }
+    @Published var paletteId: String { didSet { defaults.set(paletteId, forKey: "palette.id"); Palettes.currentId = paletteId } }
     @Published var haptics: Bool { didSet { defaults.set(haptics, forKey: "haptics") } }
     @Published var pingMethod: PingMethod { didSet { defaults.set(pingMethod.rawValue, forKey: "ping.method") } }
     @Published var pingURL: String { didSet { defaults.set(pingURL, forKey: "ping.url") } }
@@ -78,6 +81,9 @@ final class AppSettings: ObservableObject {
         bypassDomains = TunnelSettings.bypassDomains
         logLevel = TunnelSettings.logLevel
         privacyAccepted = defaults.bool(forKey: "privacy.accepted")
+        let savedPalette = Palettes.byId(defaults.string(forKey: "palette.id")).id
+        paletteId = savedPalette
+        Palettes.currentId = savedPalette
         preferredNodeId = defaults.string(forKey: "vpn.preferredNode")
     }
 

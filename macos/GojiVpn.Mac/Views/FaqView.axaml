@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:GodjiVpn.Controls"
              xmlns:s="using:GodjiVpn.Utils"
              xmlns:c="using:GodjiVpn.Controls"
              xmlns:vm="using:GodjiVpn.ViewModels"
@@ -10,29 +11,29 @@
          только внутри очень длинного ответа, как в просмотре журнала). -->
     <Grid RowDefinitions="Auto,*">
         <Grid ColumnDefinitions="Auto,*" Margin="16,16,16,10">
-            <Button Classes="circle" Command="{Binding BackCommand}" ToolTip.Tip="Назад" AutomationProperties.Name="Назад">
+            <Button Classes="circle" Command="{Binding BackCommand}" ToolTip.Tip="Назад" AutomationProperties.Name="{loc:T 'Назад'}">
                 <Path Classes="icon" Data="{StaticResource IconChevronLeft}" Width="20" Height="20"/>
             </Button>
-            <TextBlock Grid.Column="1" Classes="subTitle" Text="Частые вопросы" Margin="12,0,0,0" IsVisible="{Binding IsListOpen}"/>
-            <TextBlock Grid.Column="1" Classes="subTitle" Text="Ответ" Margin="12,0,0,0" IsVisible="{Binding IsAnswerOpen}"/>
+            <TextBlock Grid.Column="1" Classes="subTitle" Text="{loc:T 'Частые вопросы'}" Margin="12,0,0,0" IsVisible="{Binding IsListOpen}"/>
+            <TextBlock Grid.Column="1" Classes="subTitle" Text="{loc:T 'Ответ'}" Margin="12,0,0,0" IsVisible="{Binding IsAnswerOpen}"/>
         </Grid>
 
         <!-- ═══ Список вопросов ═══ -->
         <Panel Grid.Row="1" Margin="16,0,16,16" IsVisible="{Binding IsListOpen}">
             <c:Spinner Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,30,0,0" IsVisible="{Binding Loading}"/>
 
-            <c:GlassPanel Classes="card" CornerRadius="24" VerticalAlignment="Top" IsVisible="{Binding LoadError}">
+            <c:GlassPanel Classes="card" CornerRadius="2" VerticalAlignment="Top" IsVisible="{Binding LoadError}">
                 <StackPanel Margin="20" HorizontalAlignment="Center">
-                    <TextBlock Classes="muted" Text="Не удалось загрузить вопросы" FontSize="{s:Fs 12.5}"/>
-                    <Button Classes="chip" Content="Повторить" Margin="0,10,0,0" HorizontalAlignment="Center" Command="{Binding RetryCommand}"/>
+                    <TextBlock Classes="muted" Text="{loc:T 'Не удалось загрузить вопросы'}" FontSize="{s:Fs 12.5}"/>
+                    <Button Classes="chip" Content="{loc:T 'Повторить'}" Margin="0,10,0,0" HorizontalAlignment="Center" Command="{Binding RetryCommand}"/>
                 </StackPanel>
             </c:GlassPanel>
 
-            <c:GlassPanel Classes="card" CornerRadius="24" VerticalAlignment="Top" IsVisible="{Binding IsEmpty}">
-                <TextBlock Classes="muted" Text="Пока нет вопросов" Margin="20" HorizontalAlignment="Center" FontSize="{s:Fs 12.5}"/>
+            <c:GlassPanel Classes="card" CornerRadius="2" VerticalAlignment="Top" IsVisible="{Binding IsEmpty}">
+                <TextBlock Classes="muted" Text="{loc:T 'Пока нет вопросов'}" Margin="20" HorizontalAlignment="Center" FontSize="{s:Fs 12.5}"/>
             </c:GlassPanel>
 
-            <c:GlassPanel Classes="card" CornerRadius="24" VerticalAlignment="Top"
+            <c:GlassPanel Classes="card" CornerRadius="2" VerticalAlignment="Top"
                           IsVisible="{Binding Rows.Count, Converter={x:Static conv:Conv.NonZero}}">
                 <c:PagedItems ItemsSource="{Binding Rows}">
                     <c:PagedItems.DataTemplates>
@@ -64,7 +65,7 @@
         </Panel>
 
         <!-- ═══ Ответ ═══ -->
-        <c:GlassPanel Grid.Row="1" Classes="card" CornerRadius="24" Margin="16,0,16,16" VerticalAlignment="Top" IsVisible="{Binding IsAnswerOpen}">
+        <c:GlassPanel Grid.Row="1" Classes="card" CornerRadius="2" Margin="16,0,16,16" VerticalAlignment="Top" IsVisible="{Binding IsAnswerOpen}">
             <ScrollViewer>
                 <StackPanel Margin="18,16">
                     <TextBlock Text="{Binding OpenedItem.Question}" FontWeight="Bold" FontSize="{s:Fs 15}" TextWrapping="Wrap"/>

@@ -27,28 +27,28 @@
 
     <!-- godjiCard: карточка-модуль, surfaceContainer, радиус 24. -->
     <Style x:Key="GlassCard" TargetType="controls:GlassPanel" BasedOn="{StaticResource {x:Type controls:GlassPanel}}">
-        <Setter Property="CornerRadius" Value="24"/>
+        <Setter Property="CornerRadius" Value="2"/>
         <Setter Property="Level" Value="Normal"/>
         <Setter Property="Shadow" Value="Card"/>
     </Style>
 
     <!-- godjiGlassPill: плашки, круглые кнопки 40, статусы, чипы — surfaceContainerHigh. -->
     <Style x:Key="GlassPill" TargetType="controls:GlassPanel" BasedOn="{StaticResource {x:Type controls:GlassPanel}}">
-        <Setter Property="CornerRadius" Value="999"/>
+        <Setter Property="CornerRadius" Value="2"/>
         <Setter Property="Level" Value="Strong"/>
         <Setter Property="Shadow" Value="Pill"/>
     </Style>
 
     <!-- godjiGlassStrong: лист входа, тост — уровень выше карточки (surfaceContainerHigh). -->
     <Style x:Key="GlassStrong" TargetType="controls:GlassPanel" BasedOn="{StaticResource {x:Type controls:GlassPanel}}">
-        <Setter Property="CornerRadius" Value="28"/>
+        <Setter Property="CornerRadius" Value="2"/>
         <Setter Property="Level" Value="Strong"/>
         <Setter Property="Shadow" Value="Strong"/>
     </Style>
 
     <!-- godjiGlassFlat: строка/чип внутри карточки — surfaceContainerHighest. -->
     <Style x:Key="GlassFlat" TargetType="controls:GlassPanel" BasedOn="{StaticResource {x:Type controls:GlassPanel}}">
-        <Setter Property="CornerRadius" Value="16"/>
+        <Setter Property="CornerRadius" Value="2"/>
         <Setter Property="Level" Value="Faint"/>
         <Setter Property="Shadow" Value="None"/>
     </Style>
@@ -57,8 +57,8 @@
     <!-- Заголовки экранов: Manrope Bold 26 (Android 1.0.115: 30 → 26). -->
     <Style x:Key="ScreenTitle" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{DynamicResource ManropeFamily}"/>
-        <Setter Property="FontWeight" Value="Bold"/>
-        <Setter Property="FontSize" Value="{s:Fs 26}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="FontSize" Value="{s:Fs 30}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     </Style>
 
@@ -93,8 +93,8 @@
     <!-- Разделитель внутри карточек: в M3 Expressive группы разделены «щелью» цвета фона
          (Android: HorizontalDivider 2dp SurfaceBase), а не тонкой линией. -->
     <Style x:Key="Hair" TargetType="Rectangle">
-        <Setter Property="Height" Value="2"/>
-        <Setter Property="Fill" Value="{DynamicResource BgSolidBrush}"/>
+        <Setter Property="Height" Value="1"/>
+        <Setter Property="Fill" Value="{DynamicResource OutlineVariantBrush}"/>
         <Setter Property="SnapsToDevicePixels" Value="True"/>
     </Style>
 
@@ -334,8 +334,8 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
                     <Grid>
-                        <Border x:Name="Track" CornerRadius="16" Background="{DynamicResource TrackBgBrush}"/>
-                        <Border x:Name="Knob" Width="36" Height="26" CornerRadius="13" Background="#F2FFFFFF"
+                        <Border x:Name="Track" CornerRadius="2" Background="{DynamicResource TrackBgBrush}"/>
+                        <Border x:Name="Knob" Width="36" Height="26" CornerRadius="2" Background="#F2FFFFFF"
                                 HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,3,0,0">
                             <Border.RenderTransform>
                                 <TranslateTransform X="3"/>
@@ -385,7 +385,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Thumb">
-                    <Border x:Name="T" CornerRadius="3" Background="{DynamicResource TextMutedBrush}" Opacity="0.35"/>
+                    <Border x:Name="T" CornerRadius="2" Background="{DynamicResource TextMutedBrush}" Opacity="0.35"/>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="T" Property="Opacity" Value="0.6"/>
@@ -450,7 +450,7 @@
                     <!-- Рамка — outline (M3): на стеклянной карточке тёмной темы поле с CardBorder
                          сливалось с фоном. Tag — подсказка в пустом поле. -->
                     <Border x:Name="Bd" Background="{DynamicResource ChipBrush}" BorderBrush="{DynamicResource OutlineBrush}"
-                            BorderThickness="1.5" CornerRadius="16">
+                            BorderThickness="1.5" CornerRadius="2">
                         <Grid>
                             <TextBlock x:Name="Hint" Text="{TemplateBinding Tag}" Foreground="{DynamicResource TextMutedBrush}"
                                        Margin="16,0,14,0" VerticalAlignment="Center" IsHitTestVisible="False" Visibility="Collapsed"/>
@@ -491,18 +491,16 @@
                     <DockPanel>
                         <Grid x:Name="Pager" DockPanel.Dock="Bottom" Visibility="Collapsed">
                             <Rectangle Style="{StaticResource Hair}" VerticalAlignment="Top"/>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4">
-                                <Button Style="{StaticResource PagerButton}" AutomationProperties.Name="Предыдущая страница"
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10">
+                                <Button Style="{StaticResource BareButton}" Padding="12,8" AutomationProperties.Name="Предыдущая страница"
                                         Command="{Binding PrevCommand, RelativeSource={RelativeSource TemplatedParent}}">
-                                    <Path Data="{StaticResource IconChevronLeft}" Style="{StaticResource Icon}" Width="18" Height="18"
-                                          Fill="{DynamicResource TextPrimaryBrush}"/>
+                                    <TextBlock Text="‹ НАЗАД" FontFamily="{DynamicResource JetBrainsMonoFamily}" FontSize="{s:Fs 11}" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 </Button>
-                                <TextBlock Text="{TemplateBinding PagerText}" FontWeight="Bold" FontSize="{s:Fs 12}" MinWidth="44"
-                                           TextAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                <Button Style="{StaticResource PagerButton}" AutomationProperties.Name="Следующая страница"
+                                <TextBlock Text="{TemplateBinding PagerText}" FontFamily="{DynamicResource JetBrainsMonoFamily}" FontSize="{s:Fs 11}"
+                                           VerticalAlignment="Center" Margin="10,0" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <Button Style="{StaticResource BareButton}" Padding="12,8" AutomationProperties.Name="Следующая страница"
                                         Command="{Binding NextCommand, RelativeSource={RelativeSource TemplatedParent}}">
-                                    <Path Data="{StaticResource IconChevronRight}" Style="{StaticResource Icon}" Width="18" Height="18"
-                                          Fill="{DynamicResource TextPrimaryBrush}"/>
+                                    <TextBlock Text="ДАЛЬШЕ ›" FontFamily="{DynamicResource JetBrainsMonoFamily}" FontSize="{s:Fs 11}" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 </Button>
                             </StackPanel>
                         </Grid>

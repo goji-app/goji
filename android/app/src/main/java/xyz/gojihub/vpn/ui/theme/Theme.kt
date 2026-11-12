@@ -1,6 +1,8 @@
 package xyz.gojihub.vpn.ui.theme
 
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
@@ -87,7 +89,11 @@ fun GodjiVpnTheme(
     CompositionLocalProvider(LocalDensity provides scaledDensity) {
         MaterialTheme(
             colorScheme = godjiColorScheme(),
-            typography = GodjiTypography
+            typography = GodjiTypography,
+            shapes = androidx.compose.material3.Shapes(
+                extraSmall = RoundedCornerShape(2.dp), small = RoundedCornerShape(2.dp), medium = RoundedCornerShape(2.dp),
+                large = RoundedCornerShape(2.dp), extraLarge = RoundedCornerShape(2.dp)
+            )
         ) {
             // Относительный межстрочный интервал для обычного текста (см. DefaultTextStyle).
             androidx.compose.material3.ProvideTextStyle(DefaultTextStyle, content)

@@ -126,9 +126,14 @@ fun GodjiApp(startLoggedIn: Boolean, authRepository: AuthRepository, verifyEmail
     // v5: фон GlassBackdrop рисуется и под системными панелями — они прозрачные.
     val view = LocalView.current
     val isDark = GodjiColors.isDark
+    // Полоса под статус-баром и навигацией красится фоном окна: на главной он повторяет заливку по состоянию.
+    val windowFill by androidx.compose.animation.animateColorAsState(
+        GodjiColors.navBg ?: GodjiColors.BackgroundSolid, androidx.compose.animation.core.tween(500), label = "windowFill"
+    )
     SideEffect {
         val window = (view.context as? android.app.Activity)?.window
         if (window != null) {
+            window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(windowFill.toArgb()))
             @Suppress("DEPRECATION")
             window.statusBarColor = Color.Transparent.toArgb()
             @Suppress("DEPRECATION")
@@ -145,7 +150,6 @@ fun GodjiApp(startLoggedIn: Boolean, authRepository: AuthRepository, verifyEmail
     val startDestination = remember(view.context) {
         when {
             startLoggedIn -> GodjiDestinations.CONNECT
-            !xyz.gojihub.vpn.ui.login.Onboarding.isSeen(view.context) -> GodjiDestinations.ONBOARDING
             else -> GodjiDestinations.LOGIN
         }
     }

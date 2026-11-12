@@ -1,5 +1,6 @@
 package xyz.gojihub.vpn.ui.connect
 
+import kotlinx.coroutines.flow.stateIn
 import android.content.Context
 import android.content.Intent
 import android.net.TrafficStats
@@ -109,6 +110,23 @@ class ConnectViewModel @Inject constructor(
     @javax.inject.Named("diagnostics") diagnosticsClient: okhttp3.OkHttpClient,
     @ApplicationContext private val appContext: Context
 ) : ViewModel() {
+
+    /** «3 / 8» для метки на главной; пусто, пока узлов нет. */
+    val serverCounter: kotlinx.coroutines.flow.StateFlow<String> = kotlinx.coroutines.flow.combine(
+        subscriptionRepository.nodes, subscriptionRepository.selectedId
+    ) { nodes, id ->
+        val i = nodes.indexOfFirst { it.id == id }
+        if (i < 0) "" else "${i + 1} / ${nodes.size}"
+    }.stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.Eagerly, "")
+
+    /** Тап по коду страны на главной: следующий узел списка (пока идёт подключение — нельзя). */
+    fun nextServer() {
+        if (_state.value.connecting) return
+        val list = subscriptionRepository.nodes.value
+        if (list.size < 2) return
+        val i = list.indexOfFirst { it.id == subscriptionRepository.selectedId.value }
+        subscriptionRepository.select(list[(i + 1) % list.size].id)
+    }
 
     private val probeClient = diagnosticsClient.newBuilder()
         .callTimeout(5, java.util.concurrent.TimeUnit.SECONDS)

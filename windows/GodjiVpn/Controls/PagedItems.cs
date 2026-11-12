@@ -28,6 +28,11 @@ public sealed class PagedItems : ItemsControl
         nameof(PagerText), typeof(string), typeof(PagedItems), new PropertyMetadata(""));
     public static readonly DependencyProperty PagerTextProperty = PagerTextPropertyKey.DependencyProperty;
 
+    /// <summary>Число колонок сетки (макет 9a «Серверы»: 2 колонки × строки); 1 — обычный список.</summary>
+    public static readonly DependencyProperty ColumnsProperty = DependencyProperty.Register(
+        nameof(Columns), typeof(int), typeof(PagedItems), new FrameworkPropertyMetadata(1, FrameworkPropertyMetadataOptions.AffectsMeasure));
+    public int Columns { get => (int)GetValue(ColumnsProperty); set => SetValue(ColumnsProperty, value); }
+
     public int PageIndex { get => (int)GetValue(PageIndexProperty); set => SetValue(PageIndexProperty, value); }
     public int PageCount { get => (int)GetValue(PageCountProperty); set => SetValue(PageCountProperty, value); }
     public string PagerText => (string)GetValue(PagerTextProperty);
@@ -97,7 +102,7 @@ public sealed class PagedItems : ItemsControl
     }
 
     private void UpdatePagerText() =>
-        SetValue(PagerTextPropertyKey, $"{Math.Min(PageIndex + 1, PageCount)} / {PageCount}");
+        SetValue(PagerTextPropertyKey, $"СТРАНИЦА {Math.Min(PageIndex + 1, PageCount)} ИЗ {PageCount}");
 }
 
 /// <summary>
@@ -134,62 +139,79 @@ public sealed class PagedPanel : Panel
         }
     }
 
+    private readonly List<double> _rowHeights = new();
+
     protected override Size MeasureOverride(Size available)
     {
         var width = double.IsInfinity(available.Width) ? double.PositiveInfinity : available.Width;
+        var cols = Math.Max(1, Owner?.Columns ?? 1);
+        var cellW = double.IsInfinity(width) ? width : width / cols;
         _pageStarts.Clear();
         _pageStarts.Add(0);
+        _rowHeights.Clear();
         double used = 0;
-        for (var i = 0; i < InternalChildren.Count; i++)
+        var n = InternalChildren.Count;
+        for (var r = 0; r * cols < n; r++)
         {
-            var child = InternalChildren[i];
-            child.Measure(new Size(width, double.PositiveInfinity));
-            var h = child.DesiredSize.Height;
-            if (used > 0 && used + h > available.Height)
+            double rowH = 0;
+            for (var c = 0; c < cols && r * cols + c < n; c++)
             {
-                _pageStarts.Add(i);
+                var child = InternalChildren[r * cols + c];
+                child.Measure(new Size(cellW, double.PositiveInfinity));
+                rowH = Math.Max(rowH, child.DesiredSize.Height);
+            }
+            _rowHeights.Add(rowH);
+            if (used > 0 && used + rowH > available.Height)
+            {
+                _pageStarts.Add(r * cols);
                 used = 0;
             }
-            used += h;
+            used += rowH;
         }
         var owner = Owner;
         var page = Math.Clamp(owner?.PageIndex ?? 0, 0, _pageStarts.Count - 1);
-        // Предварительные проходы с бесконечной высотой (так сетка меряет строки со звёздочкой)
-        // не считаются: иначе 1 и N страниц чередовались бы и раскладка не останавливалась.
+        // Предварительные проходы с бесконечной высотой не считаются: иначе 1 и N страниц чередовались бы.
         if (!double.IsInfinity(available.Height)) owner?.ReportPages(_pageStarts.Count);
 
-        for (var i = 0; i < InternalChildren.Count; i++)
-            SetIsPageStart(InternalChildren[i], _pageStarts.Contains(i));
+        for (var i = 0; i < n; i++)
+            SetIsPageStart(InternalChildren[i], _pageStarts.Contains(i - i % cols));
 
         var (from, to) = PageRange(page);
-        double height = 0, maxWidth = 0;
-        for (var i = from; i < to; i++)
-        {
-            height += InternalChildren[i].DesiredSize.Height;
-            maxWidth = Math.Max(maxWidth, InternalChildren[i].DesiredSize.Width);
-        }
-        return new Size(double.IsInfinity(width) ? maxWidth : width, height);
+        double height = 0;
+        for (var r = from / cols; r * cols < to; r++) height += _rowHeights[r];
+        return new Size(double.IsInfinity(width) ? 0 : width, height);
     }
 
     protected override Size ArrangeOverride(Size finalSize)
     {
+        var cols = Math.Max(1, Owner?.Columns ?? 1);
+        var cellW = finalSize.Width / cols;
         var page = Math.Clamp(Owner?.PageIndex ?? 0, 0, _pageStarts.Count - 1);
         var (from, to) = PageRange(page);
         double y = 0;
         for (var i = 0; i < InternalChildren.Count; i++)
         {
             var child = InternalChildren[i];
+            var r = i / cols;
             if (i >= from && i < to)
             {
-                child.Arrange(new Rect(0, y, finalSize.Width, child.DesiredSize.Height));
-                y += child.DesiredSize.Height;
+                var rowTop = y;
+                for (var q = from / cols; q < r; q++) rowTop = 0;
+                child.Arrange(new Rect((i % cols) * cellW, RowTop(from, r, cols), cellW, _rowHeights[r]));
             }
             else
             {
-                child.Arrange(new Rect(0, finalSize.Height + 10000, finalSize.Width, child.DesiredSize.Height));
+                child.Arrange(new Rect(0, finalSize.Height + 10000, cellW, child.DesiredSize.Height));
             }
         }
         return finalSize;
+    }
+
+    private double RowTop(int from, int row, int cols)
+    {
+        double top = 0;
+        for (var q = from / cols; q < row; q++) top += _rowHeights[q];
+        return top;
     }
 
     private (int From, int To) PageRange(int page)

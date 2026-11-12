@@ -2,6 +2,7 @@ import SwiftUI
 
 struct LoginView: View {
     @EnvironmentObject private var model: AppModel
+    @EnvironmentObject private var settings: AppSettings
     @Environment(\.openURL) private var openURL
     @State private var email = ""
     @State private var sending = false
@@ -14,57 +15,84 @@ struct LoginView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                Image("Mascot")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 88, height: 88)
-                    .padding(.top, 32)
-                    .accessibilityHidden(true)
-                Text(L("login.greeting"))
-                    .font(GojiFont.title(34))
-                    .foregroundStyle(GojiColor.textPrimary)
-
-                GlassCard {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text(L("login.email.label"))
-                            .font(GojiFont.caption())
-                            .foregroundStyle(GojiColor.textSecondary)
-                        TextField("name@example.com", text: $email)
-                            .textContentType(.emailAddress)
-                            .keyboardType(.emailAddress)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                            .submitLabel(.send)
-                            .focused($emailFocused)
-                            .onSubmit { Task { await send() } }
-                            .font(GojiFont.manrope(17, .semibold))
-                            .padding(14)
-                            .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(GojiColor.chip))
-                            .accessibilityLabel(L("login.email.label"))
-                        if let error {
-                            Text(error)
-                                .font(GojiFont.caption())
-                                .foregroundStyle(GojiColor.danger)
+                // Макет 9a «Вход»: заголовок, подсказка, поле только с нижней линией, плоская кнопка, QR-вход текстом.
+                HStack(spacing: 14) {
+                    ForEach([("ru", "РУССКИЙ"), ("en", "ENGLISH")], id: \.0) { code, title in
+                        Button { settings.languageCode = code } label: {
+                            Text(title).font(GojiFont.mono(12))
+                                .fontWeight(settings.languageCode == code ? .bold : .regular)
+                                .foregroundStyle(settings.languageCode == code ? GojiColor.textPrimary : GojiColor.textSecondary)
+                                .padding(.vertical, 8)
                         }
-                        Button {
-                            Task { await send() }
-                        } label: {
-                            if sending { ProgressView().tint(GojiColor.inkButtonText) } else { Text(L("login.get_code")) }
-                        }
-                        .buttonStyle(PrimaryButtonStyle())
-                        .disabled(sending)
-                        Text(L("login.no_account"))
-                            .font(GojiFont.caption())
-                            .foregroundStyle(GojiColor.textSecondary)
                     }
                 }
+                .padding(.top, 16)
+                Text(AppLanguage.isRussian ? "Войти по почте" : "Sign in by email")
+                    .font(GojiFont.title())
+                    .foregroundStyle(GojiColor.textPrimary)
+                    .padding(.top, 8)
+                    .accessibilityAddTraits(.isHeader)
+                Text(AppLanguage.isRussian
+                     ? "Пришлём код из шести цифр. Пароль не нужен. Первые 3 дня бесплатно."
+                     : "We'll send a six-digit code. No password. First 3 days are free.")
+                    .font(GojiFont.manrope(15))
+                    .foregroundStyle(GojiColor.textSecondary)
+                Text(AppLanguage.isRussian ? "ПОЧТА" : "EMAIL")
+                    .font(GojiFont.mono(11))
+                    .foregroundStyle(GojiColor.textSecondary)
+                    .padding(.top, 16)
+                VStack(spacing: 10) {
+                    TextField("name@example.com", text: $email)
+                        .textContentType(.emailAddress)
+                        .keyboardType(.emailAddress)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .submitLabel(.send)
+                        .focused($emailFocused)
+                        .onSubmit { Task { await send() } }
+                        .font(GojiFont.manrope(18))
+                        .foregroundStyle(GojiColor.textPrimary)
+                        .accessibilityLabel(L("login.email.label"))
+                    Rectangle().fill(GojiColor.textPrimary).frame(height: 1)
+                }
+                if let error {
+                    Text(error)
+                        .font(GojiFont.caption())
+                        .foregroundStyle(GojiColor.danger)
+                }
+                Button {
+                    Task { await send() }
+                } label: {
+                    Group {
+                        if sending {
+                            ProgressView().tint(GojiColor.inkButtonText)
+                        } else {
+                            Text(L("login.get_code").uppercased())
+                                .font(GojiFont.mono(14, .bold))
+                                .tracking(0.8)
+                        }
+                    }
+                    .foregroundStyle(GojiColor.inkButtonText)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(RoundedRectangle(cornerRadius: 2).fill(GojiColor.inkButton))
+                }
+                .buttonStyle(.plain)
+                .disabled(sending)
+                .padding(.top, 14)
+                Text(L("login.no_account"))
+                    .font(GojiFont.caption())
+                    .foregroundStyle(GojiColor.textSecondary)
 
                 Button {
                     showScanner = true
                 } label: {
-                    Label(L("login.scan_qr"), systemImage: "qrcode.viewfinder")
+                    Text(AppLanguage.isRussian ? "ВОЙТИ ПО QR С ДРУГОГО УСТРОЙСТВА" : "SIGN IN WITH QR FROM ANOTHER DEVICE")
+                        .font(GojiFont.mono(12))
+                        .foregroundStyle(GojiColor.textSecondary)
+                        .frame(maxWidth: .infinity, minHeight: 44)
                 }
-                .buttonStyle(SecondaryButtonStyle())
+                .buttonStyle(.plain)
 
                 consentText
                     .padding(.bottom, 24)

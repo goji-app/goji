@@ -22,7 +22,7 @@ struct ServersView: View {
                 }
             } else {
                 PillSegmented(options: ServerSort.allCases, selection: $settings.serverSort) { $0.title }
-                VStack(spacing: 10) {
+                VStack(spacing: 0) {
                     ForEach(sortedNodes) { node in
                         ServerRow(
                             node: node,
@@ -116,21 +116,17 @@ struct ServerRow: View {
         HStack(spacing: 12) {
             Button(action: onSelect) {
                 HStack(spacing: 12) {
-                    Text(node.flag)
-                        .font(.system(size: 26))
-                        .frame(width: 42, height: 42)
-                        .background(Circle().fill(GojiColor.chip))
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(node.displayName)
-                            .font(GojiFont.manrope(15, .bold))
-                            .foregroundStyle(GojiColor.textPrimary)
-                            .lineLimit(1)
-                        if let geo = node.geo {
-                            Text(geo.displayCity)
-                                .font(GojiFont.caption())
-                                .foregroundStyle(GojiColor.textSecondary)
-                        }
-                    }
+                    Text(node.codeLabel)
+                        .font(GojiFont.mono(30, .bold))
+                        .tracking(-1.8)
+                        .foregroundStyle(GojiColor.textPrimary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
+                        .frame(width: 74, alignment: .leading)
+                    Text(node.displayName)
+                        .font(GojiFont.manrope(15, .semibold))
+                        .foregroundStyle(GojiColor.textPrimary)
+                        .lineLimit(2)
                     Spacer(minLength: 4)
                 }
                 .contentShape(Rectangle())
@@ -139,34 +135,34 @@ struct ServerRow: View {
             .accessibilityAddTraits(selected ? .isSelected : [])
 
             Button(action: onPing) {
-                Group {
+                VStack(alignment: .trailing, spacing: 3) {
                     if checking {
-                        ProgressView().scaleEffect(0.7)
-                    } else if let ping {
-                        PingLabel(ms: ping)
+                        ProgressView().scaleEffect(0.6)
                     } else {
-                        Text(L("servers.check"))
-                            // Кегль как у числа пинга в этой же колонке (13), чтобы строки
-                            // не «прыгали» между проверкой и результатом.
-                            .font(GojiFont.manrope(13, .semibold, relativeTo: .caption))
-                            .foregroundStyle(GojiColor.tealDeep)
+                        Text(ping.map { $0 >= 0 ? String($0) : "×" } ?? "—")
+                            .font(GojiFont.mono(13, .semibold))
+                            .foregroundStyle(GojiColor.textPrimary)
                     }
+                    PingScale(ms: ping, height: 4).frame(width: 48)
                 }
-                .frame(minWidth: 56, minHeight: 32)
+                .frame(minWidth: 56, minHeight: 44)
             }
             .buttonStyle(.plain)
             .accessibilityLabel(L("servers.ping"))
 
             Button(action: onFavorite) {
                 Image(systemName: favorite ? "star.fill" : "star")
-                    .foregroundStyle(favorite ? GojiColor.warning : GojiColor.textMuted)
+                    .foregroundStyle(favorite ? GojiColor.textPrimary : GojiColor.textMuted)
                     .frame(width: 44, height: 44) // минимальная зона нажатия по HIG
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel(favorite ? L("servers.unfavorite") : L("servers.favorite"))
         }
-        .padding(12)
-        .background(GlassSurface(radius: 20, highlighted: selected))
+        .padding(.vertical, 4)
+        .padding(.horizontal, 10)
+        .background(selected ? GojiColor.glass : Color.clear)
+        .overlay(alignment: .leading) { if selected { Rectangle().fill(GojiColor.textPrimary).frame(width: 3) } }
+        .overlay(alignment: .top) { Rectangle().fill(GojiColor.outlineVariant).frame(height: 1) }
     }
 }

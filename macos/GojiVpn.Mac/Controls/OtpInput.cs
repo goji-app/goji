@@ -37,15 +37,16 @@ public class OtpInput : UserControl
         {
             var cell = new TextBox
             {
-                Height = 56,
+                Height = 60,
                 Margin = new Thickness(4, 0),
                 MaxLength = 1,
                 TextAlignment = TextAlignment.Center,
                 VerticalContentAlignment = VerticalAlignment.Center,
-                [!TextBox.FontSizeProperty] = FontScale.For(20),
-                FontWeight = FontWeight.Bold,
+                [!TextBox.FontSizeProperty] = FontScale.For(26),
+                FontWeight = FontWeight.SemiBold,
+                FontFamily = new FontFamily("avares://GojiVpn/Assets/Fonts#JetBrains Mono"),
                 Padding = new Thickness(0),
-                CornerRadius = new CornerRadius(16),
+                CornerRadius = new CornerRadius(2),
                 BorderThickness = new Thickness(1)
             };
             cell.Classes.Add("glass");
@@ -125,7 +126,7 @@ public class OtpInput : UserControl
         var active = Array.FindIndex(_cells, c => string.IsNullOrEmpty(c.Text));
         for (var i = 0; i < _cells.Length; i++)
         {
-            var key = HasError ? "DangerBrush" : i == active && _cells[i].IsFocused ? "TealBrush" : "CardBorderBrush";
+            var key = HasError ? "DangerBrush" : (i == active && _cells[i].IsFocused) || _cells[i].Text?.Length == 1 ? "InkBrush" : "OutlineVariantBrush";
             _cells[i][!TemplatedControl.BorderBrushProperty] = new DynamicResourceExtension(key);
             _cells[i].BorderThickness = new Thickness(HasError || i == active ? 1.5 : 1);
         }

@@ -124,12 +124,12 @@ fun NetworkRulesScreen(onBack: () -> Unit, viewModel: NetworkRulesViewModel = hi
         Row(
             Modifier
                 .fillMaxWidth()
-                .godjiCard(RoundedCornerShape(24.dp))
+                .godjiCard(RoundedCornerShape(2.dp))
                 .padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Box(Modifier.size(36.dp).clip(CircleShape).background(GodjiColors.TealTint), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(36.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(2.dp)).background(GodjiColors.TealTint), contentAlignment = Alignment.Center) {
                 Icon(Icons.Filled.Wifi, contentDescription = null, tint = GodjiColors.TealDeep, modifier = Modifier.size(18.dp))
             }
             val ssid = state.currentSsid
@@ -167,7 +167,7 @@ fun NetworkRulesScreen(onBack: () -> Unit, viewModel: NetworkRulesViewModel = hi
                 ) {
                     Text(name, color = GodjiColors.TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                     Box(
-                        Modifier.size(28.dp).clip(CircleShape).background(GodjiColors.Hair)
+                        Modifier.size(28.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(2.dp)).background(GodjiColors.Hair)
                             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { viewModel.untrust(name) },
                         contentAlignment = Alignment.Center
                     ) {
@@ -189,9 +189,9 @@ private fun ChipButton(label: String, onClick: () -> Unit) {
     Box(
         Modifier
             .height(32.dp)
-            .clip(RoundedCornerShape(50))
+            .clip(RoundedCornerShape(2.dp))
             .background(GodjiColors.Chip)
-            .border(1.dp, GodjiColors.CardBorder, RoundedCornerShape(50))
+            .border(1.dp, GodjiColors.CardBorder, RoundedCornerShape(2.dp))
             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick)
             .padding(horizontal = 14.dp),
         contentAlignment = Alignment.Center

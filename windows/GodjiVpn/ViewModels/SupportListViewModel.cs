@@ -117,7 +117,7 @@ public sealed partial class SupportListViewModel : ObservableObject
             foreach (var t in more) Tickets.Add(ToItem(t));
             CanLoadMore = more.Count >= PageSize;
         }
-        catch { /* подгрузка страницы необязательна — просто оставляем кнопку "Показать ещё" */ }
+        catch { /* подгрузка страницы необязательна — просто оставляем кнопку Loc.T("Показать ещё") */ }
         finally { LoadingMore = false; }
     }
 
@@ -133,7 +133,7 @@ public sealed partial class SupportListViewModel : ObservableObject
     private static TicketListItem ToItem(SupportTicketDto t) => new()
     {
         Id = t.Id,
-        Title = !string.IsNullOrWhiteSpace(t.Subject) ? t.Subject! : "Новое обращение",
+        Title = !string.IsNullOrWhiteSpace(t.Subject) ? t.Subject! : Loc.T("Новое обращение"),
         LastMessage = t.LastMessage,
         StatusLabel = StatusLabels.GetValueOrDefault(t.Status, t.Status),
         IsClosed = t.Status == "closed",
