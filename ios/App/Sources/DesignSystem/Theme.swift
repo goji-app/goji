@@ -128,7 +128,8 @@ enum GojiFont {
         case medium = "GolosText-Medium"
         case semibold = "GolosText-SemiBold"
         case bold = "GolosText-Bold"
-        case extraBold = "GolosText-Bold"
+        // Отдельного ExtraBold в Golos нет: псевдоним на bold.
+        static let extraBold = Weight.bold
     }
 
     /// Общий масштаб текста (2026-10-16): шрифт во всех приложениях уменьшен на ступень, как
@@ -145,7 +146,7 @@ enum GojiFont {
         switch weight {
         case .regular, .medium: name = "JetBrainsMono-Regular"
         case .semibold: name = "JetBrainsMono-SemiBold"
-        case .bold, .extraBold: name = "JetBrainsMono-Bold"
+        case .bold: name = "JetBrainsMono-Bold"
         }
         return .custom(name, size: (size * scale).rounded(.toNearestOrEven), relativeTo: style)
     }
