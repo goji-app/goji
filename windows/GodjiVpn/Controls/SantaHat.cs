@@ -30,17 +30,12 @@ namespace GodjiVpn.Controls
         private static readonly Geometry Highlight = Freeze("M18,62 C17,42 28,20 52,10 C36,22 25,42 25,62 Z");
         private static readonly Geometry Fur = Freeze("M8,62 C38,74 80,70 106,56 L110,71 C82,86 36,90 12,77 C4,74 3,67 8,62 Z");
 
-        private SantaHat()
+        public SantaHat()
         {
             IsHitTestVisible = false;
             double w = WinterOverlay.IsActive() ? HatWidth : 0;
             Width = w;
             Height = w * 104.0 / 120.0;
-        }
-
-        public static SantaHat CreateIfActive(double hatWidth)
-        {
-            return new SantaHat { HatWidth = hatWidth };
         }
 
         private static Geometry Freeze(string data)

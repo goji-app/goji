@@ -36,7 +36,7 @@ import kotlin.math.sin
 private val BULBS = listOf(
     Color(0xFFFF5A4E), Color(0xFFFFD257), Color(0xFF63D68C), Color(0xFF6AA9FF), Color(0xFFFF9D5C)
 )
-private const val FRAME_MS = 50L // 20 к/с: для снега хватает, батарею не сажает
+private const val FRAME_MS = 80L // ~12 к/с: плавно для снега и не держит UI-поток
 private const val FLAKES_BACK = 60
 private const val FLAKES_FRONT = 14
 private const val TAU = (2.0 * PI).toFloat()
@@ -69,6 +69,7 @@ fun SantaHat(modifier: Modifier) {
             drawPath(HAT_SHADE, Color(0x808F1826))
             drawPath(HAT_HIGHLIGHT, Color(0x61F2717A))
             drawCircle(Color(0xFFFBFDFF), 10.5f, Offset(96f, 19f))
+
             drawPath(HAT_FUR, fur)
             drawPath(HAT_FUR_LINE, Color(0x9EC7D0DA), style = Stroke(width = 1.4f))
         }
@@ -171,6 +172,40 @@ private class Strand(
     val p3 = rr(0f, TAU)
 }
 
+/** Сцена (снежинки + гирлянды), пересобирается под фактический размер экрана:
+ *  плотность снега — от площади, геометрия и размер ламп — от ширины. */
+private class WinterScene {
+    var builtW = 0f
+    var builtH = 0f
+    var builtDp = 0f
+    var flakes = arrayOf<Flake>()
+    var strands = listOf<Strand>()
+    var backPaths = listOf<Path>()
+    var frontPaths = listOf<Path>()
+    private val rnd = java.util.Random()
+
+    fun ensure(w: Float, h: Float, density: Float) {
+        if (builtW > 0 && kotlin.math.abs(w - builtW) < w * 0.2f && kotlin.math.abs(h - builtH) < h * 0.2f && builtDp == density) return
+        builtW = w; builtH = h; builtDp = density
+        val screens = (w / (density * 360f)) * (h / (density * 760f)) // площадь в «эталонных» экранах
+        flakes = Array(
+            (FLAKES_BACK * screens).toInt().coerceIn(40, 160) + (FLAKES_FRONT * screens).toInt().coerceIn(10, 32)
+        ) { i -> Flake(i < FLAKES_BACK, w, h, rnd) }
+        val ratio = (w / (density * 372f)).coerceIn(1f, 1.8f) // >1 на широких экранах
+        val n1 = (8 * ratio).toInt().coerceIn(8, 16)
+        strands = listOf(
+            Strand(-density * 4, w / 2f, w + density * 4,
+                w * 0.022f, w * 0.022f + w * 0.235f, w * 0.042f,
+                n1, density * ratio, w * 0.032f, rnd),
+            Strand(-density * 4, w / 2f, w + density * 4,
+                w * 0.10f, w * 0.10f + w * 0.085f, w * 0.16f,
+                (n1 - 2).coerceAtLeast(6), density * ratio * 0.85f, w * 0.032f, rnd)
+        )
+        backPaths = List(3) { flakePath(BACK_BASE[it] * density, it) }
+        frontPaths = List(3) { flakePath(FRONT_BASE[it] * density, it) }
+    }
+}
+
 /** Зимний декор: с 1 ноября по 31 января снег и гирлянда поверх любой палитры. */
 @Composable
 fun WinterOverlay() {
@@ -189,27 +224,19 @@ fun WinterOverlay() {
 
     // Белый снег невидим на светлых палитрах — там берём серо-голубой.
     val snow = if (GodjiColors.SurfaceBase.luminance() > 0.5f) Color(0xFF8FA8C4) else Color.White
-    val backPaths = remember { List(3) { flakePath(BACK_BASE[it], it) } }
-    val frontPaths = remember { List(3) { flakePath(FRONT_BASE[it], it) } }
     val wirePath = remember { Path() }
     val glassPath = remember { glassPath() }
-    val flakes = remember { Array(FLAKES_BACK + FLAKES_FRONT) { i -> Flake(i < FLAKES_BACK, 1000f, 1000f, java.util.Random()) } }
-    val strands = remember(density.density) {
-        val px = { v: Float -> with(density) { v.dp.toPx() } }
-        listOf(
-            Strand(px(-4f), 186f.dpToPx(density), px(376f), px(8f), px(122f), px(12f), 7, 0.95f, px(186f) * 0.032f, java.util.Random()),
-            Strand(px(-4f), 186f.dpToPx(density), px(376f), px(42f), px(92f), px(34f), 6, 0.85f, px(186f) * 0.032f, java.util.Random())
-        )
-    }
+    val scene = remember { WinterScene() }
 
     Canvas(Modifier.fillMaxSize().statusBarsPadding()) {
         val w = size.width
         val h = size.height
         val dt = FRAME_MS / 1000f
+        scene.ensure(w, h, density.density)
 
         // Гирлянды: провод гнётся как верёвка (контрольная точка плывёт по трём гармоникам),
         // лампочки едут вдоль него и отстают, как маятники.
-        for (d in strands) {
+        for (d in scene.strands) {
             val dx = strandSway(d, t) * 2.2f
             val dy = 3f * sin(TAU / 8.3f * t + d.p2)
             wirePath.rewind()
@@ -228,8 +255,10 @@ fun WinterOverlay() {
                 translate(x, y) {
                     rotate(bl.tilt, pivot = Offset.Zero) {
                         scale(d.sc, d.sc, pivot = Offset.Zero) {
-                            drawCircle(col.copy(alpha = 0.20f), 21f)
-                            drawCircle(col.copy(alpha = 0.45f), 11f)
+                            // ВАЖНО: у drawCircle без явного центра центр = центр DrawScope,
+                            // а не начало координат — лампы уезжают в середину экрана.
+                            drawCircle(col.copy(alpha = 0.20f), 16f, Offset(0f, 17f))
+                            drawCircle(col.copy(alpha = 0.50f), 9f, Offset(0f, 17f))
                             drawRoundRect(Color(SOCKET), topLeft = Offset(-3.6f, 3f), size = Size(7.2f, 7.4f), cornerRadius = CornerRadius(2f, 2f))
                             drawLine(Color(SOCKET_LINE), Offset(-3.6f, 4.8f), Offset(3.6f, 4.8f), strokeWidth = 0.8f)
                             drawLine(Color(SOCKET_LINE), Offset(-3.6f, 6.6f), Offset(3.6f, 6.6f), strokeWidth = 0.8f)
@@ -246,7 +275,7 @@ fun WinterOverlay() {
         }
 
         // Снег: сзади мелкий и блеклый, спереди крупный и мягкий.
-        for (f in flakes) {
+        for (f in scene.flakes) {
             f.ph += dt; f.ph2 += dt * f.f2 * TAU; f.ph3 += dt * f.vf * TAU
             f.x += (wind(t) * f.depth * f.gust * 0.5f + f.drift + sin(f.ph2) * f.a2 * 0.55f) * dt
             f.y += f.vy * (1f + 0.3f * sin(f.ph3)) * dt
@@ -257,7 +286,7 @@ fun WinterOverlay() {
             val rx = f.x + sin(f.ph * f.swayF * TAU) * f.swayA + sin(f.ph2 * 0.6f + 1.3f) * f.a2
             val base = if (f.front) FRONT_BASE[f.spr] else BACK_BASE[f.spr]
             val scaleS = (f.size + 16f) / base
-            val path = if (f.front) frontPaths[f.spr] else backPaths[f.spr]
+            val path = if (f.front) scene.frontPaths[f.spr] else scene.backPaths[f.spr]
             val strokeW = (base * 0.05f).coerceAtLeast(0.7f)
             translate(rx, f.y) {
                 rotate(f.rot, pivot = Offset.Zero) {

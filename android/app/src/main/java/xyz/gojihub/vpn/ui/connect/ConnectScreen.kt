@@ -151,8 +151,9 @@ fun ConnectScreen(viewModel: ConnectViewModel = hiltViewModel(), onOpenPlans: ()
             BoxWithConstraints(Modifier.fillMaxWidth().padding(top = 6.dp)) {
                 val size = (maxWidth.value * 0.77f).coerceAtMost(262f)
                 val winter = isWinterSeason()
-                val hatW = if (winter) (size * 0.30f).dp.coerceIn(48.dp, 80.dp) else 0.dp
-                val hatGap = hatW * 0.62f
+                val hatW = if (winter) (size * 0.22f).dp.coerceIn(44.dp, 110.dp) else 0.dp
+                val hatH = hatW * 0.87f
+                val hatGap = hatH * 0.85f
                 Box(
                     Modifier.then(
                         if (winter) Modifier.height((size * 0.89f).dp + hatGap) else Modifier.fillMaxWidth()
@@ -177,7 +178,7 @@ fun ConnectScreen(viewModel: ConnectViewModel = hiltViewModel(), onOpenPlans: ()
                     SantaHat(
                         Modifier
                             .align(Alignment.TopStart)
-                            .offset(x = 2.dp, y = -hatW * 0.12f)
+                            .offset(x = 2.dp, y = (size * 0.10f).dp)
                             .size(width = hatW, height = hatW * 0.87f)
                     )
                 }
