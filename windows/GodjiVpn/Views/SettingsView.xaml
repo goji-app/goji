@@ -173,6 +173,19 @@
                     <TextBlock Text="{loc:T 'Размер шрифта'}" Style="{StaticResource RowTitle}" Margin="0,14,0,0"/>
                     <controls:SegmentedControl ItemsSource="{Binding FontSizes}" DisplayMemberPath="Label"
                                                SelectedIndex="{Binding FontSizeIndex, Mode=TwoWay}" Margin="0,9,0,0"/>
+                    <Grid Margin="0,18,0,0" Visibility="{Binding WinterSeason, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{loc:T 'Новогоднее оформление'}" Style="{StaticResource RowTitle}"/>
+                            <TextBlock Text="{loc:T 'Снег, гирлянда и шапка Деда Мороза. Показываются с 1 декабря по 31 января'}" Style="{StaticResource RowSubtitle}"/>
+                        </StackPanel>
+                        <ToggleButton Grid.Column="1" Style="{StaticResource GlassSwitch}" Margin="12,0,0,0"
+                                      AutomationProperties.Name="{loc:T 'Новогоднее оформление'}"
+                                      IsChecked="{Binding WinterDecor, Mode=TwoWay}"/>
+                    </Grid>
                 </StackPanel>
             </controls:GlassPanel>
         </StackPanel>

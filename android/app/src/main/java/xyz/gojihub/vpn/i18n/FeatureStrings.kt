@@ -193,6 +193,8 @@ data class FeatureStrings(
     val onboardingNext: String,
     val onboardingStart: String,
     val onboardingSkip: String,
+    val winterDecorTitle: String,
+    val winterDecorDesc: String,
 ) {
     companion object {
         fun forLang(lang: AppLanguage): FeatureStrings = when (lang) {
@@ -395,6 +397,8 @@ data class FeatureStrings(
             onboardingNext = "Далее",
             onboardingStart = "Начать",
             onboardingSkip = "Пропустить",
+            winterDecorTitle = "Новогоднее оформление",
+            winterDecorDesc = "Снег, гирлянда и шапка Деда Мороза. Показываются с 1 декабря по 31 января",
         )
 
         private val EN = FeatureStrings(
@@ -591,6 +595,8 @@ data class FeatureStrings(
             onboardingNext = "Next",
             onboardingStart = "Start",
             onboardingSkip = "Skip",
+            winterDecorTitle = "New Year decorations",
+            winterDecorDesc = "Snow, lights and a Santa hat. Shown from 1 December to 31 January",
         )
 
         private val ZH = FeatureStrings(
@@ -787,6 +793,8 @@ data class FeatureStrings(
             onboardingNext = "下一步",
             onboardingStart = "开始",
             onboardingSkip = "跳过",
+            winterDecorTitle = "新年装饰",
+            winterDecorDesc = "雪花、彩灯和圣诞帽，每年 12 月 1 日至 1 月 31 日显示",
         )
     }
 }

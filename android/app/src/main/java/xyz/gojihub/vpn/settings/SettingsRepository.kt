@@ -61,6 +61,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
     private val perAppProxyPackagesKey = stringSetPreferencesKey("per_app_proxy_packages")
     private val favoriteServerIdsKey = stringSetPreferencesKey("favorite_server_ids")
     private val hapticsKey = booleanPreferencesKey("haptics_enabled")
+    private val winterDecorKey = booleanPreferencesKey("winter_decor_enabled")
     private val serverSortKey = stringPreferencesKey("server_sort")
     private val trustedSsidsKey = stringSetPreferencesKey("trusted_wifi_ssids")
     private val disconnectOnTrustedKey = booleanPreferencesKey("disconnect_on_trusted_wifi")
@@ -191,6 +192,13 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
 
     /** Короткая вибрация при подключении/отключении VPN (см. VpnStateObserver) — по
      *  умолчанию включена. */
+    /** Новогоднее оформление (с 1 декабря по 31 января); по умолчанию включено. */
+    val winterDecorEnabled: Flow<Boolean> = context.dataStore.data.map { it[winterDecorKey] ?: true }
+    suspend fun setWinterDecorEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[winterDecorKey] = enabled }
+    }
+    suspend fun winterDecorNow(): Boolean = winterDecorEnabled.first()
+
     val hapticsEnabled: Flow<Boolean> = context.dataStore.data.map { it[hapticsKey] ?: true }
     suspend fun setHapticsEnabled(enabled: Boolean) {
         context.dataStore.edit { it[hapticsKey] = enabled }

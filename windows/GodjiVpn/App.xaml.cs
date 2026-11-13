@@ -97,6 +97,7 @@ public partial class App : Application
         var favoriteServersStore = new FavoriteServersStore();
         var appSettings = new AppSettings();
         GodjiVpn.Utils.FontScale.Instance.Apply(appSettings.FontSize);
+        GodjiVpn.Controls.WinterOverlay.SetEnabled(appSettings.WinterDecor);
         // Превью-экземпляр: размер шрифта для сверки без изменения сохранённой настройки.
         if (uiPreview && Enum.TryParse<GodjiVpn.Utils.FontSizePreset>(
                 Environment.GetEnvironmentVariable("GODJI_UI_PREVIEW_FONT"), true, out var previewFont))

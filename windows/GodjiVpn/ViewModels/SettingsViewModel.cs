@@ -274,6 +274,20 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
     }
 
+    /// <summary>Переключатель «Новогоднее оформление»; виден только в сезон (с 1 декабря по 31 января).</summary>
+    public bool WinterDecor
+    {
+        get => _appSettings.WinterDecor;
+        set
+        {
+            _appSettings.WinterDecor = value;
+            GodjiVpn.Controls.WinterOverlay.SetEnabled(value);
+            OnPropertyChanged();
+        }
+    }
+
+    public bool WinterSeason => GodjiVpn.Controls.WinterOverlay.InSeason();
+
     public ObservableCollection<LogFileItem> LogFiles { get; } = new()
     {
         new LogFileItem { Label = "Приложение", FileName = "engine.log" },

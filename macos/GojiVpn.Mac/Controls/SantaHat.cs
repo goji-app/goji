@@ -21,9 +21,17 @@ public sealed class SantaHat : Control
     public SantaHat()
     {
         IsHitTestVisible = false;
+        Apply();
+        AttachedToVisualTree += (_, _) => WinterOverlay.DecorChanged += Apply;
+        DetachedFromVisualTree += (_, _) => WinterOverlay.DecorChanged -= Apply;
+    }
+
+    private void Apply()
+    {
         var w = WinterOverlay.IsActive() ? 62.0 : 0;
         Width = w;
         Height = w * 104.0 / 120.0;
+        InvalidateVisual();
     }
 
     public override void Render(DrawingContext dc)

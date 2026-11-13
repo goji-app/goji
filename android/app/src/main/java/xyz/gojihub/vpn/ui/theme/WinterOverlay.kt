@@ -37,8 +37,8 @@ private val BULBS = listOf(
     Color(0xFFFF5A4E), Color(0xFFFFD257), Color(0xFF63D68C), Color(0xFF6AA9FF), Color(0xFFFF9D5C)
 )
 private const val FRAME_MS = 80L // ~12 к/с: плавно для снега и не держит UI-поток
-private const val FLAKES_BACK = 60
-private const val FLAKES_FRONT = 14
+private const val FLAKES_BACK = 34
+private const val FLAKES_FRONT = 6
 private const val TAU = (2.0 * PI).toFloat()
 private const val WIRE = 0xFF2C3634.toInt()
 private const val SOCKET = 0xFF3A4542.toInt()
@@ -46,11 +46,17 @@ private const val SOCKET_LINE = 0xFF202927.toInt()
 private const val CORE = 0x4DFFF8D9.toInt()
 private const val FILAMENT = 0xD9FFF8D9.toInt()
 
-/** Зимний сезон: 1 ноября — 31 января. */
+/** Зимний сезон: 1 декабря — 31 января. */
 fun isWinterSeason(): Boolean {
     val m = LocalDate.now().monthValue
-    return m == 11 || m == 12 || m == 1
+    return m == 12 || m == 1
 }
+
+/** Оформление показывается в сезон и только если пользователь не выключил его в настройках. */
+fun winterDecorOn(): Boolean = GodjiColors.winterDecor && isWinterSeason()
+
+/** Цвет снега: белый на тёмном фоне, серо-голубой на светлом (белый там не виден). */
+fun snowColorFor(bg: Color): Color = if (bg.luminance() > 0.5f) Color(0xFF8FA8C4) else Color.White
 
 /** Шапка Деда Мороза (дизайн 120×104, масштабируется под ширину элемента). */
 @Composable
@@ -137,9 +143,9 @@ private class Flake(isFront: Boolean, w: Float, h: Float, private val rnd: java.
 
     init {
         if (front) {
-            vy = rr(48f, 88f); size = rr(9f, 16f); alpha = rr(0.35f, 0.6f); depth = 1.25f; rs = rr(-0.5f, 0.5f)
+            vy = rr(48f, 88f); size = rr(5.5f, 9f); alpha = rr(0.35f, 0.6f); depth = 1.25f; rs = rr(-0.5f, 0.5f)
         } else {
-            vy = rr(14f, 38f); size = rr(2f, 5.5f); alpha = rr(0.3f, 0.72f); depth = 0.7f; rs = rr(-0.9f, 0.9f)
+            vy = rr(14f, 38f); size = rr(2.5f, 4.5f); alpha = rr(0.3f, 0.72f); depth = 0.7f; rs = rr(-0.9f, 0.9f)
         }
     }
 
@@ -188,9 +194,9 @@ private class WinterScene {
         if (builtW > 0 && kotlin.math.abs(w - builtW) < w * 0.2f && kotlin.math.abs(h - builtH) < h * 0.2f && builtDp == density) return
         builtW = w; builtH = h; builtDp = density
         val screens = (w / (density * 360f)) * (h / (density * 760f)) // площадь в «эталонных» экранах
-        flakes = Array(
-            (FLAKES_BACK * screens).toInt().coerceIn(40, 160) + (FLAKES_FRONT * screens).toInt().coerceIn(10, 32)
-        ) { i -> Flake(i < FLAKES_BACK, w, h, rnd) }
+        val nBack = (FLAKES_BACK * screens).toInt().coerceIn(24, 80)
+        val nFront = (FLAKES_FRONT * screens).toInt().coerceIn(4, 14)
+        flakes = Array(nBack + nFront) { i -> Flake(i < nBack, w, h, rnd) }
         val ratio = (w / (density * 372f)).coerceIn(1f, 1.8f) // >1 на широких экранах
         val n1 = (8 * ratio).toInt().coerceIn(8, 16)
         strands = listOf(
@@ -201,16 +207,15 @@ private class WinterScene {
                 w * 0.10f, w * 0.10f + w * 0.085f, w * 0.16f,
                 (n1 - 2).coerceAtLeast(6), density * ratio * 0.85f, w * 0.032f, rnd)
         )
-        backPaths = List(3) { flakePath(BACK_BASE[it] * density, it) }
-        frontPaths = List(3) { flakePath(FRONT_BASE[it] * density, it) }
+        backPaths = List(3) { flakePath(BACK_BASE[it], it) }
+        frontPaths = List(3) { flakePath(FRONT_BASE[it], it) }
     }
 }
 
-/** Зимний декор: с 1 ноября по 31 января снег и гирлянда поверх любой палитры. */
+/** Зимний декор: с 1 декабря по 31 января снег и гирлянда поверх любой палитры. */
 @Composable
 fun WinterOverlay() {
-    val season = remember { isWinterSeason() }
-    if (!season) return
+    if (!winterDecorOn()) return
     val context = LocalContext.current
     val density = LocalDensity.current
     // Анимации выключены в системе — рисуем один неподвижный кадр.
@@ -223,7 +228,7 @@ fun WinterOverlay() {
     }
 
     // Белый снег невидим на светлых палитрах — там берём серо-голубой.
-    val snow = if (GodjiColors.SurfaceBase.luminance() > 0.5f) Color(0xFF8FA8C4) else Color.White
+    val snow = snowColorFor(GodjiColors.SurfaceBase)
     val wirePath = remember { Path() }
     val glassPath = remember { glassPath() }
     val scene = remember { WinterScene() }
@@ -285,13 +290,12 @@ fun WinterOverlay() {
             if (f.x < -45f) f.x += w + 90f
             val rx = f.x + sin(f.ph * f.swayF * TAU) * f.swayA + sin(f.ph2 * 0.6f + 1.3f) * f.a2
             val base = if (f.front) FRONT_BASE[f.spr] else BACK_BASE[f.spr]
-            val scaleS = (f.size + 16f) / base
+            val scaleS = f.size * scene.builtDp / base // size — диаметр в dp
             val path = if (f.front) scene.frontPaths[f.spr] else scene.backPaths[f.spr]
             val strokeW = (base * 0.05f).coerceAtLeast(0.7f)
             translate(rx, f.y) {
                 rotate(f.rot, pivot = Offset.Zero) {
                     scale(scaleS, scaleS, pivot = Offset.Zero) {
-                        if (f.front) drawPath(path, snow.copy(alpha = f.alpha * 0.35f), style = Stroke(width = strokeW * 2.6f))
                         drawPath(path, snow.copy(alpha = f.alpha), style = Stroke(width = strokeW))
                     }
                 }

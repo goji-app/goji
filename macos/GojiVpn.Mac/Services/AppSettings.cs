@@ -34,6 +34,8 @@ public sealed class AppSettings
         /// <summary>Kill switch: при сбое ядра туннель не снимается — интернет закрыт, пока
         /// ядро перезапускается (порт Android-настройки «Kill switch»).</summary>
         public bool KillSwitch { get; set; }
+        /// <summary>Новогоднее оформление (1 декабря — 31 января); включено по умолчанию.</summary>
+        public bool WinterDecor { get; set; } = true;
         /// <summary>«Приложения мимо VPN» — имена исполняемых файлов (chrome.exe, Safari).</summary>
         public List<string> BypassApps { get; set; } = new();
     }
@@ -71,6 +73,12 @@ public sealed class AppSettings
     }
 
     public IReadOnlyList<string> TrustedSsids => _state.TrustedSsids;
+
+    public bool WinterDecor
+    {
+        get => _state.WinterDecor;
+        set { if (_state.WinterDecor == value) return; _state.WinterDecor = value; Save(); }
+    }
 
     public bool KillSwitch
     {

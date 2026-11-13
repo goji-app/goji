@@ -45,12 +45,19 @@ namespace GodjiVpn.Controls
             return g;
         }
 
-        protected override void OnRender(DrawingContext dc)
+        protected override void OnRender(DrawingContext dc) => Paint(dc, new Point(0, 0), ActualWidth, 0);
+
+        /// Рисует шапку с левым верхним углом в [at], шириной [width], наклоном [angle]° вокруг центра.
+        /// Используется и самим элементом, и текстовыми контролами, у которых шапка садится на букву.
+        internal static void Paint(DrawingContext dc, Point at, double width, double angle)
         {
-            double scale = ActualWidth / 120.0;
+            double scale = width / 120.0;
             if (scale <= 0 || double.IsNaN(scale)) return;
-            var m = new MatrixTransform(scale, 0, 0, scale, 0, 0);
-            dc.PushTransform(m);
+            var mx = new Matrix();
+            mx.Scale(scale, scale);
+            mx.RotateAt(angle, width / 2, width * 104.0 / 120.0 / 2);
+            mx.Translate(at.X, at.Y);
+            dc.PushTransform(new MatrixTransform(mx));
 
             var red = new LinearGradientBrush
             {

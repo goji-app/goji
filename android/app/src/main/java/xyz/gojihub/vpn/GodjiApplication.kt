@@ -113,6 +113,7 @@ class GodjiApplication : Application(), Configuration.Provider, ImageLoaderFacto
             }
             if (dark) GodjiColors.applyDark() else GodjiColors.applyLight()
             GodjiColors.fontSizePreset = settingsRepository.fontSizeNow()
+            GodjiColors.winterDecor = settingsRepository.winterDecorNow()
             Loc.lang = settingsRepository.appLanguageNow()
             AppLogger.level = settingsRepository.logLevelNow()
         }

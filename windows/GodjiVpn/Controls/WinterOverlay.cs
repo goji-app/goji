@@ -13,11 +13,28 @@ namespace GodjiVpn.Controls
     /// лампочки едут вдоль провода и отстают от него, как маятники.
     public class WinterOverlay : FrameworkElement
     {
-        public static bool IsActive()
+        /// Сезон: 1 декабря — 31 января.
+        public static bool InSeason()
         {
             var m = DateTime.Now.Month;
-            return m == 11 || m == 12 || m == 1;
+            return m == 12 || m == 1;
         }
+
+        /// Переключатель «Новогоднее оформление» из настроек.
+        public static bool Enabled { get; private set; } = true;
+
+        /// Срабатывает при включении/выключении оформления: элементы перерисовываются сразу, без перезапуска.
+        public static event Action? DecorChanged;
+
+        public static void SetEnabled(bool on)
+        {
+            if (Enabled == on) return;
+            Enabled = on;
+            DecorChanged?.Invoke();
+        }
+
+        /// Рисовать ли оформление сейчас (сезон и не выключено в настройках).
+        public static bool IsActive() => Enabled && InSeason();
 
         private struct Flake
         {
@@ -45,6 +62,8 @@ namespace GodjiVpn.Controls
         private static readonly Brush Filament = MakeBrush(Color.FromArgb(217, 0xFF, 0xF8, 0xD9));
         private static readonly Brush GlassHi = MakeBrush(Color.FromArgb(128, 0xFF, 0xFF, 0xFF));
         private static readonly Geometry GlassGeom = Freeze("M0,10 C4.8,10 7.8,13 7.8,17 C7.8,22.2 4.4,25.2 0,25.2 C-4.4,25.2 -7.8,22.2 -7.8,17 C-7.8,13 -4.8,10 0,10 Z");
+        private static readonly Pen FilamentPen = MakeFilamentPen();
+        private static Pen MakeFilamentPen() { var p = new Pen(Filament, 0.9); p.Freeze(); return p; }
         private static readonly Pen GlassStroke = MakePen(Color.FromArgb(77, 0, 0, 0), 0.7);
         private static readonly RadialGradientBrush[] GlowBrushes = MakeGlows();
 
@@ -53,7 +72,7 @@ namespace GodjiVpn.Controls
         private readonly List<Strand> _strands = new List<Strand>();
         private ImageSource[] _backSprites, _frontSprites;
         private Color _spriteColor;
-        private double _t, _lastSec;
+        private double _t, _lastSec, _acc;
 
         private const double Tau = Math.PI * 2;
 
@@ -101,13 +120,20 @@ namespace GodjiVpn.Controls
         public WinterOverlay()
         {
             IsHitTestVisible = false;
-            Loaded += (s, e) =>
+            Loaded += (s, e) => { DecorChanged += Sync; Sync(); };
+            Unloaded += (s, e) => { DecorChanged -= Sync; CompositionTarget.Rendering -= OnRendering; };
+        }
+
+        /// Включает или выключает покадровую отрисовку по состоянию оформления.
+        private void Sync()
+        {
+            CompositionTarget.Rendering -= OnRendering;
+            if (IsActive())
             {
-                if (!IsActive()) return;
                 if (_flakes.Count == 0) BuildScene();
                 CompositionTarget.Rendering += OnRendering;
-            };
-            Unloaded += (s, e) => CompositionTarget.Rendering -= OnRendering;
+            }
+            InvalidateVisual();
         }
 
         private void OnRendering(object sender, EventArgs e)
@@ -117,6 +143,10 @@ namespace GodjiVpn.Controls
             _lastSec = sec;
             if (dt <= 0 || dt > 0.1) dt = 0.016;
             if (!SystemParameters.ClientAreaAnimation) dt = 0;
+            // ~30 к/с вместо 60: снегу хватает, а процессор и батарея ноутбука целее.
+            _acc += dt;
+            if (_acc < 1.0 / 30) return;
+            dt = Math.Min(_acc, 0.1); _acc = 0;
             _t += dt;
             UpdateGarlands(dt, _t);
             UpdateSnow(dt);
@@ -127,8 +157,8 @@ namespace GodjiVpn.Controls
         {
             double w = Math.Max(ActualWidth, 300);
             _flakes.Clear();
-            for (int i = 0; i < 150; i++) _flakes.Add(MakeFlake(w, Math.Max(ActualHeight, 300), false));
-            for (int i = 0; i < 26; i++) _flakes.Add(MakeFlake(w, Math.Max(ActualHeight, 300), true));
+            for (int i = 0; i < 64; i++) _flakes.Add(MakeFlake(w, Math.Max(ActualHeight, 300), false));
+            for (int i = 0; i < 8; i++) _flakes.Add(MakeFlake(w, Math.Max(ActualHeight, 300), true));
 
             _strands.Clear();
             _strands.Add(MakeStrand(w, -4, w / 2.0, w + 4, 10, 178, 16, 10, 1.0));
@@ -162,12 +192,12 @@ namespace GodjiVpn.Controls
             var f = new Flake { X = R(-40, w + 40), Y = R(-30, h), Rot = R(0, Tau), Ph = R(0, Tau), Ph2 = R(0, Tau), Ph3 = R(0, Tau) };
             if (front)
             {
-                f.Vy = R(48, 88); f.Size = R(9, 16); f.Spr = _rnd.Next(3);
+                f.Vy = R(48, 88); f.Size = R(14, 20); f.Spr = _rnd.Next(3);
                 f.Alpha = R(0.35, 0.6); f.Rs = R(-0.5, 0.5); f.Depth = 1.25; f.Front = true;
             }
             else
             {
-                f.Vy = R(14, 38); f.Size = R(2, 5.5); f.Spr = _rnd.Next(3);
+                f.Vy = R(14, 38); f.Size = R(9, 13); f.Spr = _rnd.Next(3);
                 f.Alpha = R(0.3, 0.72); f.Rs = R(-0.9, 0.9); f.Depth = 0.7; f.Front = false;
             }
             f.SwayA = R(8, 30); f.SwayF = R(0.2, 0.55); f.Drift = R(-7, 7);
@@ -274,8 +304,8 @@ namespace GodjiVpn.Controls
                     dc.DrawLine(MakeBulbStem(), new Point(0, 0), new Point(0, 3.4));
                     dc.DrawGeometry(GlassFill(bl.ColorIdx), GlassStroke, GlassGeom);
                     dc.DrawEllipse(GlassCore, null, new Point(0, 17.4), 3.4, 5);
-                    dc.DrawLine(new Pen(Filament, 0.9), new Point(-1.8, 14.5), new Point(0, 19));
-                    dc.DrawLine(new Pen(Filament, 0.9), new Point(0, 19), new Point(1.8, 14.5));
+                    dc.DrawLine(FilamentPen, new Point(-1.8, 14.5), new Point(0, 19));
+                    dc.DrawLine(FilamentPen, new Point(0, 19), new Point(1.8, 14.5));
                     dc.DrawEllipse(GlassHi, null, new Point(-3, 13.6), 1.7, 2.6);
                     dc.Pop();
                 }
@@ -285,7 +315,7 @@ namespace GodjiVpn.Controls
             foreach (var f in _flakes)
             {
                 double rx = f.X + Math.Sin(f.Ph * f.SwayF * Tau) * f.SwayA + Math.Sin(f.Ph2 * 0.6 + 1.3) * f.A2;
-                double sz = f.Size + 16;
+                double sz = f.Size; // размер квадрата спрайта в DIP
                 var img = f.Front ? _frontSprites[f.Spr] : _backSprites[f.Spr];
                 var m = new Matrix();
                 m.Translate(rx - sz / 2, f.Y - sz / 2);
@@ -313,7 +343,7 @@ namespace GodjiVpn.Controls
         private Pen? _stemPen;
         private Pen MakeBulbStem() => _stemPen ??= MakePen(Color.FromArgb(255, 0x2C, 0x36, 0x34), 1.8);
 
-        private static bool IsLightTheme()
+        internal static bool IsLightTheme()
         {
             if (Application.Current?.TryFindResource("BgSolidBrush") is SolidColorBrush b && b.Color != default)
                 return (0.299 * b.Color.R + 0.587 * b.Color.G + 0.114 * b.Color.B) / 255.0 > 0.5;

@@ -172,6 +172,12 @@
                     <TextBlock Classes="rowTitle" Text="{loc:T 'Размер шрифта'}" Margin="0,14,0,0"/>
                     <c:SegmentedControl ItemsSource="{Binding FontSizes}" DisplayMemberPath="Label"
                                         SelectedIndex="{Binding FontSizeIndex, Mode=TwoWay}" Margin="0,9,0,0"/>
+                    <StackPanel Margin="0,18,0,0" IsVisible="{Binding WinterSeason}">
+                        <TextBlock Classes="rowTitle" Text="{loc:T 'Новогоднее оформление'}"/>
+                        <TextBlock Classes="rowSub" Text="{loc:T 'Снег, гирлянда и шапка Деда Мороза. Показываются с 1 декабря по 31 января'}"/>
+                        <c:SegmentedControl ItemsSource="{Binding OnOffOptions}" DisplayMemberPath="Label"
+                                            SelectedIndex="{Binding WinterDecorIndex, Mode=TwoWay}" Margin="0,9,0,0"/>
+                    </StackPanel>
                 </StackPanel>
             </c:GlassPanel>
         </StackPanel>

@@ -54,19 +54,43 @@ public sealed class WinterOverlay : Control
     public WinterOverlay()
     {
         IsHitTestVisible = false;
-        AttachedToVisualTree += (_, _) => Start();
-        DetachedFromVisualTree += (_, _) => _timer?.Stop();
+        AttachedToVisualTree += (_, _) => { DecorChanged += Sync; Sync(); };
+        DetachedFromVisualTree += (_, _) => { DecorChanged -= Sync; _timer?.Stop(); _timer = null; };
     }
 
-    public static bool IsActive()
+    /// Сезон: 1 декабря — 31 января.
+    public static bool InSeason()
     {
         var m = DateTime.Now.Month;
-        return m == 11 || m == 12 || m == 1;
+        return m == 12 || m == 1;
+    }
+
+    /// Переключатель «Новогоднее оформление» из настроек.
+    public static bool Enabled { get; private set; } = true;
+
+    /// Срабатывает при включении/выключении оформления: элементы обновляются сразу, без перезапуска.
+    public static event Action? DecorChanged;
+
+    public static void SetEnabled(bool on)
+    {
+        if (Enabled == on) return;
+        Enabled = on;
+        DecorChanged?.Invoke();
+    }
+
+    /// Рисовать ли оформление сейчас (сезон и не выключено в настройках).
+    public static bool IsActive() => Enabled && InSeason();
+
+    private void Sync()
+    {
+        if (IsActive()) Start();
+        else { _timer?.Stop(); _timer = null; }
+        InvalidateVisual();
     }
 
     private void Start()
     {
-        if (!IsActive() || _timer != null) return;
+        if (_timer != null) return;
         BuildScene();
         _last = DateTimeOffset.Now;
         _timer = new DispatcherTimer(TimeSpan.FromMilliseconds(33), DispatcherPriority.Background, (_, _) => Tick());
@@ -89,8 +113,8 @@ public sealed class WinterOverlay : Control
     {
         double w = Math.Max(Bounds.Width, 300), h = Math.Max(Bounds.Height, 300);
         _flakes.Clear();
-        for (var i = 0; i < 150; i++) _flakes.Add(MakeFlake(w, h, false));
-        for (var i = 0; i < 26; i++) _flakes.Add(MakeFlake(w, h, true));
+        for (var i = 0; i < 64; i++) _flakes.Add(MakeFlake(w, h, false));
+        for (var i = 0; i < 8; i++) _flakes.Add(MakeFlake(w, h, true));
 
         _strands.Clear();
         _strands.Add(MakeStrand(w, -4, w / 2, w + 4, 10, 178, 16, 10, 1.0));
@@ -123,12 +147,12 @@ public sealed class WinterOverlay : Control
         var f = new Flake { X = R(-40, w + 40), Y = R(-30, h), Rot = R(0, Tau), Ph = R(0, Tau), Ph2 = R(0, Tau), Ph3 = R(0, Tau) };
         if (front)
         {
-            f.Vy = R(48, 88); f.Size = R(9, 16); f.Spr = _rnd.Next(3);
+            f.Vy = R(48, 88); f.Size = R(14, 20); f.Spr = _rnd.Next(3);
             f.Alpha = R(0.35, 0.6); f.Rs = R(-0.5, 0.5); f.Depth = 1.25; f.Front = true;
         }
         else
         {
-            f.Vy = R(14, 38); f.Size = R(2, 5.5); f.Spr = _rnd.Next(3);
+            f.Vy = R(14, 38); f.Size = R(9, 13); f.Spr = _rnd.Next(3);
             f.Alpha = R(0.3, 0.72); f.Rs = R(-0.9, 0.9); f.Depth = 0.7; f.Front = false;
         }
         f.SwayA = R(8, 30); f.SwayF = R(0.2, 0.55); f.Drift = R(-7, 7);
@@ -250,7 +274,7 @@ public sealed class WinterOverlay : Control
         foreach (var f in _flakes)
         {
             var rx = f.X + Math.Sin(f.Ph * f.SwayF * Tau) * f.SwayA + Math.Sin(f.Ph2 * 0.6 + 1.3) * f.A2;
-            var sz = f.Size + 16;
+            var sz = f.Size; // размер квадрата спрайта
             var img = f.Front ? _frontSprites![f.Spr] : _backSprites![f.Spr];
             var rad = f.Rot * Math.PI / 180.0;
             var m = Matrix.CreateTranslation(rx - sz / 2, f.Y - sz / 2)

@@ -54,9 +54,9 @@
         <!-- Шаг 1: почта -->
         <StackPanel Width="420" VerticalAlignment="Center" Visibility="{Binding OtpSent, Converter={StaticResource InverseBoolToVisibilityConverter}}">
             <loc:LangPicker Margin="0,0,0,18"/>
-            <!-- Зимой — шапка Деда Мороза на «В» заголовка (вне сезона элемент схлопывается) -->
-            <controls:SantaHat HorizontalAlignment="Left" Margin="2,0,0,0" HatWidth="58"/>
-            <TextBlock Text="{loc:T 'Войти по почте'}" FontWeight="SemiBold" FontSize="{s:Fs 30}" Foreground="{DynamicResource InkBrush}"/>
+            <!-- Зимой — шапка Деда Мороза на «В» и снег на буквах заголовка (вне сезона — обычный текст) -->
+            <controls:SnowText Text="{loc:T 'Войти по почте'}" HasHat="True" FontWeight="SemiBold" FontSize="{s:Fs 30}" Foreground="{DynamicResource InkBrush}"
+                               AutomationProperties.Name="{loc:T 'Войти по почте'}"/>
             <TextBlock Text="{loc:T 'Пришлём код из шести цифр. Пароль не нужен. Первые 3 дня бесплатно.'}" FontSize="{s:Fs 15}"
                        Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,10,0,0"/>
             <TextBlock Text="{loc:T 'ПОЧТА'}" FontFamily="{StaticResource JetBrainsMonoFamily}" FontSize="{s:Fs 11}"

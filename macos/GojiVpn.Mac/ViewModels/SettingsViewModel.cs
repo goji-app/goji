@@ -413,6 +413,20 @@ public sealed partial class SettingsViewModel : ObservableObject
         set { _appSettings.KillSwitch = value == 1; OnPropertyChanged(); }
     }
 
+    /// <summary>«Новогоднее оформление»: Выкл/Вкл; показывается только в сезон (1 декабря — 31 января).</summary>
+    public int WinterDecorIndex
+    {
+        get => _appSettings.WinterDecor ? 1 : 0;
+        set
+        {
+            _appSettings.WinterDecor = value == 1;
+            GodjiVpn.Controls.WinterOverlay.SetEnabled(value == 1);
+            OnPropertyChanged();
+        }
+    }
+
+    public bool WinterSeason => GodjiVpn.Controls.WinterOverlay.InSeason();
+
     // ── Приложения мимо VPN (порт Android «Раздельное туннелирование») ──
     public ObservableCollection<string> BypassApps { get; } = new();
     public string BypassAppsListLabel => $"ПРИЛОЖЕНИЯ · {BypassApps.Count}";

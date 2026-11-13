@@ -25,6 +25,8 @@ object GodjiColors {
     var isDark by mutableStateOf(false)
     var themeMode by mutableStateOf(ThemeMode.SYSTEM)
     var fontSizePreset by mutableStateOf(FontSizePreset.NORMAL)
+    /** Переключатель «Новогоднее оформление» из настроек. */
+    var winterDecor by mutableStateOf(true)
 
     // ── роли Material 3 ──────────────────────────────────────
     var SurfaceBase by mutableStateOf(Color(0xFFF4FBF8))

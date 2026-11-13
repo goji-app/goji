@@ -76,8 +76,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -92,13 +95,19 @@ import xyz.gojihub.vpn.ui.globe.GojiGlobe
 import xyz.gojihub.vpn.ui.theme.GodjiColors
 import xyz.gojihub.vpn.ui.theme.SantaHat
 import xyz.gojihub.vpn.ui.theme.SpaceGroteskFamily
-import xyz.gojihub.vpn.ui.theme.isWinterSeason
+import xyz.gojihub.vpn.ui.theme.CAP_HEIGHT
+import xyz.gojihub.vpn.ui.theme.winterDecorOn
+import xyz.gojihub.vpn.ui.theme.snowCaps
+import xyz.gojihub.vpn.ui.theme.snowColorFor
 import xyz.gojihub.vpn.ui.theme.JetBrainsMonoFamily
 import androidx.compose.ui.unit.em
 import xyz.gojihub.vpn.ui.theme.godjiCard
 import xyz.gojihub.vpn.ui.theme.godjiGlassPill
 import xyz.gojihub.vpn.ui.theme.godjiGlassStrong
 import xyz.gojihub.vpn.ui.util.rememberPressScale
+
+/** Снег на заголовке голубоватый: белый на белых буквах не виден. */
+private fun titleSnow(bg: Color): Color = if (bg.luminance() > 0.5f) Color(0xFF6F8FB0) else Color(0xFFA9CBEF)
 
 @Composable
 fun ConnectScreen(viewModel: ConnectViewModel = hiltViewModel(), onOpenPlans: () -> Unit = {}, onOpenServers: () -> Unit = {}, onOpenJournal: () -> Unit = {}) {
@@ -150,7 +159,9 @@ fun ConnectScreen(viewModel: ConnectViewModel = hiltViewModel(), onOpenPlans: ()
             // Зимой сверху сидит шапка Деда Мороза — под неё отдаётся лишняя высота.
             BoxWithConstraints(Modifier.fillMaxWidth().padding(top = 6.dp)) {
                 val size = (maxWidth.value * 0.77f).coerceAtMost(262f)
-                val winter = isWinterSeason()
+                val winter = winterDecorOn()
+                val snow = snowColorFor(bg)
+                var codeLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
                 val hatW = if (winter) (size * 0.22f).dp.coerceIn(44.dp, 110.dp) else 0.dp
                 val hatH = hatW * 0.87f
                 val hatGap = hatH * 0.85f
@@ -172,21 +183,33 @@ fun ConnectScreen(viewModel: ConnectViewModel = hiltViewModel(), onOpenPlans: ()
                             .offset(x = (-10).dp, y = hatGap)
                             .clickable(role = Role.Button, onClick = viewModel::nextServer)
                             .semantics { contentDescription = state.currentGeo?.displayName(lang) ?: state.currentNodeName }
+                            .snowCaps(codeLayout, code, snow, perGlyph = false),
+                        onTextLayout = { codeLayout = it }
                     )
                 }
                 if (winter) {
+                    // Шапка садится на верхнюю кромку первой буквы: кромка = базовая линия − высота заглавной.
+                    val density = LocalDensity.current.density
+                    val base = codeLayout?.getLineBaseline(0)
+                    val capTopDp = if (base != null) hatGap.value + (base - CAP_HEIGHT * size * LocalDensity.current.fontScale * density) / density
+                        else size * 0.30f
                     SantaHat(
                         Modifier
                             .align(Alignment.TopStart)
-                            .offset(x = 2.dp, y = (size * 0.10f).dp)
+                            .offset(x = (size * 0.035f).dp, y = (capTopDp - hatH.value * 0.80f).dp)
+                            .rotate(-7f)
                             .size(width = hatW, height = hatW * 0.87f)
                     )
                 }
             }
+            val titleText = homeTitle(state, ::t)
+            var titleLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
             Text(
-                homeTitle(state, ::t), color = ink, fontFamily = SpaceGroteskFamily, fontWeight = FontWeight.SemiBold,
+                titleText, color = ink, fontFamily = SpaceGroteskFamily, fontWeight = FontWeight.SemiBold,
                 fontSize = 30.sp, lineHeight = 32.sp, letterSpacing = (-0.02).em,
+                onTextLayout = { titleLayout = it },
                 modifier = Modifier.padding(top = 4.dp).semantics { liveRegion = LiveRegionMode.Polite }
+                    .snowCaps(titleLayout, titleText, titleSnow(bg), perGlyph = true, depthEm = 0.13f, liftEm = 0.07f)
             )
             Text(homeSub(state, ::t), color = mut, fontSize = 14.sp, modifier = Modifier.padding(top = 6.dp).heightIn(min = 40.dp))
 

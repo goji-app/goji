@@ -52,6 +52,7 @@ data class SettingsUiState(
     val autoConnectOnWifi: Boolean = false,
     val killSwitch: Boolean = false,
     val haptics: Boolean = true,
+    val winterDecor: Boolean = true,
     val pingMethod: PingMethod = PingMethod.PROXY_GET,
     val pingTestUrl: String = SettingsRepository.DEFAULT_PING_URL,
     val logLevel: LogLevel = LogLevel.DEFAULT,
@@ -94,6 +95,7 @@ class SettingsViewModel @Inject constructor(
                 autoConnectOnWifi = settingsRepository.autoConnectOnWifi.first(),
                 killSwitch = settingsRepository.killSwitchEnabled.first(),
                 haptics = settingsRepository.hapticsEnabled.first(),
+                winterDecor = settingsRepository.winterDecorNow(),
                 logLevel = settingsRepository.logLevelNow(),
                 hwid = subscriptionRepository.hwidNow(),
                 subscriptionId = subscriptionRepository.clientUuid()
@@ -161,6 +163,12 @@ class SettingsViewModel @Inject constructor(
     fun setKillSwitch(enabled: Boolean) {
         _state.value = _state.value.copy(killSwitch = enabled)
         viewModelScope.launch { settingsRepository.setKillSwitchEnabled(enabled) }
+    }
+
+    fun setWinterDecor(enabled: Boolean) {
+        _state.value = _state.value.copy(winterDecor = enabled)
+        GodjiColors.winterDecor = enabled
+        viewModelScope.launch { settingsRepository.setWinterDecorEnabled(enabled) }
     }
 
     fun setHaptics(enabled: Boolean) {

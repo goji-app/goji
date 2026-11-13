@@ -45,6 +45,7 @@ import xyz.gojihub.vpn.i18n.AppLanguage
 import xyz.gojihub.vpn.i18n.Loc
 import xyz.gojihub.vpn.settings.PingMethod
 import xyz.gojihub.vpn.ui.theme.FontSizePreset
+import xyz.gojihub.vpn.ui.theme.isWinterSeason
 import xyz.gojihub.vpn.ui.theme.NewBadge
 import xyz.gojihub.vpn.ui.theme.ThemeMode
 import xyz.gojihub.vpn.ui.theme.Palettes
@@ -256,6 +257,10 @@ fun SettingsScreen(
                     selectedIndex = FontSizePreset.entries.indexOf(state.fontSize),
                     onSelect = { viewModel.setFontSize(FontSizePreset.entries[it]) }
                 )
+                if (isWinterSeason()) {
+                    Hair()
+                    ToggleRow(Loc.f.winterDecorTitle, Loc.f.winterDecorDesc, state.winterDecor, viewModel::setWinterDecor)
+                }
             }
 
             SettingsPage.CONNECTION -> {

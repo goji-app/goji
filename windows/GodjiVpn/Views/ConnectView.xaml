@@ -92,10 +92,8 @@
                                Text="{Binding ServerCounter}" HorizontalAlignment="Right"/>
                 </Grid>
 
-                <!-- Зимой — шапка Деда Мороза над кодом страны (вне сезона элемент схлопывается) -->
-                <controls:SantaHat HorizontalAlignment="Left" Margin="4,0,0,0" HatWidth="62"/>
                 <!-- Код страны 170: контур в выключенном состоянии, заливка — при подключении и в сети. Тап — следующая страна. -->
-                <controls:CountryCodeText Margin="-6,10,0,0" Text="{Binding CountryCode}" MaxFontSize="170" Cursor="Hand"
+                <controls:CountryCodeText Margin="-6,10,0,0" Text="{Binding CountryCode}" MaxFontSize="170" Decor="True" Cursor="Hand"
                                           Stroke="{DynamicResource OutlineVariantBrush}" ToolTip="{loc:T 'Следующая страна'}"
                                           AutomationProperties.Name="{Binding CountryCode}">
                     <controls:CountryCodeText.InputBindings>
@@ -117,8 +115,9 @@
                     </controls:CountryCodeText.Style>
                 </controls:CountryCodeText>
 
-                <TextBlock Text="{Binding Headline}" FontWeight="SemiBold" FontSize="{s:Fs 32}" Foreground="{DynamicResource HomeInkBrush}"
-                           TextWrapping="Wrap" Margin="0,14,0,0"/>
+                <!-- Заголовок со снегом на буквах (вне сезона рисуется как обычный текст) -->
+                <controls:SnowText Text="{Binding Headline}" FontWeight="SemiBold" FontSize="{s:Fs 32}" Foreground="{DynamicResource HomeInkBrush}"
+                                   Margin="0,14,0,0" AutomationProperties.Name="{Binding Headline}"/>
                 <TextBlock Text="{Binding Subline}" FontSize="{s:Fs 15}" Foreground="{DynamicResource HomeMutBrush}" TextWrapping="Wrap" Margin="0,8,0,0"/>
 
                 <!-- Ошибка подключения: заметный блок — красная полоса слева, подложка ошибки, кнопки действий -->
