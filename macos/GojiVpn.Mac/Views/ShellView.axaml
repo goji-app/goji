@@ -56,6 +56,6 @@
         </Panel>
 
         <!-- Новогодняя тема: снег и качающиеся гирлянды поверх всей оболочки (1 ноября — 31 января) -->
-        <c:WinterOverlay ColumnSpan="2"/>
+        <c:WinterOverlay Grid.ColumnSpan="2"/>
     </Grid>
 </UserControl>
