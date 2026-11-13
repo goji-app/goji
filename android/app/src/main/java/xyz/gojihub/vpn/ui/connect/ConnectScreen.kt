@@ -90,7 +90,9 @@ import xyz.gojihub.vpn.i18n.Loc
 import xyz.gojihub.vpn.network.NetState
 import xyz.gojihub.vpn.ui.globe.GojiGlobe
 import xyz.gojihub.vpn.ui.theme.GodjiColors
+import xyz.gojihub.vpn.ui.theme.SantaHat
 import xyz.gojihub.vpn.ui.theme.SpaceGroteskFamily
+import xyz.gojihub.vpn.ui.theme.isWinterSeason
 import xyz.gojihub.vpn.ui.theme.JetBrainsMonoFamily
 import androidx.compose.ui.unit.em
 import xyz.gojihub.vpn.ui.theme.godjiCard
@@ -145,22 +147,40 @@ fun ConnectScreen(viewModel: ConnectViewModel = hiltViewModel(), onOpenPlans: ()
                 Text(counter, color = mut, fontFamily = mono, fontSize = 11.sp)
             }
             // Код страны выхода: контур в выключенном состоянии, заливка — когда подключаемся/в сети.
+            // Зимой сверху сидит шапка Деда Мороза — под неё отдаётся лишняя высота.
             BoxWithConstraints(Modifier.fillMaxWidth().padding(top = 6.dp)) {
                 val size = (maxWidth.value * 0.77f).coerceAtMost(262f)
-                Text(
-                    code,
-                    color = if (target == 0) GodjiColors.OutlineVariant else ink,
-                    style = androidx.compose.ui.text.TextStyle(
-                        fontFamily = SpaceGroteskFamily, fontWeight = FontWeight.Bold,
-                        fontSize = size.sp, lineHeight = (size * 0.89f).sp, letterSpacing = (-0.07).em,
-                        drawStyle = if (target == 0) Stroke(width = 4f) else null
-                    ),
-                    maxLines = 1, softWrap = false,
-                    modifier = Modifier
-                        .offset(x = (-10).dp)
-                        .clickable(role = Role.Button, onClick = viewModel::nextServer)
-                        .semantics { contentDescription = state.currentGeo?.displayName(lang) ?: state.currentNodeName }
-                )
+                val winter = isWinterSeason()
+                val hatW = if (winter) (size * 0.30f).dp.coerceIn(48.dp, 80.dp) else 0.dp
+                val hatGap = hatW * 0.62f
+                Box(
+                    Modifier.then(
+                        if (winter) Modifier.height((size * 0.89f).dp + hatGap) else Modifier.fillMaxWidth()
+                    )
+                ) {
+                    Text(
+                        code,
+                        color = if (target == 0) GodjiColors.OutlineVariant else ink,
+                        style = androidx.compose.ui.text.TextStyle(
+                            fontFamily = SpaceGroteskFamily, fontWeight = FontWeight.Bold,
+                            fontSize = size.sp, lineHeight = (size * 0.89f).sp, letterSpacing = (-0.07).em,
+                            drawStyle = if (target == 0) Stroke(width = 4f) else null
+                        ),
+                        maxLines = 1, softWrap = false,
+                        modifier = Modifier
+                            .offset(x = (-10).dp, y = hatGap)
+                            .clickable(role = Role.Button, onClick = viewModel::nextServer)
+                            .semantics { contentDescription = state.currentGeo?.displayName(lang) ?: state.currentNodeName }
+                    )
+                }
+                if (winter) {
+                    SantaHat(
+                        Modifier
+                            .align(Alignment.TopStart)
+                            .offset(x = 2.dp, y = -hatW * 0.12f)
+                            .size(width = hatW, height = hatW * 0.87f)
+                    )
+                }
             }
             Text(
                 homeTitle(state, ::t), color = ink, fontFamily = SpaceGroteskFamily, fontWeight = FontWeight.SemiBold,

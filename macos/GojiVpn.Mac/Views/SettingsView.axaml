@@ -129,13 +129,15 @@
         </StackPanel>
 
         <StackPanel Margin="28,26,28,12" IsVisible="{Binding IsAppearancePage}">
-            <StackPanel Orientation="Horizontal">
-                <Button Classes="bare back" Command="{Binding BackCommand}">
-                    <Path Classes="icon" Data="{StaticResource IconArrowBack}" Width="22" Height="22"/>
-                </Button>
-                <TextBlock Classes="subTitle" Text="{loc:T 'Внешний вид'}" FontSize="{s:Fs 24}"/>
-                <loc:LangPicker Margin="0,0,0,10"/>
-            </StackPanel>
+            <Grid>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                    <Button Classes="bare back" Command="{Binding BackCommand}">
+                        <Path Classes="icon" Data="{StaticResource IconArrowBack}" Width="22" Height="22"/>
+                    </Button>
+                    <TextBlock Classes="subTitle" Text="{loc:T 'Внешний вид'}" FontSize="{s:Fs 24}"/>
+                </StackPanel>
+                <loc:LangPicker HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,-16,0"/>
+            </Grid>
             <c:GlassPanel Classes="card" CornerRadius="2" Margin="0,16,0,0">
                 <StackPanel Margin="14,13">
                     <TextBlock Classes="rowTitle" Text="{loc:T 'Тема оформления'}"/>

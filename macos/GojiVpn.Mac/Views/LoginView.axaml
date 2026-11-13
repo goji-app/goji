@@ -52,6 +52,8 @@
         <!-- Шаг 1: почта -->
         <StackPanel Width="420" VerticalAlignment="Center" IsVisible="{Binding !OtpSent}">
             <loc:LangPicker Margin="0,0,0,18"/>
+            <!-- Зимой — шапка Деда Мороза на «В» заголовка (вне сезона элемент схлопывается) -->
+            <loc:SantaHat HorizontalAlignment="Left" Margin="2,0,0,0"/>
             <TextBlock Text="{loc:T 'Войти по почте'}" FontWeight="SemiBold" FontSize="{s:Fs 30}" Foreground="{DynamicResource InkBrush}"/>
             <TextBlock Text="{loc:T 'Пришлём код из шести цифр. Пароль не нужен. Первые 3 дня бесплатно.'}" FontSize="{s:Fs 15}"
                        Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,10,0,0"/>

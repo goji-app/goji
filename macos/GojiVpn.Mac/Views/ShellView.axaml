@@ -54,5 +54,8 @@
             <ContentControl Content="{Binding Plans}" IsVisible="{Binding SelectedTabIndex, Converter={x:Static conv:Conv.IntEquals}, ConverterParameter=2}"/>
             <ContentControl Content="{Binding Settings}" IsVisible="{Binding SelectedTabIndex, Converter={x:Static conv:Conv.IntEquals}, ConverterParameter=3}"/>
         </Panel>
+
+        <!-- Новогодняя тема: снег и качающиеся гирлянды поверх всей оболочки (1 ноября — 31 января) -->
+        <c:WinterOverlay ColumnSpan="2"/>
     </Grid>
 </UserControl>

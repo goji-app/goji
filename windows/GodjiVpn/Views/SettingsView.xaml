@@ -124,11 +124,13 @@
         </StackPanel>
 
         <StackPanel Margin="28,26,28,12" Visibility="{Binding IsAppearancePage, Converter={StaticResource BoolToVisibilityConverter}}">
-            <StackPanel Orientation="Horizontal">
-                <Button Style="{StaticResource BackButton}"/>
-                <TextBlock Text="{loc:T 'Внешний вид'}" Style="{StaticResource SubTitle}"/>
-                <loc:LangPicker Margin="0,0,0,10"/>
-            </StackPanel>
+            <Grid>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                    <Button Style="{StaticResource BackButton}"/>
+                    <TextBlock Text="{loc:T 'Внешний вид'}" Style="{StaticResource SubTitle}"/>
+                </StackPanel>
+                <loc:LangPicker HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,-16,0"/>
+            </Grid>
             <controls:GlassPanel Style="{StaticResource GlassCard}" CornerRadius="2" Margin="0,16,0,0">
                 <StackPanel Margin="14,13">
                     <TextBlock Text="{loc:T 'Тема оформления'}" Style="{StaticResource RowTitle}"/>

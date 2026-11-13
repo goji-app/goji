@@ -73,6 +73,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             GodjiVpnTheme {
                 GodjiApp(startLoggedIn = authRepository.isLoggedIn(), authRepository = authRepository, verifyEmail = verifyEmail)
+                xyz.gojihub.vpn.ui.theme.WinterOverlay()
                 if (crashReport != null && authRepository.isLoggedIn()) CrashReportDialog(crashReport)
             }
         }
