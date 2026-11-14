@@ -5,6 +5,12 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GodjiVpn", "GodjiVpn\GodjiVpn.csproj", "{1C5DF8CC-774A-443D-8A32-9E309856657A}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "installer", "installer", "{7296D52F-6DD1-4937-83B6-05DE26285DA9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Setup", "installer\Setup\Setup.csproj", "{7F12FA5A-61C1-4D13-9A18-94B65B2350B0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PayloadTool", "installer\PayloadTool\PayloadTool.csproj", "{B3C01560-FDE2-4A15-AF13-B683F28C2424}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +24,17 @@ Global
 		{1C5DF8CC-774A-443D-8A32-9E309856657A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1C5DF8CC-774A-443D-8A32-9E309856657A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1C5DF8CC-774A-443D-8A32-9E309856657A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F12FA5A-61C1-4D13-9A18-94B65B2350B0}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{7F12FA5A-61C1-4D13-9A18-94B65B2350B0}.Debug|Any CPU.Build.0 = Debug|x64
+		{7F12FA5A-61C1-4D13-9A18-94B65B2350B0}.Release|Any CPU.ActiveCfg = Release|x64
+		{7F12FA5A-61C1-4D13-9A18-94B65B2350B0}.Release|Any CPU.Build.0 = Release|x64
+		{B3C01560-FDE2-4A15-AF13-B683F28C2424}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3C01560-FDE2-4A15-AF13-B683F28C2424}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3C01560-FDE2-4A15-AF13-B683F28C2424}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3C01560-FDE2-4A15-AF13-B683F28C2424}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{7F12FA5A-61C1-4D13-9A18-94B65B2350B0} = {7296D52F-6DD1-4937-83B6-05DE26285DA9}
+		{B3C01560-FDE2-4A15-AF13-B683F28C2424} = {7296D52F-6DD1-4937-83B6-05DE26285DA9}
 	EndGlobalSection
 EndGlobal

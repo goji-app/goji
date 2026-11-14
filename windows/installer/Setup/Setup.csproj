@@ -1,0 +1,62 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>GodjiSetup</RootNamespace>
+    <AssemblyName>GodjiSetup</AssemblyName>
+    <AssemblyTitle>Godji VPN Setup</AssemblyTitle>
+    <Product>Godji VPN</Product>
+    <Company>Godji</Company>
+    <!-- Версию передаёт build-installer.ps1 (-p:Version=...), беря её из GodjiVpn.csproj. -->
+    <Version Condition="'$(Version)' == ''">1.0.0</Version>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <!-- Установщик должен запускаться на любой машине пользователя — тащим рантайм с собой.
+         Один exe: payload (zip с publish приложения) лежит внутри как EmbeddedResource; сборка
+         распакуется в %TEMP%\.net при первом запуске — плата за одиночный файл. -->
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>none</DebugType>
+    <!-- Локализованные ресурсы самого WPF (cs/de/fr/…) не нужны — минус ~8 МБ. -->
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <ApplicationIcon>..\..\GodjiVpn\Assets\Images\app.ico</ApplicationIcon>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+
+  <!-- Release: requireAdministrator (пишем в Program Files и HKLM, гасим запущенное приложение).
+       Debug: asInvoker — чтобы dry-run-прогон UI из не-админ-шелла не поднимал UAC. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' != 'Release'">
+    <ApplicationManifest>app.manifest.dev</ApplicationManifest>
+  </PropertyGroup>
+
+  <!-- Payload встраивается только в setup-сборку (-p:EmbedPayload=true из build-installer.ps1):
+       контейнер payload.bin (Brotli, см. installer/PayloadTool). Без него (Debug и отдельная
+       сборка деинсталлятора) exe весит ~30 МБ вместо ~95. -->
+  <ItemGroup Condition="'$(EmbedPayload)' == 'true'">
+    <EmbeddedResource Include="payload.bin" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LZMA-SDK" Version="22.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Шрифты и иконка — ссылки на оригиналы из GodjiVpn, чтобы не плодить копии файлов.
+         Имена семейств в SetupTheme.xaml — как в приложении (Golos Text / JetBrains Mono). -->
+    <Resource Include="..\..\GodjiVpn\Assets\Fonts\golos_400.ttf"><Link>Assets\Fonts\golos_400.ttf</Link></Resource>
+    <Resource Include="..\..\GodjiVpn\Assets\Fonts\golos_600.ttf"><Link>Assets\Fonts\golos_600.ttf</Link></Resource>
+    <Resource Include="..\..\GodjiVpn\Assets\Fonts\golos_700.ttf"><Link>Assets\Fonts\golos_700.ttf</Link></Resource>
+    <Resource Include="..\..\GodjiVpn\Assets\Fonts\jbmono_400.ttf"><Link>Assets\Fonts\jbmono_400.ttf</Link></Resource>
+    <Resource Include="..\..\GodjiVpn\Assets\Fonts\jbmono_700.ttf"><Link>Assets\Fonts\jbmono_700.ttf</Link></Resource>
+    <Resource Include="..\..\GodjiVpn\Assets\Images\app.ico"><Link>Assets\Images\app.ico</Link></Resource>
+  </ItemGroup>
+
+</Project>

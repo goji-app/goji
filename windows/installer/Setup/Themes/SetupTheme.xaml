@@ -1,0 +1,186 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Палитра и шрифты установщика — подмножество DarkTheme.xaml приложения («Goji Expressive»,
+         тёмная тема «Афиша×Прибор»), значения 1:1. Установщик всегда тёмный — смены темы нет,
+         поэтому ключи можно читать StaticResource (кроме BgSolidBrush: WinterOverlay ищет его
+         TryFindResource'ом для определения светлоты темы). -->
+
+    <SolidColorBrush x:Key="BgSolidBrush" Color="#0E1513"/>
+    <SolidColorBrush x:Key="SurfaceContainerLowBrush" Color="#161D1C"/>
+    <SolidColorBrush x:Key="SurfaceContainerBrush" Color="#1A2120"/>
+    <SolidColorBrush x:Key="SurfaceContainerHighBrush" Color="#252B2A"/>
+    <SolidColorBrush x:Key="SurfaceContainerHighestBrush" Color="#2F3635"/>
+    <SolidColorBrush x:Key="PrimaryBrush" Color="#80D5CA"/>
+    <SolidColorBrush x:Key="OnPrimaryBrush" Color="#003732"/>
+    <SolidColorBrush x:Key="OutlineBrush" Color="#889391"/>
+    <SolidColorBrush x:Key="OutlineVariantBrush" Color="#3F4947"/>
+    <SolidColorBrush x:Key="HairBrush" Color="#2F3635"/>
+    <SolidColorBrush x:Key="TrackBgBrush" Color="#2F3635"/>
+    <SolidColorBrush x:Key="InkBrush" Color="#DDE4E1"/>
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#DDE4E1"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#BEC9C6"/>
+    <SolidColorBrush x:Key="TextMutedBrush" Color="#889391"/>
+    <SolidColorBrush x:Key="InkBtnBrush" Color="#80D5CA"/>
+    <SolidColorBrush x:Key="InkBtnTextBrush" Color="#003732"/>
+    <SolidColorBrush x:Key="DangerBrush" Color="#FFB4AB"/>
+    <SolidColorBrush x:Key="JamBgBrush" Color="#93000A"/>
+    <SolidColorBrush x:Key="TerracottaBrush" Color="#FFB59A"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="#F0BF48"/>
+
+    <!-- Семейные имена — как в App.xaml приложения (под «Manrope» прячется Golos Text,
+         снежные контролы ищут их по тем же ключам). -->
+    <FontFamily x:Key="ManropeFamily">pack://application:,,,/Assets/Fonts/#Golos Text</FontFamily>
+    <FontFamily x:Key="JetBrainsMonoFamily">pack://application:,,,/Assets/Fonts/#JetBrains Mono</FontFamily>
+
+    <!-- Плоская кнопка 56: моно капс, угол 2 (аналог FlatCta из LoginView приложения). -->
+    <Style x:Key="FlatCta" TargetType="Button">
+        <Setter Property="Height" Value="56"/>
+        <Setter Property="MinWidth" Value="260"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Foreground" Value="{StaticResource InkBtnTextBrush}"/>
+        <Setter Property="Background" Value="{StaticResource InkBtnBrush}"/>
+        <Setter Property="FontFamily" Value="{StaticResource JetBrainsMonoFamily}"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" CornerRadius="2" Background="{TemplateBinding Background}">
+                        <TextBlock Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}"
+                                   FontFamily="{TemplateBinding FontFamily}" FontWeight="{TemplateBinding FontWeight}"
+                                   FontSize="{TemplateBinding FontSize}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Opacity" Value="0.92"/></Trigger>
+                        <Trigger Property="IsPressed" Value="True"><Setter TargetName="Bd" Property="Opacity" Value="0.8"/></Trigger>
+                        <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Bd" Property="Opacity" Value="0.5"/></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Деструктивная кнопка деинсталляции: контур цвета ошибки, при наведении — error-container. -->
+    <Style x:Key="DangerCta" TargetType="Button" BasedOn="{StaticResource FlatCta}">
+        <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" CornerRadius="2" Background="{TemplateBinding Background}"
+                            BorderBrush="{StaticResource DangerBrush}" BorderThickness="1">
+                        <TextBlock Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}"
+                                   FontFamily="{TemplateBinding FontFamily}" FontWeight="{TemplateBinding FontWeight}"
+                                   FontSize="{TemplateBinding FontSize}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource JamBgBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True"><Setter TargetName="Bd" Property="Opacity" Value="0.8"/></Trigger>
+                        <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Bd" Property="Opacity" Value="0.5"/></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Вторая кнопка: без заливки, тонкий контур, моно капс. -->
+    <Style x:Key="GhostCta" TargetType="Button">
+        <Setter Property="Height" Value="56"/>
+        <Setter Property="MinWidth" Value="150"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="FontFamily" Value="{StaticResource JetBrainsMonoFamily}"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" CornerRadius="2" Background="{TemplateBinding Background}"
+                            BorderBrush="{StaticResource OutlineVariantBrush}" BorderThickness="1">
+                        <TextBlock x:Name="Txt" Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}"
+                                   FontFamily="{TemplateBinding FontFamily}" FontWeight="{TemplateBinding FontWeight}"
+                                   FontSize="{TemplateBinding FontSize}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Txt" Property="Foreground" Value="{StaticResource InkBrush}"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource OutlineBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True"><Setter TargetName="Bd" Property="Opacity" Value="0.8"/></Trigger>
+                        <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Bd" Property="Opacity" Value="0.5"/></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Чекбокс: квадрат 18 без рамок заголовков, моно-подпись (в духе instrument-таблицы). -->
+    <Style x:Key="MonoCheck" TargetType="CheckBox">
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+        <Setter Property="FontFamily" Value="{StaticResource JetBrainsMonoFamily}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <StackPanel Orientation="Horizontal" Background="Transparent">
+                        <Border x:Name="Box" Width="18" Height="18" CornerRadius="2" BorderThickness="1"
+                                BorderBrush="{StaticResource OutlineVariantBrush}" Background="Transparent"
+                                VerticalAlignment="Center">
+                            <Path x:Name="Check" Data="M3,9 L7,13 L14,4" Stroke="{StaticResource OnPrimaryBrush}"
+                                  StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                  Visibility="Collapsed" Margin="1,1,1,1" Stretch="Uniform"/>
+                        </Border>
+                        <ContentPresenter VerticalAlignment="Center" Margin="12,0,0,0"
+                                          RecognizesAccessKey="True"/>
+                    </StackPanel>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Box" Property="Background" Value="{StaticResource PrimaryBrush}"/>
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
+                            <Setter TargetName="Check" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource OutlineBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Кнопка «×» в титлбаре рамки окна. -->
+    <Style x:Key="CloseButton" TargetType="Button">
+        <Setter Property="Width" Value="46"/>
+        <Setter Property="Height" Value="46"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+        <Setter Property="FontFamily" Value="{StaticResource JetBrainsMonoFamily}"/>
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" Background="Transparent">
+                        <TextBlock x:Name="Txt" Text="{TemplateBinding Content}" FontFamily="{TemplateBinding FontFamily}"
+                                   FontSize="{TemplateBinding FontSize}" Foreground="{TemplateBinding Foreground}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource SurfaceContainerHighBrush}"/>
+                            <Setter TargetName="Txt" Property="Foreground" Value="{StaticResource InkBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True"><Setter TargetName="Bd" Property="Opacity" Value="0.8"/></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

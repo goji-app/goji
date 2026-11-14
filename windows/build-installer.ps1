@@ -1,29 +1,29 @@
-﻿# Полная пересборка Godji VPN: dotnet publish (self-contained win-x64) +
-# упаковка в установщик через Inno Setup (ISCC.exe). Результат — единственный
-# файл dist\GodjiVpn-Setup-<версия>.exe, промежуточные папки после сборки
-# установщика удаляются.
+﻿# Полная пересборка Godji VPN: dotnet publish (self-contained win-x64) + Obfuscar +
+# сборка собственного WPF-установщика (installer\Setup). Результат — единственный файл
+# dist\GodjiVpn-Setup-<версия>.exe; промежуточные папки после сборки удаляются.
 #
-# Требования: .NET 8 SDK, Inno Setup 6 (ставится через:
-#   winget install --id JRSoftware.InnoSetup -e
-# ISCC.exe ищется автоматически в стандартных путях установки).
+# Установщик — отдельное приложение GodjiSetup (WPF, фирменный дизайн «Афиша×Прибор»):
+#   1) publish приложения → publish_stage (как раньше);
+#   2) publish_stage упаковывается в payload.bin (LZMA-контейнер, installer/PayloadTool);
+#   3) payload.bin встраивается в GodjiSetup.exe как EmbeddedResource → dist\GodjiVpn-Setup-<v>.exe.
+# Отдельного деинсталлятора нет: unins000.exe в папке установки — это копия самого установщика
+# (InstallerEngine кладёт её после распаковки), он же работает с /uninstall и /quiet.
+# Inno Setup больше не нужен. Payload живёт внутри сборки, поэтому при первом запуске
+# .NET-хост распаковывает сборку в %TEMP%\.net\GodjiSetup\ — это цена одиночного файла.
+#
+# Требования: .NET 8 SDK. Установщик собирается с -p:EmbedPayload=true / false
+#   (встраивать payload.bin) и -p:Version=<версия из csproj>.
+# Запуск: powershell -NoProfile -ExecutionPolicy Bypass -File build-installer.ps1
+# Время: ~35 мин (LZMA-кодирование payload) + ~10 мин (publish/обфускация/публикация).
 
 $ErrorActionPreference = "Stop"
 $root = $PSScriptRoot
 $proj = Join-Path $root "GodjiVpn\GodjiVpn.csproj"
+$setupProj = Join-Path $root "installer\Setup\Setup.csproj"
 $publishDir = Join-Path $root "publish_stage"
-$issFile = Join-Path $root "installer\GodjiVpn.iss"
-
-function Find-Iscc {
-    $candidates = @(
-        "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe",
-        "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
-        "$env:ProgramFiles\Inno Setup 6\ISCC.exe"
-    )
-    foreach ($c in $candidates) { if (Test-Path $c) { return $c } }
-    $found = Get-Command ISCC.exe -ErrorAction SilentlyContinue
-    if ($found) { return $found.Source }
-    throw "ISCC.exe не найден. Установите Inno Setup: winget install --id JRSoftware.InnoSetup -e"
-}
+$uninsDir = Join-Path $root "setup_stage_unins"
+$fullDir = Join-Path $root "setup_stage_full"
+$payloadBin = Join-Path $root "installer\Setup\payload.bin"
 
 Write-Host "== Проверка ядра (Runtime\SHA256SUMS) ==" -ForegroundColor Cyan
 # xray.exe и sing-box.exe в git не хранятся — сверяем, что в установщик уйдут именно те версии.
@@ -35,7 +35,8 @@ foreach ($line in Get-Content (Join-Path $runtimeDir "SHA256SUMS")) {
 }
 
 Write-Host "== Очистка старых артефактов сборки ==" -ForegroundColor Cyan
-Remove-Item -Recurse -Force (Join-Path $root "GodjiVpn\bin"), (Join-Path $root "GodjiVpn\obj"), $publishDir -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force (Join-Path $root "GodjiVpn\bin"), (Join-Path $root "GodjiVpn\obj"),
+    $publishDir, $uninsDir, $fullDir, $payloadBin -ErrorAction SilentlyContinue
 
 Write-Host "== dotnet publish (Release, self-contained, win-x64) ==" -ForegroundColor Cyan
 dotnet publish $proj -c Release -r win-x64 --self-contained true `
@@ -76,15 +77,35 @@ try {
 }
 Remove-Item -Recurse -Force (Join-Path $root "publish_stage_obf") -ErrorAction SilentlyContinue
 
-Write-Host "== Компиляция установщика (Inno Setup) ==" -ForegroundColor Cyan
-$iscc = Find-Iscc
 # Версия — из GodjiVpn.csproj, чтобы установщик не отставал от приложения.
 $version = ([xml](Get-Content $proj -Raw)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
 if (-not $version) { throw "Не нашёл <Version> в $proj" }
-& $iscc "/DMyAppVersion=$version" $issFile
-if ($LASTEXITCODE -ne 0) { throw "ISCC.exe завершился с ошибкой" }
 
-Write-Host "== Уборка промежуточной publish-папки ==" -ForegroundColor Cyan
-Remove-Item -Recurse -Force $publishDir, (Join-Path $root "GodjiVpn\bin"), (Join-Path $root "GodjiVpn\obj") -ErrorAction SilentlyContinue
+Write-Host "== Упаковка payload (publish_stage -> payload.bin, LZMA d64 fb273) ==" -ForegroundColor Cyan
+# Потоковый контейнер PayloadTool: header (кол-во файлов/байты) открытым текстом + LZMA-поток
+# записей (словарь 64 МБ, fastbytes 273 — профиль прежнего Inno lzma2/max; декодер — тот же
+# пакет LZMA-SDK в Setup). unins000.exe в publish_stage НЕ кладём: деинсталлятором становится
+# сам установщик (копия в папке установки), иначе ~60 МБ уже сжатого кода ложатся в payload
+# почти без сжатия и раздували установщик с ~148 до ~200 МБ.
+dotnet run --project (Join-Path $root "installer\PayloadTool\PayloadTool.csproj") -c Release -- $publishDir $payloadBin
+if ($LASTEXITCODE -ne 0) { throw "PayloadTool завершился с ошибкой" }
 
-Write-Host "Готово: dist\GodjiVpn-Setup-*.exe" -ForegroundColor Green
+Write-Host "== Установщик (GodjiSetup с payload) -> dist\GodjiVpn-Setup-$version.exe ==" -ForegroundColor Cyan
+dotnet publish $setupProj -c Release -r win-x64 -p:EmbedPayload=true -p:Version=$version -o $fullDir
+if ($LASTEXITCODE -ne 0) { throw "publish установщика завершился с ошибкой" }
+Remove-Item -Force (Join-Path $fullDir "*.pdb") -ErrorAction SilentlyContinue
+
+$outExe = Join-Path $root "dist\GodjiVpn-Setup-$version.exe"
+New-Item -ItemType Directory -Force (Join-Path $root "dist") | Out-Null
+Move-Item -Force (Join-Path $fullDir "GodjiSetup.exe") $outExe
+
+Write-Host "== Уборка промежуточных папок ==" -ForegroundColor Cyan
+Remove-Item -Recurse -Force $publishDir, $uninsDir, $fullDir, $payloadBin, `
+    (Join-Path $root "installer\Setup\bin"), (Join-Path $root "installer\Setup\obj"), `
+    (Join-Path $root "installer\PayloadTool\bin"), (Join-Path $root "installer\PayloadTool\obj"), `
+    (Join-Path $root "GodjiVpn\bin"), (Join-Path $root "GodjiVpn\obj") -ErrorAction SilentlyContinue
+
+$hash = (Get-FileHash $outExe -Algorithm SHA256).Hash.ToLowerInvariant()
+$size = (Get-Item $outExe).Length
+Write-Host "Готово: $outExe ($size байт)" -ForegroundColor Green
+Write-Host "SHA-256: $hash" -ForegroundColor Green

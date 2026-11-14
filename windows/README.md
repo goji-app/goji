@@ -39,7 +39,7 @@
 
 ## Сборка
 
-Нужны .NET 8 SDK и [Inno Setup 6](https://jrsoftware.org/isinfo.php) (`winget install --id JRSoftware.InnoSetup -e`). Адреса сервисов — `goji-hosts.properties` в корне репозитория (см. README там).
+Нужен .NET 8 SDK. Адреса сервисов — `goji-hosts.properties` в корне репозитория (см. README там).
 
 ```powershell
 dotnet build GodjiVpn/GodjiVpn.csproj -c Release   # проверить, что собирается
@@ -64,6 +64,7 @@ GodjiVpn/
 ├─ ViewModels/
 └─ Views/        Onboarding, Login, Connect, Servers, Plans, Settings, Support
 
-installer/           скрипт Inno Setup
+installer/Setup/     установщик GodjiSetup (WPF, тот же дизайн «Афиша×Прибор»):
+                     деинсталлятор собирается тем же проектом с -p:EmbedPayload=false
 build-installer.ps1  проверка ядра + publish + установщик одной командой
 ```

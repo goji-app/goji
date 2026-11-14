@@ -1,0 +1,180 @@
+<Window x:Class="GodjiSetup.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:GodjiSetup.Controls"
+        xmlns:s="clr-namespace:GodjiSetup"
+        Title="Godji VPN" Width="860" Height="544"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None" ResizeMode="NoResize"
+        Background="{StaticResource BgSolidBrush}"
+        Icon="pack://application:,,,/Assets/Images/app.ico"
+        FontFamily="{StaticResource ManropeFamily}"
+        UseLayoutRounding="True" SnapsToDevicePixels="True"
+        TextOptions.TextRenderingMode="ClearType">
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="46" ResizeBorderThickness="0" GlassFrameThickness="0"
+                      CornerRadius="0" UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <s:BoolToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="304"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ═══ ЛЕВАЯ ПАНЕЛЬ — как ConnectView: статус-строка, гигантские буквы, заголовок, тело, кнопки ═══ -->
+        <Grid Grid.Column="0" Margin="44,46,40,40">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Статусная моно-строка: «УСТАНОВКА · 1.0.137» или фаза + процент -->
+            <TextBlock Grid.Row="0" Text="{Binding StatusLine}" FontFamily="{StaticResource JetBrainsMonoFamily}"
+                       FontSize="11" Foreground="{StaticResource TextMutedBrush}" TextTrimming="CharacterEllipsis"/>
+
+            <!-- Гигантские буквы (аналог кода страны): контур в покое, заливка растёт с прогрессом.
+                 Зимой — снежная кромка и шапка Деда Мороза на «G». -->
+            <controls:CountryCodeText Grid.Row="1" x:Name="Giant" Text="GOJI" MaxFontSize="150" Decor="True"
+                                      Stroke="{StaticResource OutlineVariantBrush}" Margin="0,18,0,0"/>
+
+            <!-- Заголовок экрана (зимой — снег на кромках букв, без шапки: она одна, на «G») -->
+            <controls:SnowText Grid.Row="2" x:Name="Headline" Text="{Binding HeadlineText}" FontSize="28"
+                               FontWeight="SemiBold" Foreground="{StaticResource InkBrush}" Margin="0,10,0,0"/>
+
+            <StackPanel Grid.Row="3" Margin="0,10,0,0">
+                <!-- Тело: подстрока -->
+                <TextBlock Text="{Binding Subline}" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}"
+                           TextWrapping="Wrap" MaxWidth="420" HorizontalAlignment="Left"/>
+
+                <!-- Чекбоксы приветствия -->
+                <StackPanel x:Name="WelcomeChecks" Margin="0,26,0,0"
+                            Visibility="{Binding IsWelcome, Converter={StaticResource BoolToVis}}">
+                    <CheckBox x:Name="DesktopCheck" Style="{StaticResource MonoCheck}" IsChecked="{Binding DesktopShortcut}"
+                              Content="{Binding DesktopCheckText}"/>
+                    <CheckBox x:Name="LaunchCheck" Style="{StaticResource MonoCheck}" IsChecked="{Binding LaunchAfter}"
+                              Content="{Binding LaunchCheckText}" Margin="0,14,0,0"/>
+                </StackPanel>
+
+                <!-- Чекбокс удаления настроек (экран подтверждения) -->
+                <CheckBox x:Name="UserDataCheck" Style="{StaticResource MonoCheck}" IsChecked="{Binding DeleteUserData}"
+                          Content="{Binding UserDataCheckText}" Margin="0,26,0,0"
+                          Visibility="{Binding IsConfirm, Converter={StaticResource BoolToVis}}"/>
+
+                <!-- Прогресс: линия 2px + ошибка -->
+                <Grid x:Name="ProgressHost" Height="2" Margin="0,30,0,0" Background="{StaticResource TrackBgBrush}"
+                      Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}">
+                    <Rectangle Fill="{StaticResource PrimaryBrush}" HorizontalAlignment="Left" RenderTransformOrigin="0,0.5">
+                        <Rectangle.RenderTransform>
+                            <ScaleTransform ScaleX="{Binding ProgressScaleX}"/>
+                        </Rectangle.RenderTransform>
+                    </Rectangle>
+                </Grid>
+                <TextBlock Text="{Binding ErrorText}" FontSize="12.5" Foreground="{StaticResource DangerBrush}"
+                           TextWrapping="Wrap" MaxWidth="440" HorizontalAlignment="Left" Margin="0,26,0,0"
+                           Visibility="{Binding ShowErrorBlock, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
+
+            <!-- Кнопки: собираются в code-behind по состоянию -->
+            <StackPanel Grid.Row="4" x:Name="ButtonsHost" Orientation="Horizontal" Margin="0,30,0,0"/>
+        </Grid>
+
+        <!-- ═══ ПРАВАЯ КОЛОНКА — instrument-таблица ═══ -->
+        <Border Grid.Column="1" BorderBrush="{StaticResource HairBrush}" BorderThickness="1,0,0,0" Padding="32,52,36,40">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <!-- Строки: моно-метка 92px + значение, хвост-линия HairBrush (последняя строка — без неё) -->
+                <Grid Grid.Row="0" MinHeight="52">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="92"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="LblVersion" FontFamily="{StaticResource JetBrainsMonoFamily}" FontSize="11"
+                               Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="{Binding VersionValue}" FontFamily="{StaticResource JetBrainsMonoFamily}"
+                               FontSize="12" Foreground="{StaticResource InkBrush}" VerticalAlignment="Center"/>
+                </Grid>
+                <Border Grid.Row="1" BorderBrush="{StaticResource HairBrush}" BorderThickness="0,1,0,0">
+                    <Grid MinHeight="52">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="92"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="LblPath" FontFamily="{StaticResource JetBrainsMonoFamily}" FontSize="11"
+                                   Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding PathValue}" FontFamily="{StaticResource JetBrainsMonoFamily}"
+                                   FontSize="12" Foreground="{StaticResource InkBrush}" VerticalAlignment="Center"
+                                   TextWrapping="Wrap" ToolTip="{Binding PathValue}" Margin="0,8,0,8"/>
+                    </Grid>
+                </Border>
+                <Border Grid.Row="2" BorderBrush="{StaticResource HairBrush}" BorderThickness="0,1,0,0">
+                    <Grid MinHeight="52">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="92"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="LblSize" FontFamily="{StaticResource JetBrainsMonoFamily}" FontSize="11"
+                                   Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding SizeValue}" FontFamily="{StaticResource JetBrainsMonoFamily}"
+                                   FontSize="12" Foreground="{StaticResource InkBrush}" VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+                <Border Grid.Row="3" BorderBrush="{StaticResource HairBrush}" BorderThickness="0,1,0,0">
+                    <Grid MinHeight="52">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="92"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="LblFiles" FontFamily="{StaticResource JetBrainsMonoFamily}" FontSize="11"
+                                   Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding FilesValue}" FontFamily="{StaticResource JetBrainsMonoFamily}"
+                                   FontSize="12" Foreground="{StaticResource InkBrush}" VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+                <Border Grid.Row="4" BorderBrush="{StaticResource HairBrush}" BorderThickness="0,1,0,0">
+                    <Grid MinHeight="52">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="92"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="LblSystem" FontFamily="{StaticResource JetBrainsMonoFamily}" FontSize="11"
+                                   Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding SystemValue}" FontFamily="{StaticResource JetBrainsMonoFamily}"
+                                   FontSize="12" Foreground="{StaticResource InkBrush}" VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Титлбар: моно-подпись + «×». Панель прозрачна для контента, тянется только полоса сверху. -->
+        <Grid Grid.ColumnSpan="2" VerticalAlignment="Top" Height="46" Background="Transparent"
+              MouseLeftButtonDown="Titlebar_MouseLeftButtonDown">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock x:Name="TitleText" Margin="44,0,0,0" VerticalAlignment="Center"
+                       FontFamily="{StaticResource JetBrainsMonoFamily}" FontSize="11"
+                       Foreground="{StaticResource TextMutedBrush}"/>
+            <Button Grid.Column="1" x:Name="CloseButton" Style="{StaticResource CloseButton}" Content="×"
+                    WindowChrome.IsHitTestVisibleInChrome="True" Click="Close_Click"/>
+        </Grid>
+
+        <!-- Зимний декор поверх всего (вне сезона — пустой нулевой слой, как в приложении). -->
+        <controls:WinterOverlay Grid.ColumnSpan="2"/>
+    </Grid>
+</Window>

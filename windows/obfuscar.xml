@@ -1,0 +1,28 @@
+<Obfuscator>
+  <!-- Запускается из build-installer.ps1 по готовому publish_stage (см. комментарий там).
+       Правит только GodjiVpn.dll; зависимости (WebView2, ядра и т.п.) не трогаются. -->
+  <Var name="InPath" value="publish_stage" />
+  <Var name="OutPath" value="publish_stage_obf" />
+
+  <!-- Базовая политика: публичный API остаётся с именами, приватное/внутреннее переименовывается.
+       Это безопасный для WPF профиль: в XAML (BAML) компилируются ссылки только на публичные
+       типы (окна, вью-модели в DataTemplate {x:Type ...}, конвертеры, стили TargetType) — они
+       сохраняются. Биндинги ({Binding Path}) резолвятся по именам публичных свойств —
+       переименование свойств выключено. x:Name-поля и XAML-обработчики событий ссылаются
+       из сгенерированного кода через метадата-токены (пересобираются обфускатором
+       консистентно), но поля оставлены нетронутыми для надёжности. Reflection по строкам
+       и XamlReader.Load в коде не используются (проверено grep'ом), статический анализ
+       выполняется самим Obfuscar'ом: неразрешимые ссылки он не переименует молча. -->
+  <Var name="KeepPublicApi" value="true" />
+  <Var name="HidePrivateApi" value="true" />
+  <Var name="RenameProperties" value="false" />
+  <Var name="RenameEvents" value="false" />
+  <Var name="RenameFields" value="false" />
+
+  <!-- Строковые литералы шифруются в ресурс сборки и расшифровываются при вызове —
+       «strings GodjiVpn.dll» больше не выдаёт URL, сообщения и названия серверов.
+       Аргументы атрибутов (DllImport и т.п.) не являются ldstr-литералами и не трогаются. -->
+  <Var name="HideStrings" value="true" />
+
+  <Module file="$(InPath)\GodjiVpn.dll" />
+</Obfuscator>
