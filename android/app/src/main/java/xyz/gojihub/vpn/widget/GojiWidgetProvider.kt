@@ -64,9 +64,7 @@ class GojiWidgetProvider : AppWidgetProvider() {
             // Виджеты концепта Goji 2.0 обновляются по тем же событиям.
             GojiStatusWidgetProvider.refresh(context)
             GojiTinyWidgetProvider.refresh(context)
-            GojiStripWidgetProvider.refresh(context)
             GojiWideWidgetProvider.refresh(context)
-            GojiSubscriptionWidgetProvider.refresh(context)
         }
 
         private fun buildViews(context: Context, appWidgetId: Int, options: Bundle?): RemoteViews {
@@ -155,7 +153,7 @@ class GojiWidgetProvider : AppWidgetProvider() {
             )
         }
 
-        private fun nodeStepIntent(context: Context, action: String, requestCode: Int): PendingIntent = PendingIntent.getBroadcast(
+        internal fun nodeStepIntent(context: Context, action: String, requestCode: Int): PendingIntent = PendingIntent.getBroadcast(
             context, requestCode,
             Intent(context, GojiWidgetActionReceiver::class.java).setAction(action),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE

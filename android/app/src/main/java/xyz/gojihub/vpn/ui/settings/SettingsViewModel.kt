@@ -139,14 +139,20 @@ class SettingsViewModel @Inject constructor(
             ThemeMode.SYSTEM -> isSystemInDarkMode(appContext)
         }
         if (dark) GodjiColors.applyDark() else GodjiColors.applyLight()
-        viewModelScope.launch { settingsRepository.setThemeMode(mode) }
+        viewModelScope.launch {
+            settingsRepository.setThemeMode(mode)
+            xyz.gojihub.vpn.widget.GojiWidgetProvider.refresh(appContext)
+        }
     }
 
     fun setPalette(id: String) {
         _state.value = _state.value.copy(paletteId = id)
         GodjiColors.paletteId = id
         if (GodjiColors.isDark) GodjiColors.applyDark() else GodjiColors.applyLight()
-        viewModelScope.launch { settingsRepository.setPaletteId(id) }
+        viewModelScope.launch {
+            settingsRepository.setPaletteId(id)
+            xyz.gojihub.vpn.widget.GojiWidgetProvider.refresh(appContext) // виджеты перекрашиваются под палитру
+        }
     }
 
     fun setFontSize(preset: FontSizePreset) {
