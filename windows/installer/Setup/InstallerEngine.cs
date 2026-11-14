@@ -75,19 +75,26 @@ public sealed class InstallerEngine
     public async Task RunAsync(string targetDir, SetupVm vm, bool dryRun,
         IProgress<EngineStep> progress, CancellationToken ct)
     {
+        void Phase(string m) => App.LogRun("install: " + m);
+
         // 0–6%: закрываем приложение и ядра.
+        Phase("phase close: begin");
         progress.Report(new EngineStep("close", 1));
         if (dryRun) await Task.Delay(700, ct);
         else ProcessGuard.CloseAppAndCores(targetDir, id => { }, ct);
+        Phase("phase close: done");
         progress.Report(new EngineStep("close", 6));
 
         // 6–10%: старый Inno-установщик (до 1.0.136) — тихий /VERYSILENT деинсталлятор.
+        Phase("phase legacy: begin");
         progress.Report(new EngineStep("legacy", 7));
         if (!dryRun) await UninstallLegacyInnoAsync(ct);
         else await Task.Delay(400, ct);
+        Phase("phase legacy: done");
         progress.Report(new EngineStep("legacy", 10));
 
         // 10–92%: payload.
+        Phase("phase extract: begin");
         progress.Report(new EngineStep("extract", 10, "0"));
         if (dryRun)
         {
@@ -98,6 +105,7 @@ public sealed class InstallerEngine
             }
         }
         else await ExtractAsync(targetDir, progress, ct);
+        Phase("phase extract: done");
 
         // 92–96%: деинсталлятор + ярлыки.
         progress.Report(new EngineStep("shortcuts", 92));
@@ -110,6 +118,7 @@ public sealed class InstallerEngine
             // Деинсталлятор — копия самого установщика (он умеет /uninstall и /quiet).
             // Отдельный exe в payload не кладём: ~60 МБ уже сжатого кода легли бы туда
             // почти без сжатия и раздули установщик.
+            Phase("unins000: copying self");
             var self = Environment.ProcessPath
                 ?? throw new InvalidOperationException("Не удалось определить путь установщика");
             var uninsPath = Path.Combine(targetDir, "unins000.exe");
@@ -122,14 +131,18 @@ public sealed class InstallerEngine
             }
             catch { /* пометки нет — ок */ }
 
+            Phase("shortcuts: begin");
             CreateShortcuts(targetDir, vm.DesktopShortcut);
+            Phase("shortcuts: done");
         }
         progress.Report(new EngineStep("shortcuts", 96));
 
         // 96–100%: реестр.
+        Phase("phase registry: begin");
         progress.Report(new EngineStep("registry", 97));
         if (dryRun) await Task.Delay(300, ct);
         else WriteUninstallRegistry(targetDir);
+        Phase("phase registry: done");
         progress.Report(new EngineStep("registry", 100));
     }
 
@@ -152,12 +165,14 @@ public sealed class InstallerEngine
         int count = BitConverter.ToInt32(header, 8);
         long totalFilesBytes = BitConverter.ToInt64(header, 12);
         long rawStreamSize = BitConverter.ToInt64(header, 20);
+        App.LogRun($"extract: entries={count} filesBytes={totalFilesBytes} raw={rawStreamSize}");
 
         // LZMA-декод (push-модель SDK) во временный файл, затем последовательный разбор
         // записей из него. Как у Inno: распаковка в %TEMP%, только файлы без архивного каркаса.
         var props = new byte[LzmaPropsSize];
         ReadExactly(resource, props);
         long compressedSize = resource.Length - HeaderSize - LzmaPropsSize;
+        App.LogRun($"extract: resource len={resource.Length} compressed={compressedSize}");
 
         var tempPath = Path.Combine(Path.GetTempPath(), $"GodjiSetup-payload-{Guid.NewGuid():N}.tmp");
         try
@@ -166,8 +181,10 @@ public sealed class InstallerEngine
             {
                 var decoder = new SevenZip.Compression.LZMA.Decoder();
                 decoder.SetDecoderProperties(props);
+                App.LogRun("extract: lzma decode begin");
                 // Декодирование — самый долгий шаг; отпускаем UI-поток (вызов из Task.Run).
                 decoder.Code(resource, temp, compressedSize, rawStreamSize, null);
+                App.LogRun($"extract: lzma decode done, temp={temp.Length}");
                 temp.Position = 0;
 
                 var destRoot = Path.GetFullPath(targetDir).TrimEnd(Path.DirectorySeparatorChar)
@@ -187,6 +204,7 @@ public sealed class InstallerEngine
 
                     string dest = SafePath(destRoot, rel);
                     Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
+                    if (i % 50 == 0) App.LogRun($"extract: file {i + 1}/{count} {rel}");
                     await ExtractFileAsync(temp, dest, dataLen, lastWriteTicks, buffer, ct);
 
                     doneBytes += dataLen;

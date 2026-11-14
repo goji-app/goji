@@ -41,9 +41,60 @@ if (args.Length >= 2 && args[0] == "test")
     return sha.SequenceEqual(sha2) ? 0 : 1;
 }
 
+// decodecheck <payload.bin> — тот же путь декодирования, что в InstallerEngine:
+// header 28 байт + 5 байт свойств, Decoder.Code точными размерами, разбор записей.
+// Позволяет проверить контейнер без WPF-установщика и UAC.
+if (args.Length == 2 && args[0] == "decodecheck")
+{
+    using var fs = File.OpenRead(args[1]);
+    var cHeader = new byte[8 + 4 + 8 + 8];
+    fs.ReadExactly(cHeader);
+    if (Encoding.ASCII.GetString(cHeader, 0, 8) != "GOJIPAYL") { Console.Error.WriteLine("bad magic"); return 1; }
+    int cCount = BitConverter.ToInt32(cHeader, 8);
+    long cFilesBytes = BitConverter.ToInt64(cHeader, 12);
+    long cRaw = BitConverter.ToInt64(cHeader, 20);
+    var cProps = new byte[5];
+    fs.ReadExactly(cProps);
+    long cCompressed = fs.Length - cHeader.Length - cProps.Length;
+    Console.WriteLine($"count={cCount} filesBytes={cFilesBytes} raw={cRaw} compressed={cCompressed}");
+
+    var tempPath = Path.Combine(Path.GetTempPath(), $"payload-check-{Guid.NewGuid():N}.tmp");
+    var cWatch = System.Diagnostics.Stopwatch.StartNew();
+    try
+    {
+        await using (var temp = File.Create(tempPath, 1024 * 1024, FileOptions.DeleteOnClose))
+        {
+            var decoder = new SevenZip.Compression.LZMA.Decoder();
+            decoder.SetDecoderProperties(cProps);
+            decoder.Code(fs, temp, cCompressed, cRaw, null);
+            cWatch.Stop();
+            Console.WriteLine($"decode OK: {temp.Length} bytes, {cWatch.Elapsed.TotalSeconds:0} s");
+            temp.Position = 0;
+            using var br = new BinaryReader(temp, Encoding.UTF8, leaveOpen: true);
+            long filesSum = 0;
+            for (int i = 0; i < cCount; i++)
+            {
+                int pathLen = br.ReadInt32();
+                string rel = Encoding.UTF8.GetString(br.ReadBytes(pathLen));
+                br.ReadInt64();
+                long dataLen = br.ReadInt64();
+                br.ReadBytes((int)dataLen);
+                filesSum += dataLen;
+                if (i < 3 || i >= cCount - 3) Console.WriteLine($"  entry {i}: {rel} ({dataLen})");
+            }
+            Console.WriteLine($"records OK, filesBytes sum={filesSum} (header {cFilesBytes})");
+        }
+    }
+    finally
+    {
+        try { File.Delete(tempPath); } catch { }
+    }
+    return 0;
+}
+
 if (args.Length != 2)
 {
-    Console.Error.WriteLine("Использование: PayloadTool <srcDir> <outFile> | test <file>");
+    Console.Error.WriteLine("Использование: PayloadTool <srcDir> <outFile> | test <file> | decodecheck <payload.bin>");
     return 1;
 }
 
@@ -70,10 +121,14 @@ outStream.Write(BitConverter.GetBytes(rawStreamSize));
 
 var watch = System.Diagnostics.Stopwatch.StartNew();
 
-// Сырой поток записей → LZMA.
+// Сырой поток записей → LZMA. Запись строго попарно «заголовок + данные» на файл —
+// читатель в установщике идёт ровно в этом порядке. (Когда-то заголовки писались
+// отдельным проходом перед данными: поток рассинхронился после первой записи,
+// распаковка получала мусорные пути и размеры.)
 var rawStream = new MemoryStream((int)Math.Min(int.MaxValue, rawStreamSize));
 using (var bw = new BinaryWriter(rawStream, Encoding.UTF8, leaveOpen: true))
 {
+    var buffer = new byte[1024 * 1024];
     foreach (var (full, rel) in files)
     {
         var pathBytes = Encoding.UTF8.GetBytes(rel);
@@ -82,11 +137,14 @@ using (var bw = new BinaryWriter(rawStream, Encoding.UTF8, leaveOpen: true))
         bw.Write(pathBytes);
         bw.Write(fi.LastWriteTimeUtc.Ticks);
         bw.Write(fi.Length);
+
+        using var fs = File.OpenRead(full);
+        int read;
+        while ((read = fs.Read(buffer, 0, buffer.Length)) > 0)
+            bw.Write(buffer, 0, read);
+        if (fs.Length != fi.Length) throw new IOException($"Файл изменился при упаковке: {rel}");
     }
 }
-foreach (var (full, _) in files)
-    await using (var fs = File.OpenRead(full))
-        await fs.CopyToAsync(rawStream);
 
 rawStream.Position = 0;
 Encode(rawStream, outStream);

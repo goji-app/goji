@@ -23,6 +23,8 @@ public sealed class UninstallEngine
     public async Task RunAsync(SetupVm vm, bool dryRun, IProgress<EngineStep> progress, CancellationToken ct)
     {
         var ownDir = AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar);
+        void Phase(string m) => App.LogRun("uninstall: " + m);
+        Phase($"begin, dir={ownDir}, dryRun={dryRun}");
 
         // 0–10%: приложение и ядра.
         progress.Report(new EngineStep("kill", 2));
@@ -87,21 +89,39 @@ public sealed class UninstallEngine
             .OrderBy(f => f.Length)
             .ToList();
         long total = files.Sum(f => f.Length), done = 0;
+        int locked = 0;
         progress.Report(new EngineStep("unfiles", 40, "0"));
         for (int i = 0; i < files.Count; i++)
         {
             ct.ThrowIfCancellationRequested();
-            DeleteFileWithRetry(files[i].FullName, attempts: 3);
+            // Залоченный файл — не ошибка удаления: это почти наверняка нативные библиотеки
+            // самого деинсталлятора (WPF single-file резолвит wpfgfx/PresentationNative из
+            // СВОЕЙ папки, то есть из папки приложения). Их подберёт отложенный rd после
+            // нашего выхода — падать из-за них нельзя.
+            try
+            {
+                DeleteFileWithRetry(files[i].FullName, attempts: 3);
+            }
+            catch (Exception ex)
+            {
+                locked++;
+                App.LogRun($"uninstall: locked, отложу rd: {files[i].Name} ({ex.GetType().Name})");
+            }
             done += files[i].Length;
             progress.Report(new EngineStep("unfiles",
                 40 + 58.0 * done / Math.Max(1, total), $"{i + 1} / {files.Count}"));
         }
+        App.LogRun($"uninstall: files done, locked={locked}");
 
-        // Хвост: этот exe + возможно залоченные чужими руками файлы. rd сработает через ~2 с
-        // после выхода процесса, когда файлы освободятся.
+        // Хвост: этот exe + залоченные файлы. rd сработает через ~2 с после выхода процесса,
+        // когда файлы освободятся.
         bool leftovers = Directory.Exists(ownDir);
         progress.Report(new EngineStep("unfiles", 100));
-        if (leftovers) SpawnDelayedSelfDelete(ownDir);
+        if (leftovers)
+        {
+            App.LogRun("uninstall: spawn delayed rd");
+            SpawnDelayedSelfDelete(ownDir);
+        }
     }
 
     private static bool IsSelf(string file)
@@ -152,10 +172,14 @@ public sealed class UninstallEngine
 
     private static void SpawnDelayedSelfDelete(string dir)
     {
+        // Цикл с повторами, а не «ping + rd»: окно «Удалено» ещё держит наши нативные DLL
+        // (пользователь закроет его когда угодно), поэтому rd повторяется до 10 минут,
+        // пока папка не опустеет; если не вышло — остатки доедут при следующей установке.
+        var ps = $"for($i=0;$i -lt 600;$i++){{ Remove-Item -LiteralPath '{dir}' -Recurse -Force -ErrorAction SilentlyContinue; if(-not (Test-Path -LiteralPath '{dir}')){{ exit 0 }}; Start-Sleep 1 }}";
         var psi = new ProcessStartInfo
         {
-            FileName = "cmd.exe",
-            Arguments = $"/c ping -n 3 127.0.0.1 > nul & rd /s /q \"{dir}\"",
+            FileName = "powershell.exe",
+            Arguments = $"-NoProfile -WindowStyle Hidden -Command \"{ps.Replace("\"", "\\\"")}\"",
             UseShellExecute = false,
             CreateNoWindow = true,
             WorkingDirectory = Path.GetTempPath()

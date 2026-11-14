@@ -337,6 +337,7 @@ public partial class MainWindow : Window
 
     private async void StartInstall()
     {
+        App.LogRun("install: start (dryRun=" + _dryRun + ", dir=" + _installDir + ")");
         _vm.Screen = SetupVm.Phase.Running;
         _vm.Percent = 0;
         UpdateGiant(0);
@@ -357,17 +358,20 @@ public partial class MainWindow : Window
         }
         catch (OperationCanceledException)
         {
+            App.LogRun("install: cancelled");
             _vm.Screen = SetupVm.Phase.Cancelled;
             ApplyState();
         }
         catch (Exception ex)
         {
+            App.LogRun("install FAILED: " + ex);
             ShowError(ex.Message);
         }
     }
 
     private async void StartUninstall()
     {
+        App.LogRun("uninstall: start (dryRun=" + _dryRun + ")");
         _vm.Screen = SetupVm.Phase.Running;
         _vm.Percent = 100; // при удалении заливка «съедается» слева направо
         UpdateGiant(0);
@@ -382,11 +386,13 @@ public partial class MainWindow : Window
         }
         catch (OperationCanceledException)
         {
+            App.LogRun("uninstall: cancelled");
             _vm.Screen = SetupVm.Phase.Cancelled;
             ApplyState();
         }
         catch (Exception ex)
         {
+            App.LogRun("uninstall FAILED: " + ex);
             ShowError(ex.Message);
         }
     }

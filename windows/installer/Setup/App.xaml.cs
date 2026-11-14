@@ -28,6 +28,18 @@ public partial class App : Application
         catch { /* некуда писать — и ладно */ }
     }
 
+    /// Журнал фаз установки/удаления в %TEMP% — единственный способ понять, на каком шаге
+    /// «установщик упал/завис», когда окна уже нет. Пишется построчно, ошибки — со стеком.
+    public static void LogRun(string message)
+    {
+        try
+        {
+            File.AppendAllText(Path.Combine(Path.GetTempPath(), "GodjiSetup-run.log"),
+                $"{DateTime.Now:HH:mm:ss.fff} {message}\r\n");
+        }
+        catch { /* журнал не критичен */ }
+    }
+
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -39,10 +51,22 @@ public partial class App : Application
             if (low is "/uninstall" or "-uninstall" or "--uninstall") UninstallMode = true;
             if (low is "/quiet" or "-quiet" or "--quiet" or "/q" or "-q") Quiet = true;
         }
+        // Отладочные аргументы (дублируют env-хуки GODJI_SETUP_AUTO/DRYRUN — надёжнее при
+        // запуске через UAC, где окружение до elevated-процесса может не доехать).
+        foreach (var a in args)
+        {
+            var low = a.ToLowerInvariant();
+            if (low is "--auto" or "/auto") Environment.SetEnvironmentVariable("GODJI_SETUP_AUTO", "1");
+            if (low is "--auto-uninstall" or "/auto-uninstall") Environment.SetEnvironmentVariable("GODJI_SETUP_AUTO", "uninstall-go");
+            if (low is "--dry-run" or "/dry-run") Environment.SetEnvironmentVariable("GODJI_SETUP_DRYRUN", "1");
+            if (low is "--winter" or "/winter") Environment.SetEnvironmentVariable("GODJI_SETUP_WINTER", "1");
+        }
         // unins000.exe — имя деинсталлятора в папке приложения; реестр зовёт его с /uninstall,
         // но и прямой запуск без аргументов должен означать удаление, а не установку.
         if (AppDomain.CurrentDomain.FriendlyName.Equals("unins000.exe", StringComparison.OrdinalIgnoreCase))
             UninstallMode = true;
+
+        LogRun($"start: mode={(UninstallMode ? "uninstall" : "install")} quiet={Quiet} ver={InstallerEngine.AssemblyVersion}");
 
         DispatcherUnhandledException += (s, ea) =>
         {

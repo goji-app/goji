@@ -90,6 +90,12 @@ Write-Host "== Упаковка payload (publish_stage -> payload.bin, LZMA d64 
 dotnet run --project (Join-Path $root "installer\PayloadTool\PayloadTool.csproj") -c Release -- $publishDir $payloadBin
 if ($LASTEXITCODE -ne 0) { throw "PayloadTool завершился с ошибкой" }
 
+Write-Host "== Проверка payload (decodecheck: полный проход декодера) ==" -ForegroundColor Cyan
+# Контроль качества: тот же путь декодирования, что в установщике, на готовом payload.bin.
+# Ловит рассинхрон контейнера до того, как он уедет в дистрибутив (случалось — см. историю).
+dotnet run --project (Join-Path $root "installer\PayloadTool\PayloadTool.csproj") -c Release -- decodecheck $payloadBin
+if ($LASTEXITCODE -ne 0) { throw "decodecheck не прошёл — payload повреждён" }
+
 Write-Host "== Установщик (GodjiSetup с payload) -> dist\GodjiVpn-Setup-$version.exe ==" -ForegroundColor Cyan
 dotnet publish $setupProj -c Release -r win-x64 -p:EmbedPayload=true -p:Version=$version -o $fullDir
 if ($LASTEXITCODE -ne 0) { throw "publish установщика завершился с ошибкой" }
