@@ -96,6 +96,11 @@ public partial class App : Application
         var customNodeStore = new CustomNodeStore();
         var favoriteServersStore = new FavoriteServersStore();
         var appSettings = new AppSettings();
+        // Автозапуск: задача планировщика могла остаться от старого пути exe (обновление) —
+        // пересоздаём с актуальным. Прокси-режим: если прошлая сессия упала, не вернув
+        // системный прокси пользователю (бэкап есть, настройка выключена) — возвращаем молча.
+        AutoStartService.SyncOnStartup(appSettings.StartWithSystem);
+        SystemProxy.RestoreIfOrphaned(appSettings.ProxyOnly);
         GodjiVpn.Utils.FontScale.Instance.Apply(appSettings.FontSize);
         GodjiVpn.Controls.WinterOverlay.SetEnabled(appSettings.WinterDecor);
         // Превью-экземпляр: размер шрифта для сверки без изменения сохранённой настройки.
@@ -139,7 +144,7 @@ public partial class App : Application
             if (connectViewModel.ToggleCommand.CanExecute(null)) await connectViewModel.ToggleCommand.ExecuteAsync(null);
         };
 
-        Tray = new TrayIconService(vpnEngine, connectViewModel, window, ExitApplication);
+        Tray = new TrayIconService(vpnEngine, connectViewModel, subscriptionRepository, window, ExitApplication);
         subscriptionNotifier.NotificationRequested += (title, text) => Tray.ShowBalloon(title, text);
         broadcastNotifier.NotificationRequested += (title, text) => Tray.ShowBalloon(title, text);
         updateNotifier.NotificationRequested += (title, text) => Tray.ShowBalloon(title, text);
@@ -170,6 +175,15 @@ public partial class App : Application
         window.StateChanged += (_, _) => SyncWindowVisible();
 
         window.Show();
+
+        // «Подключаться при запуске»: узел уже известен (список грузится с диска мгновенно,
+        // см. SubscriptionRepository) — VPN поднимается без участия пользователя. Как и все
+        // фоновые действия, только в настоящем клиенте: превью-экземпляр сеть не трогает.
+        if (!uiPreview && appSettings.AutoConnectOnLaunch && tokenStore.IsLoggedIn &&
+            !vpnEngine.IsRunning && !vpnEngine.IsConnecting && subscriptionRepository.SelectedNode is { } autoNode)
+        {
+            _ = vpnEngine.ConnectAsync(autoNode);
+        }
 
         // Входы через сайт, сделанные до исправления, сохранены без refresh-токена — разово
         // забираем его из хранилища кук WebView2 (см. WebRefreshTokenRecovery).

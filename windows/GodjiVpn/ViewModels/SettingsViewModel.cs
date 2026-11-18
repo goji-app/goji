@@ -495,16 +495,139 @@ public sealed partial class SettingsViewModel : ObservableObject
         set { _appSettings.KillSwitch = value; OnPropertyChanged(); }
     }
 
-    // ── Приложения мимо VPN (порт Android «Раздельное туннелирование») ──
+    // ── Автозапуск, автоподключение, блокировка рекламы, прокси-режим (Настройки → Подключение) ──
+    /// <summary>Запускать при входе в Windows: задача планировщика с наивысшими правами
+    /// (AutoStartService) — приложению нужны права администратора, чтобы поднять TUN.</summary>
+    public bool StartWithSystem
+    {
+        get => _appSettings.StartWithSystem;
+        set { _appSettings.StartWithSystem = value; AutoStartService.SetEnabled(value); OnPropertyChanged(); }
+    }
+
+    /// <summary>Подключаться к последнему узлу при запуске приложения. Узел уже известен
+    /// без сети — список кэшируется на диске (SubscriptionRepository), VPN поднимается сразу.</summary>
+    public bool AutoConnectOnLaunch
+    {
+        get => _appSettings.AutoConnectOnLaunch;
+        set { _appSettings.AutoConnectOnLaunch = value; OnPropertyChanged(); }
+    }
+
+    /// <summary>Блокировка рекламы: geosite:category-ads-all → blackhole в правиле xray.
+    /// Конфиг ядра читается при подключении — при живом туннеле нужен reconnect (баннер ниже).</summary>
+    public bool BlockAds
+    {
+        get => _appSettings.BlockAds;
+        set
+        {
+            if (_appSettings.BlockAds == value) return;
+            _appSettings.BlockAds = value;
+            CoreDirty = true;
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>Режим прокси без туннеля: системный прокси на локальный SOCKS xray, Wintun
+    /// не поднимается. Через VPN идут только приложения, уважающие системный прокси.</summary>
+    public bool ProxyOnly
+    {
+        get => _appSettings.ProxyOnly;
+        set
+        {
+            if (_appSettings.ProxyOnly == value) return;
+            _appSettings.ProxyOnly = value;
+            CoreDirty = true;
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>Правила xray (реклама) и режим прокси применяются при подключении — баннер
+    /// с кнопкой «Применить» (ReconnectAsync), пока туннель поднят. BypassDirty уже работал
+    /// так для списков — единый флаг для всего, что требует переподключения.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowBypassApply))]
+    private bool coreDirty;
+
+    // ── Гео-базы (обновляются сами раз в неделю; кнопка — немедленно) ──
+    [ObservableProperty] private bool geoUpdating;
+    [ObservableProperty] private string? geoResult;
+
+    public string GeoStatus
+    {
+        get
+        {
+            if (GeoUpdating) return Loc.T("Обновляю гео-базы…");
+            if (GeoResult != null) return GeoResult;
+            return _appSettings.GeoUpdatedUtc is { Length: > 0 } iso &&
+                   DateTime.TryParse(iso, null, System.Globalization.DateTimeStyles.RoundtripKind, out var t)
+                ? Loc.T("Обновлены") + ": " + t.ToLocalTime().ToString("d MMM yyy", System.Globalization.CultureInfo.CurrentCulture)
+                : Loc.T("Свои базы ещё не загружались");
+        }
+    }
+
+    [RelayCommand]
+    private async Task UpdateGeoAsync()
+    {
+        if (GeoUpdating) return;
+        GeoUpdating = true;
+        GeoResult = null;
+        OnPropertyChanged(nameof(GeoStatus));
+        var ok = await Task.Run(() => GeoStore.UpdateAsync()).ConfigureAwait(true);
+        GeoUpdating = false;
+        if (ok)
+        {
+            _appSettings.GeoUpdatedUtc = DateTime.UtcNow.ToString("O");
+            CoreDirty = true; // новые базы читает ядро при следующем подключении
+            GeoResult = Loc.T("Гео-базы обновлены");
+        }
+        else
+        {
+            GeoResult = Loc.T("Не удалось обновить — проверьте интернет");
+        }
+        OnPropertyChanged(nameof(GeoStatus));
+    }
+
+    // ── Per-app Proxy (порт Android AppTunnelingScreen): ВЫКЛ — всем одинаково через VPN,
+    // ВКЛ — только выбранные через VPN, Обход — выбранные напрямую. Список один и тот же. ──
     public ObservableCollection<string> BypassApps { get; } = new();
     public string BypassAppsListLabel => $"ПРИЛОЖЕНИЯ · {BypassApps.Count}";
     public bool BypassAppsEmpty => BypassApps.Count == 0;
+
+    public IReadOnlyList<string> PerAppModeOptions { get; } = new[] { "Выкл", "Вкл", "Обход" };
+
+    public int PerAppModeIndex
+    {
+        get => (int)_appSettings.PerAppMode;
+        set
+        {
+            if (_appSettings.PerAppMode == (PerAppProxyMode)value) return;
+            _appSettings.PerAppMode = (PerAppProxyMode)value;
+            // Режим читается движком при подключении — как список, требует переподключения.
+            BypassDirty = true;
+            OnPropertyChanged(nameof(PerAppModeDescription));
+            OnPropertyChanged(nameof(BypassAppsEmptyText));
+        }
+    }
+
+    /// <summary>Пояснение под переключателем режима — строки Android appTunnelingMode*Desc.</summary>
+    public string PerAppModeDescription => Loc.T(_appSettings.PerAppMode switch
+    {
+        PerAppProxyMode.Allow => "Функция Per-app Proxy управляет тем, какие приложения используют прокси. ВКЛ — только выбранные приложения используют прокси, а все остальные подключаются напрямую.",
+        PerAppProxyMode.Bypass => "Функция Per-app Proxy управляет тем, какие приложения используют прокси. Обход — выбранные приложения обходят прокси и подключаются напрямую, в то время как все остальные приложения используют прокси.",
+        _ => "Функция Per-app Proxy управляет тем, какие приложения используют прокси. ВЫКЛ — прокси применяется ко всем приложениям без исключений."
+    });
+
+    public string BypassAppsEmptyText => Loc.T(_appSettings.PerAppMode == PerAppProxyMode.Allow
+        ? "Список пуст — все программы работают напрямую."
+        : "Список пуст — все программы работают через VPN.");
 
     [RelayCommand]
     private void OpenBypassApps()
     {
         RefreshBypassApps();
         BypassDirty = false;
+        OnPropertyChanged(nameof(PerAppModeIndex));
+        OnPropertyChanged(nameof(PerAppModeDescription));
+        OnPropertyChanged(nameof(BypassAppsEmptyText));
         Page = SettingsPage.BypassApps;
     }
 
@@ -540,6 +663,28 @@ public sealed partial class SettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(BypassAppsEmpty));
     }
 
+    // ── Тест скорости (через поднятый туннель) ──
+    [ObservableProperty] private bool speedTesting;
+    [ObservableProperty] private string? speedResult;
+
+    [RelayCommand]
+    private async Task RunSpeedTestAsync()
+    {
+        if (SpeedTesting || !_vpnEngine.IsRunning) return;
+        SpeedTesting = true;
+        SpeedResult = Loc.T("Замеряю скорость…");
+        try
+        {
+            var (down, up) = await SpeedTestService.RunAsync(VpnEngine.SocksPort).ConfigureAwait(true);
+            SpeedResult = Loc.T("Загрузка") + $" {down:0} " + Loc.T("Мбит/с") + " · " + Loc.T("Отдача") + $" {up:0} " + Loc.T("Мбит/с");
+        }
+        catch (Exception)
+        {
+            SpeedResult = Loc.T("Не удалось замерить — узел не отвечает");
+        }
+        SpeedTesting = false;
+    }
+
     // ── Сайты мимо VPN (порт 6803326) ──
     public ObservableCollection<BypassDomainItem> BypassDomains { get; } = new();
     [ObservableProperty] private string bypassInput = "";
@@ -547,7 +692,9 @@ public sealed partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowBypassApply))]
     private bool bypassDirty;
-    public bool ShowBypassApply => BypassDirty && _vpnEngine.IsRunning;
+    /// <summary>Баннер «применится после переподключения»: списки, реклама, прокси-режим,
+    /// свежие гео-базы — всё, что ядро читает только при подключении.</summary>
+    public bool ShowBypassApply => (BypassDirty || CoreDirty) && _vpnEngine.IsRunning;
     public string BypassListLabel => $"САЙТЫ · {BypassDomains.Count}";
     public bool BypassEmpty => BypassDomains.Count == 0;
 

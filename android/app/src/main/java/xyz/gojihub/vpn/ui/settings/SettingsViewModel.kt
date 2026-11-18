@@ -51,6 +51,7 @@ data class SettingsUiState(
     val fontSize: FontSizePreset = FontSizePreset.NORMAL,
     val autoConnectOnWifi: Boolean = false,
     val killSwitch: Boolean = false,
+    val blockAds: Boolean = false,
     val haptics: Boolean = true,
     val winterDecor: Boolean = true,
     val pingMethod: PingMethod = PingMethod.PROXY_GET,
@@ -94,6 +95,7 @@ class SettingsViewModel @Inject constructor(
                 fontSize = settingsRepository.fontSizeNow(),
                 autoConnectOnWifi = settingsRepository.autoConnectOnWifi.first(),
                 killSwitch = settingsRepository.killSwitchEnabled.first(),
+                blockAds = settingsRepository.blockAdsEnabled.first(),
                 haptics = settingsRepository.hapticsEnabled.first(),
                 winterDecor = settingsRepository.winterDecorNow(),
                 logLevel = settingsRepository.logLevelNow(),
@@ -169,6 +171,11 @@ class SettingsViewModel @Inject constructor(
     fun setKillSwitch(enabled: Boolean) {
         _state.value = _state.value.copy(killSwitch = enabled)
         viewModelScope.launch { settingsRepository.setKillSwitchEnabled(enabled) }
+    }
+
+    fun setBlockAds(enabled: Boolean) {
+        _state.value = _state.value.copy(blockAds = enabled)
+        viewModelScope.launch { settingsRepository.setBlockAdsEnabled(enabled) }
     }
 
     fun setWinterDecor(enabled: Boolean) {

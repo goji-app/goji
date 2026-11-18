@@ -9,6 +9,11 @@ namespace GodjiVpn.Services;
 /// <summary>Сортировка списка серверов — порт Android ServerSort (SettingsRepository).</summary>
 public enum ServerSort { Favorites, Ping, Name }
 
+/// <summary>Режим Per-app Proxy — порт Android PerAppProxyMode (SettingsRepository):
+/// Off — прокси применяется ко всем программам без исключений; Allow — через VPN идут
+/// ТОЛЬКО выбранные, остальное напрямую; Bypass — выбранные идут напрямую, остальное через VPN.</summary>
+public enum PerAppProxyMode { Off, Allow, Bypass }
+
 /// <summary>
 /// Мелкие пользовательские настройки приложения, переживающие перезапуск (аналог
 /// SettingsRepository в Android): %LOCALAPPDATA%\GodjiVpn\app-settings.json. Отдельные файлы
@@ -36,8 +41,24 @@ public sealed class AppSettings
         public bool KillSwitch { get; set; }
         /// <summary>Новогоднее оформление (1 декабря — 31 января); включено по умолчанию.</summary>
         public bool WinterDecor { get; set; } = true;
-        /// <summary>«Приложения мимо VPN» — имена исполняемых файлов (chrome.exe, Safari).</summary>
+        /// <summary>«Приложения мимо VPN» — имена исполняемых файлов (chrome.exe, Safari).
+        /// Теперь это список Per-app Proxy: в режиме Bypass — программы в обход VPN, в режиме
+        /// Allow — только они и идут через VPN.</summary>
         public List<string> BypassApps { get; set; } = new();
+        /// <summary>Режим Per-app Proxy ("OFF"/"ALLOW"/"BYPASS") — строкой, чтобы файл настроек
+        /// читался и старыми версиями. Пусто = не выбрано (см. миграцию в Load()).</summary>
+        public string PerAppProxy { get; set; } = "";
+        /// <summary>Блокировка рекламы: домены geosite:category-ads-all идут в blackhole.</summary>
+        public bool BlockAds { get; set; }
+        /// <summary>Автозапуск приложения при входе в систему (см. AutoStartService).</summary>
+        public bool StartWithSystem { get; set; }
+        /// <summary>Подключаться к последнему узлу при старте приложения.</summary>
+        public bool AutoConnectOnLaunch { get; set; }
+        /// <summary>Режим прокси без туннеля: только локальный SOCKS xray + системный прокси,
+        /// sing-box/TUN не поднимается. Для RDP, виртуалок и машин, где TUN проблемный.</summary>
+        public bool ProxyOnly { get; set; }
+        /// <summary>Момент последнего успешного обновления гео-баз (ISO), пусто — никогда.</summary>
+        public string GeoUpdatedUtc { get; set; } = "";
     }
 
     private readonly State _state;
@@ -87,6 +108,58 @@ public sealed class AppSettings
     }
 
     public IReadOnlyList<string> BypassApps => _state.BypassApps;
+
+    public bool BlockAds
+    {
+        get => _state.BlockAds;
+        set { if (_state.BlockAds == value) return; _state.BlockAds = value; Save(); }
+    }
+
+    public bool StartWithSystem
+    {
+        get => _state.StartWithSystem;
+        set { if (_state.StartWithSystem == value) return; _state.StartWithSystem = value; Save(); }
+    }
+
+    public bool AutoConnectOnLaunch
+    {
+        get => _state.AutoConnectOnLaunch;
+        set { if (_state.AutoConnectOnLaunch == value) return; _state.AutoConnectOnLaunch = value; Save(); }
+    }
+
+    public bool ProxyOnly
+    {
+        get => _state.ProxyOnly;
+        set { if (_state.ProxyOnly == value) return; _state.ProxyOnly = value; Save(); }
+    }
+
+    public string GeoUpdatedUtc
+    {
+        get => _state.GeoUpdatedUtc;
+        set { if (_state.GeoUpdatedUtc == value) return; _state.GeoUpdatedUtc = value; Save(); }
+    }
+
+    public PerAppProxyMode PerAppMode
+    {
+        get => _state.PerAppProxy.ToUpperInvariant() switch
+        {
+            "ALLOW" => PerAppProxyMode.Allow,
+            "BYPASS" => PerAppProxyMode.Bypass,
+            _ => PerAppProxyMode.Off
+        };
+        set
+        {
+            var code = value switch
+            {
+                PerAppProxyMode.Allow => "ALLOW",
+                PerAppProxyMode.Bypass => "BYPASS",
+                _ => "OFF"
+            };
+            if (_state.PerAppProxy == code) return;
+            _state.PerAppProxy = code;
+            Save();
+        }
+    }
 
     public void AddBypassApp(string processName)
     {
@@ -162,8 +235,14 @@ public sealed class AppSettings
     {
         try
         {
-            if (!File.Exists(StatePath)) return new State();
-            return JsonSerializer.Deserialize<State>(File.ReadAllText(StatePath)) ?? new State();
+            var state = File.Exists(StatePath)
+                ? JsonSerializer.Deserialize<State>(File.ReadAllText(StatePath)) ?? new State()
+                : new State();
+            // Раньше списков с режимами не было: непустой список означал именно обход. Разовый
+            // перенос, чтобы обновившиеся пользователи не потеряли прежнее поведение.
+            if (string.IsNullOrEmpty(state.PerAppProxy) && state.BypassApps.Count > 0)
+                state.PerAppProxy = "BYPASS";
+            return state;
         }
         catch { return new State(); }
     }

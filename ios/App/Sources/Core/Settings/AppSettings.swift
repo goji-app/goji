@@ -61,6 +61,7 @@ final class AppSettings: ObservableObject {
     @Published var disconnectOnTrusted: Bool { didSet { defaults.set(disconnectOnTrusted, forKey: "vpn.disconnectOnTrusted") } }
     @Published var autoSwitchOnJam: Bool { didSet { defaults.set(autoSwitchOnJam, forKey: "vpn.autoSwitchOnJam") } }
     @Published var bypassDomains: [String] { didSet { TunnelSettings.bypassDomains = bypassDomains } }
+    @Published var blockAds: Bool { didSet { TunnelSettings.blockAds = blockAds } }
     @Published var logLevel: LogLevel { didSet { TunnelSettings.logLevel = logLevel } }
     @Published var privacyAccepted: Bool { didSet { defaults.set(privacyAccepted, forKey: "privacy.accepted") } }
     /// Последний узел, выбранный вручную до автоматического ухода на LTE при глушении.
@@ -79,6 +80,7 @@ final class AppSettings: ObservableObject {
         disconnectOnTrusted = defaults.object(forKey: "vpn.disconnectOnTrusted") as? Bool ?? true
         autoSwitchOnJam = defaults.object(forKey: "vpn.autoSwitchOnJam") as? Bool ?? true
         bypassDomains = TunnelSettings.bypassDomains
+        blockAds = TunnelSettings.blockAds
         logLevel = TunnelSettings.logLevel
         privacyAccepted = defaults.bool(forKey: "privacy.accepted")
         let savedPalette = Palettes.byId(defaults.string(forKey: "palette.id")).id

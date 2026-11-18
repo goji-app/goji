@@ -16,7 +16,26 @@ printf '%s\n' $sid 4242 Telegram 'bad"name' 'Good App' 'x;rm -rf' > "$work/d/req
 out=$(bash "$work/h.sh")
 echo "$out" | grep -q "ARGS: .*sing-box .*4242 .*stop.$sid .*tun.$sid.pid" || { echo "FAIL: аргументы обёртки"; status=1; }
 echo "$out" | grep -q '"process_name":\["GojiVpn","Telegram","Good App"\]' || { echo "FAIL: имена приложений"; status=1; }
+echo "$out" | grep -q '"final":"socks-out"' || { echo "FAIL: обход по умолчанию (заявка без @MODE — старое приложение)"; status=1; }
 [ -e "$work/d/req/start" ] && { echo "FAIL: заявка не удалена"; status=1; }
+
+# Per-app Proxy: режим ALLOW — только выбранные через SOCKS (и их DNS), остальное напрямую.
+printf '%s\n' $sid 4242 '@MODE ALLOW' Telegram 'bad"name' 'Good App' > "$work/d/req/start"
+out=$(bash "$work/h.sh")
+echo "$out" | grep -q '"protocol":"dns","process_name":\["Telegram","Good App"\],"action":"hijack-dns"' || { echo "FAIL: ALLOW DNS"; status=1; }
+echo "$out" | grep -q '{"process_name":\["Telegram","Good App"\],"outbound":"socks-out"' || { echo "FAIL: ALLOW socks"; status=1; }
+echo "$out" | grep -q '"final":"direct"' || { echo "FAIL: ALLOW final"; status=1; }
+
+# ALLOW с пустым списком: никаких правил по приложениям, всё напрямую.
+printf '%s\n' $sid 4242 '@MODE ALLOW' > "$work/d/req/start"
+out=$(bash "$work/h.sh")
+echo "$out" | grep -q '"process_name":\["Telegram"' && { echo "FAIL: ALLOW без списка дал правила"; status=1; }
+echo "$out" | grep -q '"final":"direct"' || { echo "FAIL: ALLOW без списка, final"; status=1; }
+
+# Неизвестный режим — как обход (защита от опечатки в будущих версиях).
+printf '%s\n' $sid 4242 '@MODE WHAT' Telegram > "$work/d/req/start"
+out=$(bash "$work/h.sh")
+echo "$out" | grep -q '"final":"socks-out"' || { echo "FAIL: неизвестный режим"; status=1; }
 
 printf '%s\n' 'bad sid' 4242 > "$work/d/req/start"
 [ -z "$(bash "$work/h.sh")" ] || { echo "FAIL: неверный номер сессии принят"; status=1; }

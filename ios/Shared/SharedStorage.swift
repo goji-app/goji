@@ -65,6 +65,7 @@ enum SharedStorage {
 enum TunnelSettings {
     private static let bypassKey = "tunnel.bypassDomains"
     private static let logLevelKey = "log.level"
+    private static let blockAdsKey = "tunnel.blockAds"
     private static let lastErrorKey = "tunnel.lastError"
     private static let connectedSinceKey = "tunnel.connectedSince"
     private static let lastCancelledAtKey = "tunnel.lastCancelledAt"
@@ -77,6 +78,13 @@ enum TunnelSettings {
     static var logLevel: LogLevel {
         get { LogLevel(rawValue: SharedStorage.defaults.string(forKey: logLevelKey) ?? "") ?? .info }
         set { SharedStorage.defaults.set(newValue.rawValue, forKey: logLevelKey) }
+    }
+
+    /// "Блокировать рекламу": geosite:category-ads-all → blackhole (см. XrayConfigBuilder).
+    /// Дефолт false, чтобы обновление не меняло поведение без спроса.
+    static var blockAds: Bool {
+        get { SharedStorage.defaults.bool(forKey: blockAdsKey) }
+        set { SharedStorage.defaults.set(newValue, forKey: blockAdsKey) }
     }
 
     /// Последняя ошибка запуска туннеля — приложение показывает её пользователю, т.к. система

@@ -49,7 +49,7 @@ android {
         minSdk = 24 // VpnService + Reality нормально живут с 24+, но проверьте охват вашей аудитории
         targetSdk = 37
         versionCode = 118
-        versionName = "1.0.137"
+        versionName = "1.0.138"
 
         buildConfigField("String", "SITE_URL", "\"${gojiHost("GOJI_SITE_URL")}\"")
         buildConfigField("String", "DOWNLOAD_URL", "\"${gojiHost("GOJI_DOWNLOAD_URL")}\"")

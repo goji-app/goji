@@ -18,7 +18,9 @@ public sealed class TrayIconService : IDisposable
     private readonly TaskbarIcon _icon;
     private readonly VpnEngine _vpnEngine;
     private readonly MenuItem _toggleItem;
+    private readonly MenuItem _serversItem;
     private readonly ConnectViewModel _connect;
+    private readonly SubscriptionRepository _subscription;
     // Хранятся, чтобы снять в Dispose — иначе движок/вьюмодель продолжали бы держать живой
     // TrayIconService после Dispose (утечка + апдейты мёртвой иконки).
     private readonly PropertyChangedEventHandler _onEngineChanged;
@@ -34,10 +36,11 @@ public sealed class TrayIconService : IDisposable
 
     public bool IsExiting { get; private set; }
 
-    public TrayIconService(VpnEngine vpnEngine, ConnectViewModel connect, Window window, Action exit)
+    public TrayIconService(VpnEngine vpnEngine, ConnectViewModel connect, SubscriptionRepository subscription, Window window, Action exit)
     {
         _vpnEngine = vpnEngine;
         _connect = connect;
+        _subscription = subscription;
 
         _icon = new TaskbarIcon
         {
@@ -54,12 +57,18 @@ public sealed class TrayIconService : IDisposable
             if (connect.ToggleCommand.CanExecute(null)) await connect.ToggleCommand.ExecuteAsync(null);
         };
 
+        // Смена узла без открытия окна: подменю пересобирается при каждом открытии меню —
+        // список и выбранный узел всегда актуальны, и пинги пересчитывать не нужно.
+        _serversItem = new MenuItem { Header = "Сменить сервер" };
+        _serversItem.SubmenuOpened += (_, _) => RebuildServersMenu();
+
         var exitItem = new MenuItem { Header = "Выход" };
         exitItem.Click += (_, _) => { IsExiting = true; exit(); };
 
         var menu = new ContextMenu();
         menu.Items.Add(openItem);
         menu.Items.Add(_toggleItem);
+        menu.Items.Add(_serversItem);
         menu.Items.Add(new Separator());
         menu.Items.Add(exitItem);
         // Меню создаётся вне визуального дерева окна: без явных стилей фон рисует дефолтный
@@ -70,6 +79,7 @@ public sealed class TrayIconService : IDisposable
         menu.Style = (Style)Application.Current.TryFindResource("TrayContextMenu");
         openItem.Style = (Style)Application.Current.TryFindResource("TrayMenuItem");
         _toggleItem.Style = openItem.Style;
+        _serversItem.Style = openItem.Style;
         exitItem.Style = openItem.Style;
         _icon.ContextMenu = menu;
 
@@ -84,6 +94,46 @@ public sealed class TrayIconService : IDisposable
         };
         connect.PropertyChanged += _onConnectChanged;
         UpdateStatus();
+    }
+
+    /// <summary>Выбранный узел помечен; порядок — как на вкладке "Серверы" (сортировка
+    /// пользователя). Клик выбирает узел и переподключает туннель, если он поднят;
+    /// выключенный VPN при следующем подключении возьмёт уже новый узел.</summary>
+    private void RebuildServersMenu()
+    {
+        var itemStyle = (Style)Application.Current.TryFindResource("TrayMenuItem");
+        _serversItem.Items.Clear();
+        var nodes = _subscription.Nodes;
+        if (nodes.Count == 0)
+        {
+            var empty = new MenuItem { Header = "Список пуст — обновите подписку", IsEnabled = false };
+            empty.Style = itemStyle;
+            _serversItem.Items.Add(empty);
+            return;
+        }
+        // Больше ~25 пунктов в подменю трея не прокручивается на маленьких экранах —
+        // показываем верх списка; полный список всегда на вкладке "Серверы".
+        foreach (var node in nodes.Take(25))
+        {
+            var id = node.Id;
+            var selected = id == _subscription.SelectedId;
+            var item = new MenuItem
+            {
+                Header = (selected ? "●  " : "") + node.Name,
+                IsChecked = selected,
+                IsEnabled = !selected || _vpnEngine.IsRunning
+            };
+            item.Style = itemStyle;
+            item.Click += async (_, _) =>
+            {
+                _subscription.Select(id);
+                if (_vpnEngine.IsRunning)
+                    await _vpnEngine.ReconnectAsync();
+                else if (!_vpnEngine.IsConnecting && _subscription.SelectedNode is { } picked)
+                    await _vpnEngine.ConnectAsync(picked);
+            };
+            _serversItem.Items.Add(item);
+        }
     }
 
     private static void ShowWindow(Window window)

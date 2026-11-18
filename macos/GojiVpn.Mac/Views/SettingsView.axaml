@@ -198,6 +198,55 @@
                                             SelectedIndex="{Binding KillSwitchIndex, Mode=TwoWay}" Margin="0,9,0,0"/>
                     </StackPanel>
                     <Rectangle Classes="hair"/>
+                    <StackPanel Margin="14,13">
+                        <TextBlock Classes="rowTitle" Text="{loc:T 'Запускать при входе в систему'}"/>
+                        <TextBlock Classes="rowSub" Text="{loc:T 'Автозапуск приложения со входом в систему'}"/>
+                        <c:SegmentedControl ItemsSource="{Binding OnOffOptions}" DisplayMemberPath="Label"
+                                            SelectedIndex="{Binding StartWithSystemIndex, Mode=TwoWay}" Margin="0,9,0,0"/>
+                    </StackPanel>
+                    <Rectangle Classes="hair"/>
+                    <StackPanel Margin="14,13">
+                        <TextBlock Classes="rowTitle" Text="{loc:T 'Подключаться при запуске'}"/>
+                        <TextBlock Classes="rowSub" Text="{loc:T 'VPN включится сам, сразу после старта приложения'}"/>
+                        <c:SegmentedControl ItemsSource="{Binding OnOffOptions}" DisplayMemberPath="Label"
+                                            SelectedIndex="{Binding AutoConnectIndex, Mode=TwoWay}" Margin="0,9,0,0"/>
+                    </StackPanel>
+                    <Rectangle Classes="hair"/>
+                    <StackPanel Margin="14,13">
+                        <TextBlock Classes="rowTitle" Text="{loc:T 'Блокировать рекламу'}"/>
+                        <TextBlock Classes="rowSub" Text="{loc:T 'Реклама и типичные трекеры режутся на уровне VPN'}"/>
+                        <c:SegmentedControl ItemsSource="{Binding OnOffOptions}" DisplayMemberPath="Label"
+                                            SelectedIndex="{Binding BlockAdsIndex, Mode=TwoWay}" Margin="0,9,0,0"/>
+                    </StackPanel>
+                    <!-- Баннер применения: реклама/гео-базы читаются ядром при подключении -->
+                    <Border CornerRadius="2" Background="{DynamicResource TealTintBrush}" Padding="14,8,8,8" Margin="14,10,14,0" IsVisible="{Binding ShowBypassApply}">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="{loc:T 'Изменения применятся после переподключения VPN'}" FontWeight="SemiBold" FontSize="{s:Fs 12}" LineHeight="{s:Fs 16}"
+                                       TextWrapping="Wrap" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" Classes="chip" Content="{loc:T 'Применить'}" Margin="10,0,0,0" Command="{Binding ApplyBypassCommand}"/>
+                        </Grid>
+                    </Border>
+                    <Rectangle Classes="hair"/>
+                    <Button Classes="row" AutomationProperties.Name="{loc:T 'Тест скорости'}" Command="{Binding RunSpeedTestCommand}">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel>
+                                <TextBlock Classes="rowTitle" Text="{loc:T 'Тест скорости'}"/>
+                                <TextBlock Classes="rowSub" Text="{Binding SpeedStatus}"/>
+                            </StackPanel>
+                            <c:Spinner Width="16" Height="16" Margin="0,0,12,0" VerticalAlignment="Center" IsVisible="{Binding SpeedTesting}"/>
+                        </Grid>
+                    </Button>
+                    <Rectangle Classes="hair"/>
+                    <Button Classes="row" AutomationProperties.Name="{loc:T 'Обновить гео-базы'}" Command="{Binding UpdateGeoCommand}">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel>
+                                <TextBlock Classes="rowTitle" Text="{loc:T 'Обновить гео-базы'}"/>
+                                <TextBlock Classes="rowSub" Text="{Binding GeoStatus}"/>
+                            </StackPanel>
+                            <c:Spinner Width="16" Height="16" Margin="0,0,12,0" VerticalAlignment="Center" IsVisible="{Binding GeoUpdating}"/>
+                        </Grid>
+                    </Button>
+                    <Rectangle Classes="hair"/>
                     <Button Classes="row" AutomationProperties.Name="{loc:T 'Журнал сети'}" Command="{Binding OpenJournalCommand}">
                         <Grid ColumnDefinitions="*,Auto">
                             <StackPanel>
@@ -228,11 +277,11 @@
                         </Grid>
                     </Button>
                     <Rectangle Classes="hair"/>
-                    <Button Classes="row" AutomationProperties.Name="{loc:T 'Приложения мимо VPN'}" Command="{Binding OpenBypassAppsCommand}">
+                    <Button Classes="row" AutomationProperties.Name="{loc:T 'Прокси для выбранных приложений'}" Command="{Binding OpenBypassAppsCommand}">
                         <Grid ColumnDefinitions="*,Auto">
                             <StackPanel>
-                                <TextBlock Classes="rowTitle" Text="{loc:T 'Приложения мимо VPN'}"/>
-                                <TextBlock Classes="rowSub" Text="{loc:T 'Программы, которые работают напрямую'}"/>
+                                <TextBlock Classes="rowTitle" Text="{loc:T 'Прокси для выбранных приложений'}"/>
+                                <TextBlock Classes="rowSub" Text="{loc:T 'Какие приложения используют VPN'}"/>
                             </StackPanel>
                             <Path Grid.Column="1" Classes="icon secondary" Data="{StaticResource IconChevronRight}" Width="15" Height="15" Margin="12,0,0,0"/>
                         </Grid>
@@ -549,17 +598,19 @@
             </StackPanel>
         </Panel>
 
-        <!-- ═══ Подэкран: Сайты мимо VPN (домены — постранично) ═══ -->
+        <!-- ═══ Подэкран: Per-app Proxy (режим + программы — постранично) ═══ -->
         <Grid RowDefinitions="Auto,Auto,*" Margin="28,26,28,12" IsVisible="{Binding IsBypassAppsPage}">
             <StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <Button Classes="bare back" Command="{Binding BackCommand}">
                         <Path Classes="icon" Data="{StaticResource IconArrowBack}" Width="22" Height="22"/>
                     </Button>
-                    <TextBlock Classes="subTitle" Text="{loc:T 'Приложения мимо VPN'}" FontSize="{s:Fs 24}"/>
+                    <TextBlock Classes="subTitle" Text="{loc:T 'Прокси для выбранных приложений'}" FontSize="{s:Fs 24}"/>
                 </StackPanel>
+                <c:SegmentedControl ItemsSource="{Binding PerAppModeOptions}" SelectedIndex="{Binding PerAppModeIndex}"
+                                    ItemHeight="36" LabelFontSize="12" Margin="8,12,8,0"/>
                 <TextBlock Classes="muted" LineHeight="{s:Fs 17}" Margin="8,10,8,10"
-                           Text="{loc:T 'Эти программы будут работать напрямую через твоего провайдера, остальное — через VPN. Удобно для банковских клиентов, игр и программ, которые не любят VPN.'}"/>
+                           Text="{Binding PerAppModeDescription}"/>
                 <Button Classes="accent" Height="44" FontSize="{s:Fs 13}" HorizontalAlignment="Left" Content="{loc:T 'Добавить приложение'}"
                         Command="{Binding AddBypassAppCommand}"/>
                 <Border CornerRadius="2" Background="{DynamicResource TealTintBrush}" Padding="14,8,8,8" Margin="0,10,0,0" IsVisible="{Binding ShowBypassApply}">
@@ -574,7 +625,7 @@
             <Panel Grid.Row="2">
                 <c:GlassPanel Classes="card" CornerRadius="2" VerticalAlignment="Top">
                     <Panel>
-                        <TextBlock Classes="muted" Text="{loc:T 'Список пуст — все программы работают через VPN.'}" LineHeight="{s:Fs 17}" Margin="14,13" IsVisible="{Binding BypassAppsEmpty}"/>
+                        <TextBlock Classes="muted" Text="{Binding BypassAppsEmptyText}" LineHeight="{s:Fs 17}" Margin="14,13" IsVisible="{Binding BypassAppsEmpty}"/>
                         <c:PagedItems ItemsSource="{Binding BypassApps}">
                             <c:PagedItems.ItemTemplate>
                                 <DataTemplate>

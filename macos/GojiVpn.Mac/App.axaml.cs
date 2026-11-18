@@ -47,6 +47,10 @@ public partial class App : Application
         var customNodeStore = new CustomNodeStore();
         var favoriteServersStore = new FavoriteServersStore();
         var appSettings = new AppSettings();
+        // Автозапуск: plist мог остаться от старого пути (обновление/перенос приложения) —
+        // пересоздаём с актуальным. Прокси-режим на macOS не реализован (сетевые настройки
+        // требуют root) — бэкапов SystemProxy там не бывает, проверка не нужна.
+        AutoStartService.SyncOnStartup(appSettings.StartWithSystem);
         GodjiVpn.Utils.FontScale.Instance.Apply(appSettings.FontSize);
         GodjiVpn.Controls.WinterOverlay.SetEnabled(appSettings.WinterDecor);
         // Превью-экземпляр: размер шрифта для сверки без изменения сохранённой настройки.
@@ -85,7 +89,7 @@ public partial class App : Application
         };
 
         MenuBarService? tray = null;
-        tray = new MenuBarService(vpnEngine, connectViewModel, window, () => Exit());
+        tray = new MenuBarService(vpnEngine, connectViewModel, subscriptionRepository, window, () => Exit());
         subscriptionNotifier.NotificationRequested += Notifier.Show;
         broadcastNotifier.NotificationRequested += Notifier.Show;
         updateNotifier.NotificationRequested += Notifier.Show;
@@ -118,6 +122,15 @@ public partial class App : Application
             activatable.Activated += (_, _) => tray?.ShowWindow();
 
         window.Show();
+
+        // «Подключаться при запуске»: список узлов уже с диска (SubscriptionRepository) —
+        // VPN поднимается сразу, без сети и без участия пользователя.
+        if (Environment.GetEnvironmentVariable("GODJI_UI_PREVIEW") != "1" &&
+            appSettings.AutoConnectOnLaunch && tokenStore.IsLoggedIn &&
+            !vpnEngine.IsRunning && !vpnEngine.IsConnecting && subscriptionRepository.SelectedNode is { } autoNode)
+        {
+            _ = vpnEngine.ConnectAsync(autoNode);
+        }
 
         // Прошлый запуск закрылся из-за сбоя (см. CrashReporter) — предложить отправить отчёт.
         if (Environment.GetEnvironmentVariable("GODJI_UI_PREVIEW") != "1" &&

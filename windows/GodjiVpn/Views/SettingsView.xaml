@@ -211,6 +211,85 @@
                                           IsChecked="{Binding KillSwitch, Mode=TwoWay}"/>
                         </Grid>
                         <Rectangle Style="{StaticResource Hair}"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{loc:T 'Запускать при входе в Windows'}" Style="{StaticResource RowTitle}"/>
+                                <TextBlock Text="{loc:T 'Автозапуск приложения со входом в систему'}" Style="{StaticResource RowSubtitle}"/>
+                            </StackPanel>
+                            <ToggleButton Grid.Column="1" Style="{StaticResource GlassSwitch}" Margin="12,0,0,0"
+                                          AutomationProperties.Name="{loc:T 'Запускать при входе в Windows'}"
+                                          IsChecked="{Binding StartWithSystem, Mode=TwoWay}"/>
+                        </Grid>
+                        <Rectangle Style="{StaticResource Hair}"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{loc:T 'Подключаться при запуске'}" Style="{StaticResource RowTitle}"/>
+                                <TextBlock Text="{loc:T 'VPN включится сам, сразу после старта приложения'}" Style="{StaticResource RowSubtitle}"/>
+                            </StackPanel>
+                            <ToggleButton Grid.Column="1" Style="{StaticResource GlassSwitch}" Margin="12,0,0,0"
+                                          AutomationProperties.Name="{loc:T 'Подключаться при запуске'}"
+                                          IsChecked="{Binding AutoConnectOnLaunch, Mode=TwoWay}"/>
+                        </Grid>
+                        <Rectangle Style="{StaticResource Hair}"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{loc:T 'Блокировать рекламу'}" Style="{StaticResource RowTitle}"/>
+                                <TextBlock Text="{loc:T 'Реклама и типичные трекеры режутся на уровне VPN'}" Style="{StaticResource RowSubtitle}"/>
+                            </StackPanel>
+                            <ToggleButton Grid.Column="1" Style="{StaticResource GlassSwitch}" Margin="12,0,0,0"
+                                          AutomationProperties.Name="{loc:T 'Блокировать рекламу'}"
+                                          IsChecked="{Binding BlockAds, Mode=TwoWay}"/>
+                        </Grid>
+                        <Rectangle Style="{StaticResource Hair}"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{loc:T 'Режим прокси (без туннеля)'}" Style="{StaticResource RowTitle}"/>
+                                <TextBlock Text="{loc:T 'Через VPN — только приложения с системным прокси. Для RDP и виртуалок'}" Style="{StaticResource RowSubtitle}"/>
+                            </StackPanel>
+                            <ToggleButton Grid.Column="1" Style="{StaticResource GlassSwitch}" Margin="12,0,0,0"
+                                          AutomationProperties.Name="{loc:T 'Режим прокси (без туннеля)'}"
+                                          IsChecked="{Binding ProxyOnly, Mode=TwoWay}"/>
+                        </Grid>
+                        <Rectangle Style="{StaticResource Hair}"/>
+                        <!-- Баннер применения: реклама/прокси-режим/гео-базы читаются ядром при подключении -->
+                        <Border CornerRadius="2" Background="{DynamicResource TealTintBrush}" Padding="14,8,8,8" Margin="0,10,0,0"
+                                Visibility="{Binding ShowBypassApply, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{loc:T 'Изменения применятся после переподключения VPN'}" FontWeight="SemiBold" FontSize="{s:Fs 12}" LineHeight="{s:Fs 16}"
+                                           TextWrapping="Wrap" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                <Button Grid.Column="1" Style="{StaticResource ChipButton}" Content="{loc:T 'Применить'}" Margin="10,0,0,0"
+                                        Command="{Binding ApplyBypassCommand}"/>
+                            </Grid>
+                        </Border>
+                        <Rectangle Style="{StaticResource Hair}"/>
+                        <Button Style="{StaticResource LinkRowButton}" Content="{loc:T 'Тест скорости'}"
+                                Tag="{Binding SpeedResult, TargetNullValue='Скорость загрузки и отдачи через VPN'}"
+                                Command="{Binding RunSpeedTestCommand}"/>
+                        <Rectangle Style="{StaticResource Hair}"/>
+                        <Button Style="{StaticResource LinkRowButton}" Content="{loc:T 'Обновить гео-базы'}"
+                                Tag="{Binding GeoStatus, TargetNullValue='Базы доменов и подсетей для правил маршрутизации'}"
+                                Command="{Binding UpdateGeoCommand}"/>
+                        <Rectangle Style="{StaticResource Hair}"/>
                         <Button Style="{StaticResource LinkRowButton}" Content="{loc:T 'Журнал сети'}" Tag="{loc:T 'Когда VPN работал, смены сети и сбои'}"
                                 Command="{Binding OpenJournalCommand}"/>
                         <Rectangle Style="{StaticResource Hair}"/>
@@ -223,7 +302,7 @@
                         <Button Style="{StaticResource LinkRowButton}" Content="{loc:T 'Сайты мимо VPN'}" Tag="{loc:T 'Домены, которые открываются напрямую'}"
                                 Command="{Binding OpenBypassCommand}"/>
                         <Rectangle Style="{StaticResource Hair}"/>
-                        <Button Style="{StaticResource LinkRowButton}" Content="{loc:T 'Приложения мимо VPN'}" Tag="{loc:T 'Программы, которые работают напрямую'}"
+                        <Button Style="{StaticResource LinkRowButton}" Content="{loc:T 'Прокси для выбранных приложений'}" Tag="{loc:T 'Какие приложения используют VPN'}"
                                 Command="{Binding OpenBypassAppsCommand}"/>
                 </StackPanel>
             </controls:GlassPanel>
@@ -761,7 +840,7 @@
             </StackPanel>
         </Grid>
 
-        <!-- ═══ Подэкран: Сайты мимо VPN (домены — постранично) ═══ -->
+        <!-- ═══ Подэкран: Per-app Proxy (режим + программы — постранично) ═══ -->
         <Grid Margin="28,26,28,12" Visibility="{Binding IsBypassAppsPage, Converter={StaticResource BoolToVisibilityConverter}}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -771,9 +850,11 @@
             <StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <Button Style="{StaticResource BackButton}"/>
-                    <TextBlock Text="{loc:T 'Приложения мимо VPN'}" Style="{StaticResource SubTitle}"/>
+                    <TextBlock Text="{loc:T 'Прокси для выбранных приложений'}" Style="{StaticResource SubTitle}"/>
                 </StackPanel>
-                <TextBlock Text="{loc:T 'Эти программы будут работать напрямую через твоего провайдера, остальное — через VPN. Удобно для банковских клиентов, игр и программ, которые не любят VPN.'}"
+                <controls:SegmentedControl ItemsSource="{Binding PerAppModeOptions}" SelectedIndex="{Binding PerAppModeIndex}"
+                                           ItemHeight="36" LabelFontSize="12" Margin="8,12,8,0"/>
+                <TextBlock Text="{Binding PerAppModeDescription}"
                            FontWeight="Medium" FontSize="{s:Fs 12}" LineHeight="{s:Fs 17}" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}"
                            Margin="8,10,8,10"/>
                 <Button Style="{StaticResource AccentPillButton}" Height="44" FontSize="{s:Fs 13}" HorizontalAlignment="Left"
@@ -796,7 +877,7 @@
             <Grid Grid.Row="2">
                 <controls:GlassPanel Style="{StaticResource GlassCard}" CornerRadius="2" Margin="0,8,0,0" VerticalAlignment="Top">
                     <Grid>
-                        <TextBlock Text="{loc:T 'Список пуст — все программы работают через VPN.'}" FontWeight="Medium" FontSize="{s:Fs 12}" LineHeight="{s:Fs 17}" TextWrapping="Wrap"
+                        <TextBlock Text="{Binding BypassAppsEmptyText}" FontWeight="Medium" FontSize="{s:Fs 12}" LineHeight="{s:Fs 17}" TextWrapping="Wrap"
                                    Foreground="{DynamicResource TextSecondaryBrush}" Margin="14,13"
                                    Visibility="{Binding BypassAppsEmpty, Converter={StaticResource BoolToVisibilityConverter}}"/>
                         <controls:PagedItems ItemsSource="{Binding BypassApps}">

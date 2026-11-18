@@ -22,6 +22,14 @@ struct SettingsView: View {
                     RowLabel(icon: "lock.shield", title: L("settings.killswitch"), subtitle: L("settings.killswitch.desc"), showsChevron: false)
                 }
                 divider
+                Toggle(isOn: Binding(get: { settings.blockAds }, set: { value in
+                    settings.blockAds = value
+                    // Правило живёт в конфиге xray — ядро пересобираем без разрыва туннеля.
+                    Task { await vpn.applySettings(reloadCore: true) }
+                })) {
+                    RowLabel(icon: "shield.lefthalf.filled", title: L("settings.blockads"), subtitle: L("settings.blockads.desc"), showsChevron: false)
+                }
+                divider
                 NavigationLink { AutoConnectView() } label: {
                     RowLabel(icon: "wifi", title: L("settings.autoconnect"), value: settings.autoConnect.title)
                 }

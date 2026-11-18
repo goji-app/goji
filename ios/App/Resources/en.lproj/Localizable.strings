@@ -180,6 +180,8 @@
 "settings.connection" = "Connection";
 "settings.killswitch" = "Kill switch";
 "settings.killswitch.desc" = "All traffic goes only through the VPN: if the tunnel drops, internet is blocked instead of leaking around it.";
+"settings.blockads" = "Block ads";
+"settings.blockads.desc" = "Ads and common trackers are cut off at the VPN level. Applies instantly without dropping the connection.";
 "settings.autoconnect" = "Auto-connect";
 "settings.autoswitch" = "Keep me online";
 "settings.autoswitch.desc" = "Mobile network throttled — switch to the Russian node; Wi-Fi is back — switch back. While the app is open.";

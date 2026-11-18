@@ -55,6 +55,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
     private val fontSizeKey = stringPreferencesKey("font_size_preset")
     private val autoConnectOnWifiKey = booleanPreferencesKey("auto_connect_on_wifi")
     private val killSwitchKey = booleanPreferencesKey("kill_switch_enabled")
+    private val blockAdsKey = booleanPreferencesKey("block_ads_enabled")
     private val lastConnectPayloadKey = stringPreferencesKey("last_connect_payload")
     private val lastConnectLabelKey = stringPreferencesKey("last_connect_label")
     private val perAppProxyModeKey = stringPreferencesKey("per_app_proxy_mode")
@@ -153,6 +154,15 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         context.dataStore.edit { it[killSwitchKey] = enabled }
     }
     suspend fun killSwitchEnabledNow(): Boolean = killSwitchEnabled.first()
+
+    /** Блокировка рекламы (geosite:category-ads-all — в blackhole, см. GodjiVpnService). */
+    val blockAdsEnabled: Flow<Boolean> = context.dataStore.data.map { it[blockAdsKey] ?: false }
+
+    suspend fun setBlockAdsEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[blockAdsKey] = enabled }
+    }
+
+    suspend fun blockAdsEnabledNow(): Boolean = blockAdsEnabled.first()
 
     /** Последний узел, на который реально отправляли ACTION_CONNECT — используется
      *  GodjiVpnService для самостоятельного подъёма туннеля, когда службу запускает сама

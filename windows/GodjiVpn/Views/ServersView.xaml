@@ -13,6 +13,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -44,6 +45,13 @@
                             </StackPanel>
                         </Border>
                     </Button>
+                    <Button Style="{StaticResource BareButton}" Command="{Binding AddNodeLinkCommand}" Margin="8,0,0,0"
+                            AutomationProperties.Name="{loc:T 'Свой узел'}">
+                        <Border Background="{DynamicResource SurfaceContainerHighBrush}" CornerRadius="2" Height="40" Width="40">
+                            <TextBlock Text="+" FontWeight="Bold" FontSize="{s:Fs 18}" Foreground="{DynamicResource TealDeepBrush}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </Button>
                     <Button Style="{StaticResource BareButton}" Command="{Binding RefreshCommand}" Margin="8,0,0,0" AutomationProperties.Name="{loc:T 'Обновить список серверов'}">
                         <Border Background="{DynamicResource SurfaceContainerHighBrush}" CornerRadius="2" Height="40" Padding="14,0">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -65,8 +73,18 @@
             <controls:SegmentedControl Grid.Row="1" ItemsSource="{Binding SortOptions}" SelectedIndex="{Binding SortIndex}"
                                        ItemHeight="32" LabelFontSize="12" Margin="0,12,0,0"/>
 
+            <!-- Постоянное объяснение пустого списка (сбой автообновления на старте, нет сети,
+                 лимит устройств): видно, пока список не загрузился, а не только 4.5 с после
+                 ручного «Обновить». -->
+            <Border Grid.Row="2" Margin="0,12,0,0" Padding="14,10,14,10" BorderThickness="4,0,0,0"
+                    Background="{DynamicResource ErrorContainerBrush}" BorderBrush="{DynamicResource DangerBrush}"
+                    Visibility="{Binding NodesError, Converter={StaticResource NullToVisibilityConverter}}">
+                <TextBlock Text="{Binding NodesError}" FontWeight="SemiBold" FontSize="{s:Fs 13}" TextWrapping="Wrap" VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+            </Border>
+
             <!-- Баннер-результат ручного "Обновить": круг 24 с галочкой/!, текст 12, крестик 22. -->
-            <Border Grid.Row="2" Margin="0,12,0,0" Padding="14,10,8,10" BorderThickness="4,0,0,0"
+            <Border Grid.Row="3" Margin="0,12,0,0" Padding="14,10,8,10" BorderThickness="4,0,0,0"
                     Visibility="{Binding RefreshResultMessage, Converter={StaticResource NullToVisibilityConverter}}">
                 <Border.Style>
                     <Style TargetType="Border">
@@ -95,7 +113,7 @@
             </Border>
 
             <!-- Все узлы — одна карточка. -->
-            <controls:PagedItems Grid.Row="3" Columns="2" Margin="0,12,0,0" VerticalAlignment="Top" ItemsSource="{Binding Nodes}">
+            <controls:PagedItems Grid.Row="4" Columns="2" Margin="0,12,0,0" VerticalAlignment="Top" ItemsSource="{Binding Nodes}">
                 <controls:PagedItems.ItemTemplate>
                     <DataTemplate DataType="{x:Type vm:NodeItem}">
                         <!-- Ячейка макета 9a: код страны 34 моно, название, шкала пинга; выбранная — «шалфей». -->

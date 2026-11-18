@@ -291,3 +291,44 @@ VPN выключен	VPN is off	VPN 已关闭
 Действия с устройством	Device actions	设备操作
 Новогоднее оформление	New Year decorations	新年装饰
 Снег, гирлянда и шапка Деда Мороза. Показываются с 1 декабря по 31 января	Snow, lights and a Santa hat. Shown from 1 December to 31 January	雪花、彩灯和圣诞帽，每年 12 月 1 日至 1 月 31 日显示
+Прокси для выбранных приложений	Per-app proxy	按应用代理
+Какие приложения используют VPN	Which apps use the VPN	哪些应用使用 VPN
+Выкл	Off	关
+Вкл	On	开
+Обход	Bypass	绕过
+Функция Per-app Proxy управляет тем, какие приложения используют прокси. ВЫКЛ — прокси применяется ко всем приложениям без исключений.	Per-app Proxy controls which apps use the proxy. OFF — the proxy applies to all apps with no exceptions.	Per-app Proxy（按应用代理）决定哪些应用使用代理。关闭 — 代理对所有应用生效，没有任何例外。
+Функция Per-app Proxy управляет тем, какие приложения используют прокси. ВКЛ — только выбранные приложения используют прокси, а все остальные подключаются напрямую.	Per-app Proxy controls which apps use the proxy. ON — only selected apps use the proxy, everything else connects directly.	Per-app Proxy（按应用代理）决定哪些应用使用代理。开启 — 仅所选应用使用代理，其余应用直接连接。
+Функция Per-app Proxy управляет тем, какие приложения используют прокси. Обход — выбранные приложения обходят прокси и подключаются напрямую, в то время как все остальные приложения используют прокси.	Per-app Proxy controls which apps use the proxy. Bypass — selected apps bypass the proxy and connect directly, while everything else uses the proxy.	Per-app Proxy（按应用代理）决定哪些应用使用代理。绕过 — 所选应用绕过代理直接连接，其余所有应用使用代理。
+Список пуст — все программы работают напрямую.	List is empty — all apps connect directly.	列表为空 — 所有应用都直接连接。
+Не удалось загрузить список серверов. Проверьте интернет и нажмите «Обновить».	Couldn't load the server list. Check the internet and press “Refresh”.	无法加载服务器列表。请检查网络并点击“刷新”。
+Запускать при входе в Windows	Start with Windows	开机自启
+Запускать при входе в систему	Start at login	Запускать при входе в систему
+Автозапуск приложения со входом в систему	Launch the app automatically when you sign in	Автозапуск приложения при входе в систему
+Подключаться при запуске	Connect on launch	Подключаться при запуске
+VPN включится сам, сразу после старта приложения	VPN turns on by itself right after the app starts	VPN включается сразу после запуска приложения
+Блокировать рекламу	Block ads	Блокировать рекламу
+Реклама и типичные трекеры режутся на уровне VPN	Ads and typical trackers are cut off at the VPN level	Реклама и трекеры блокируются на уровне VPN
+Режим прокси (без туннеля)	Proxy mode (no tunnel)	Проксирование без туннеля
+Через VPN — только приложения с системным прокси. Для RDP и виртуалок	Only apps that honor the system proxy go through VPN. For RDP and virtual machines	Через VPN — только приложения с системным прокси. Для RDP и виртуальных машин
+Тест скорости	Speed test	Тест скорости
+Скорость загрузки и отдачи через VPN	Download and upload speed through VPN	Скорость загрузки и отдачи через VPN
+Замеряю скорость…	Measuring speed…	Измеряю скорость…
+Загрузка	Down	Загрузка
+Отдача	Up	Отдача
+Мбит/с	Mbps	Мбит/с
+Не удалось замерить — узел не отвечает	Couldn't measure — the node is not responding	Не удалось измерить — узел не отвечает
+Обновить гео-базы	Update geo databases	Обновить гео-базы
+Базы доменов и подсетей для правил маршрутизации	Domain and subnet databases for routing rules	Базы доменов и подсетей для правил маршрутизации
+Обновляю гео-базы…	Updating geo databases…	Обновляю гео-базы…
+Обновлены	Updated	Обновлено
+Свои базы ещё не загружались	Own databases were never downloaded yet	Свои базы еще не загружались
+Гео-базы обновлены	Geo databases updated	Гео-базы обновлены
+Не удалось обновить — проверьте интернет	Couldn't update — check the internet	Не удалось обновить — проверьте интернет
+Свой узел	Custom node	Свой узел
+Вставьте ссылку vless://, vmess://, trojan:// или ss:// (или JSON-профиль целиком)	Paste a vless://, vmess://, trojan:// or ss:// link (or a full JSON profile)	Вставьте ссылку vless://, vmess://, trojan:// или ss:// (или JSON-профиль целиком)
+Ссылка или JSON	Link or JSON	Ссылка или JSON
+Узел добавлен	Node added	Узел добавлен
+Не похоже на ссылку узла — поддерживаются vless://, vmess://, trojan:// и ss://	Doesn't look like a node link — vless://, vmess://, trojan:// and ss:// are supported	Не похоже на ссылку узла — поддерживаются vless://, vmess://, trojan:// и ss://
+Неизвестный протокол — поддерживаются vless://, vmess://, trojan:// и ss://	Unknown protocol — vless://, vmess://, trojan:// and ss:// are supported	Неизвестный протокол — поддерживаются vless://, vmess://, trojan:// и ss://
+Не удалось разобрать ссылку — проверьте, что она скопирована целиком	Couldn't parse the link — make sure it was copied in full	Не удалось разобрать ссылку — проверьте, что она скопирована целиком
+В ссылке нет адреса сервера	The link has no server address	В ссылке нет адреса сервера

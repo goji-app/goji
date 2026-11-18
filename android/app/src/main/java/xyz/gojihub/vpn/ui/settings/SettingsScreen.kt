@@ -279,6 +279,8 @@ fun SettingsScreen(
                 RefCard {
                     ToggleRow(Loc.s.settingsKillSwitch, Loc.s.settingsKillSwitchDesc, state.killSwitch, viewModel::setKillSwitch)
                     Hair()
+                    ToggleRow(Loc.s.settingsBlockAds, Loc.s.settingsBlockAdsDesc, state.blockAds, viewModel::setBlockAds)
+                    Hair()
                     // Программно включить Always-on VPN нельзя — ограничение Android; открываем
                     // системный экран, где пользователь включает это сам.
                     LinkRow(Loc.s.settingsAlwaysOnTitle, Loc.s.settingsAlwaysOnDesc) {

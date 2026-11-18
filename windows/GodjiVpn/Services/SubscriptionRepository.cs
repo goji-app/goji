@@ -26,7 +26,11 @@ public sealed class SubscriptionRepository : INotifyPropertyChanged
         private set { _subscription = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Subscription))); }
     }
 
-    private IReadOnlyList<VlessNode> _subscriptionNodes = Array.Empty<VlessNode>();
+    // Последний успешно полученный список узлов — с диска (AccountCache, как NodeListCache в
+    // Android): вкладка «Серверы» показывает его сразу после запуска, и при недоступности
+    // кабинета или сервера подписки список не превращается в молча пустой экран.
+    private IReadOnlyList<VlessNode> _subscriptionNodes =
+        AccountCache.Load<List<VlessNode>>(AccountCache.Key.Nodes)?.Value ?? new List<VlessNode>();
 
     /// <summary>Узлы подписки + добавленные вручную по JSON-профилю (см. CustomNodeStore) —
     /// единый список для Connect/Servers/Plans, ничего в потребителях менять не пришлось: они
@@ -138,7 +142,9 @@ public sealed class SubscriptionRepository : INotifyPropertyChanged
         await _refreshGate.WaitAsync();
         try
         {
-            if (_subscriptionNodes.Count > 0 && DateTime.UtcNow - _lastOkRefreshUtc < AutoRefreshInterval) return true;
+            // Наличие узлов в памяти больше не признак свежести: после перезапуска они приходят
+            // из кэша на диске, и обновление всё равно должно пройти (см. поле выше).
+            if (DateTime.UtcNow - _lastOkRefreshUtc < AutoRefreshInterval) return true;
             return await RefreshUnlockedAsync();
         }
         finally { _refreshGate.Release(); }
@@ -216,6 +222,7 @@ public sealed class SubscriptionRepository : INotifyPropertyChanged
             // понять, что не так, было невозможно. Теперь причина видна.
             LastError = CabinetStale;
             _subscriptionNodes = cachedNodes;
+            AccountCache.Save(AccountCache.Key.Nodes, cachedNodes);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Nodes)));
             if (SelectedId == null || Nodes.All(n => n.Id != SelectedId))
                 SelectedId = cachedNodes[0].Id;
@@ -274,6 +281,9 @@ public sealed class SubscriptionRepository : INotifyPropertyChanged
         {
             LastError = null;
             _subscriptionNodes = nodes;
+            // На диск (AccountCache): при следующем запуске список показывается сразу, даже если
+            // кабинет или сервер подписки в тот момент недоступны (порт Android NodeListCache).
+            AccountCache.Save(AccountCache.Key.Nodes, nodes);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Nodes)));
             if (SelectedId == null || Nodes.All(n => n.Id != SelectedId))
                 SelectedId = nodes[0].Id;

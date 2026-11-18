@@ -21,6 +21,9 @@
     <SelfContained>true</SelfContained>
     <PublishSingleFile>true</PublishSingleFile>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <!-- Нативные DLL WPF (wpfgfx, PresentationNative…) кладём внутрь exe: build-installer.ps1 забирает
+         из publish только GodjiSetup.exe, без этого окно падает с DllNotFoundException. -->
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <DebugType>none</DebugType>
     <!-- Локализованные ресурсы самого WPF (cs/de/fr/…) не нужны — минус ~8 МБ. -->
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>

@@ -17,7 +17,7 @@ namespace GodjiVpn.Services;
 /// </summary>
 public static class AccountCache
 {
-    public enum Key { Subscription, Broadcasts, Plans, Referrals, Partner, Devices }
+    public enum Key { Subscription, Broadcasts, Plans, Referrals, Partner, Devices, Nodes }
 
     public sealed record Entry<T>(T Value, DateTime SavedAtUtc);
 

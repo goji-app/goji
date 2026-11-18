@@ -159,9 +159,12 @@ public sealed partial class ServersViewModel : ObservableObject
         IsRefreshing = false;
 
         RefreshResultIsError = !ok || _subscription.LastError != null;
-        ShowRefreshMessage(RefreshResultIsError
+        // Тот же текст уже висит постоянным баннером пустого списка (NodesError) — не дублируем.
+        var message = RefreshResultIsError
             ? _subscription.LastError ?? Loc.T("Не удалось обновить подписку — проверьте соединение")
-            : Loc.T("Подписка обновлена"));
+            : Loc.T("Подписка обновлена");
+        if (!(RefreshResultIsError && message == NodesError))
+            ShowRefreshMessage(message);
         // Новый список сразу перепроверяем — уже под индикатором кнопки «Пинг» (как Android).
         if (ok) await PingAllCommand.ExecuteAsync(null);
     }
@@ -203,8 +206,17 @@ public sealed partial class ServersViewModel : ObservableObject
         }
         Nodes.Clear();
         foreach (var item in Sorted(newNodes)) Nodes.Add(item);
+        OnPropertyChanged(nameof(NodesError));
         if (Nodes.Count == 0 && Environment.GetEnvironmentVariable("GODJI_UI_PREVIEW_DEMO") == "1") FillPreviewDemo();
     }
+
+    /// <summary>Постоянное объяснение пустого списка — причина последнего сбоя обновления.
+    /// Раньше причина была видна только 4.5 с в баннере после ручного «Обновить»; при сбое
+    /// автообновления на старте пользователь оставался с «0 узлов в подписке» и ни словом
+    /// больше. Непустой список молчит: он мог прийти из кэша, а сбою обновления там просто
+    /// не видно.</summary>
+    public string? NodesError => Nodes.Count > 0 ? null
+        : _subscription.LastError ?? Loc.T("Не удалось загрузить список серверов. Проверьте интернет и нажмите «Обновить».");
 
     /// <summary>Сортировки стабильные: при равенстве остаётся порядок подписки. Избранные идут
     /// первыми только в режиме "Избранные"; в остальных — строго по ключу (как в Android).</summary>
@@ -237,6 +249,56 @@ public sealed partial class ServersViewModel : ObservableObject
         foreach (var n in Nodes) n.IsSelected = n == item;
         _subscription.Select(item.Node.Id);
         ServerPicked?.Invoke();
+    }
+
+    /// <summary>Свой узел по ссылке (vless://, vmess://, trojan://, ss://) или вставкой
+    /// JSON-профиля: стандартный путь v2ray-клиентов. Результат — в баннер экрана
+    /// (RefreshResultMessage), узел появляется в списке сразу (CustomNodeStore.Changed).</summary>
+    [RelayCommand]
+    private async Task AddNodeLinkAsync()
+    {
+        var dialog = new Views.PromptDialog
+        {
+            PromptTitle = Loc.T("Свой узел"),
+            Message = Loc.T("Вставьте ссылку vless://, vmess://, trojan:// или ss:// (или JSON-профиль целиком)"),
+            ShowInput = true,
+            InputLabel = Loc.T("Ссылка или JSON"),
+            PrimaryText = Loc.T("Добавить")
+        };
+        if (!await Ui.ShowDialogAsync<bool>(dialog)) return;
+        var input = dialog.InputValue?.Trim() ?? "";
+        if (input.Length == 0) return;
+
+        try
+        {
+            VlessNode node;
+            if (input.StartsWith("{", StringComparison.Ordinal))
+            {
+                var (ok, error) = _customNodes.Add(input);
+                if (!ok) { Fail(error ?? "Не удалось добавить профиль"); return; }
+                node = _customNodes.Nodes[^1];
+            }
+            else
+            {
+                var (parsed, parseError) = NodeLinkParser.Parse(input);
+                if (parsed == null) { Fail(parseError ?? "Не удалось разобрать ссылку"); return; }
+                var (ok, error) = _customNodes.Add(parsed.ConnectPayloadJson);
+                if (!ok) { Fail(error ?? "Не удалось добавить узел"); return; }
+                node = parsed;
+            }
+            RefreshResultIsError = false;
+            ShowRefreshMessage(Loc.T("Узел добавлен") + ": " + node.Name);
+        }
+        catch (Exception ex)
+        {
+            Fail(ex.Message);
+        }
+
+        void Fail(string? message)
+        {
+            RefreshResultIsError = true;
+            ShowRefreshMessage(message ?? "Не удалось добавить узел");
+        }
     }
 
     [RelayCommand]

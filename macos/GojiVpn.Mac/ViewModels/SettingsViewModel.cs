@@ -413,6 +413,113 @@ public sealed partial class SettingsViewModel : ObservableObject
         set { _appSettings.KillSwitch = value == 1; OnPropertyChanged(); }
     }
 
+    // ── Автозапуск, автоподключение, блокировка рекламы (Настройки → Подключение) ──
+    /// <summary>Запускать при входе в macOS: LaunchAgent xyz.goji.vpn.app (AutoStartService).</summary>
+    public int StartWithSystemIndex
+    {
+        get => _appSettings.StartWithSystem ? 1 : 0;
+        set
+        {
+            if (_appSettings.StartWithSystem == (value == 1)) return;
+            _appSettings.StartWithSystem = value == 1;
+            AutoStartService.SetEnabled(value == 1);
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>Подключаться к последнему узлу при запуске приложения: узел уже известен
+    /// без сети — список кэшируется на диске (SubscriptionRepository).</summary>
+    public int AutoConnectIndex
+    {
+        get => _appSettings.AutoConnectOnLaunch ? 1 : 0;
+        set
+        {
+            if (_appSettings.AutoConnectOnLaunch == (value == 1)) return;
+            _appSettings.AutoConnectOnLaunch = value == 1;
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>Блокировка рекламы: geosite:category-ads-all → blackhole в правиле xray.
+    /// Конфиг ядра читается при подключении — при живом туннеле нужен переподключение.</summary>
+    public int BlockAdsIndex
+    {
+        get => _appSettings.BlockAds ? 1 : 0;
+        set
+        {
+            if (_appSettings.BlockAds == (value == 1)) return;
+            _appSettings.BlockAds = value == 1;
+            BypassDirty = true;
+            OnPropertyChanged();
+        }
+    }
+
+    // ── Гео-базы (обновляются сами раз в неделю; кнопка — немедленно) ──
+    [ObservableProperty] private bool geoUpdating;
+    [ObservableProperty] private string? geoResult;
+
+    public string GeoStatus
+    {
+        get
+        {
+            if (GeoUpdating) return Loc.T("Обновляю гео-базы…");
+            if (GeoResult != null) return GeoResult;
+            return _appSettings.GeoUpdatedUtc is { Length: > 0 } iso &&
+                   DateTime.TryParse(iso, null, System.Globalization.DateTimeStyles.RoundtripKind, out var t)
+                ? Loc.T("Обновлены") + ": " + t.ToLocalTime().ToString("d MMM yyy", System.Globalization.CultureInfo.CurrentCulture)
+                : Loc.T("Свои базы ещё не загружались");
+        }
+    }
+
+    [RelayCommand]
+    private async Task UpdateGeoAsync()
+    {
+        if (GeoUpdating) return;
+        GeoUpdating = true;
+        GeoResult = null;
+        OnPropertyChanged(nameof(GeoStatus));
+        var ok = await Task.Run(() => GeoStore.UpdateAsync()).ConfigureAwait(true);
+        GeoUpdating = false;
+        if (ok)
+        {
+            _appSettings.GeoUpdatedUtc = DateTime.UtcNow.ToString("O");
+            BypassDirty = true; // новые базы читает ядро при следующем подключении
+            GeoResult = Loc.T("Гео-базы обновлены");
+        }
+        else
+        {
+            GeoResult = Loc.T("Не удалось обновить — проверьте интернет");
+        }
+        OnPropertyChanged(nameof(GeoStatus));
+    }
+
+    // ── Тест скорости (через поднятый туннель) ──
+    [ObservableProperty] private bool speedTesting;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SpeedStatus))]
+    private string? speedResult;
+
+    /// <summary>Подстрока ряда «Тест скорости»: до первого замера — пояснение, после — цифры.</summary>
+    public string SpeedStatus => SpeedResult ?? Loc.T("Скорость загрузки и отдачи через VPN");
+
+    [RelayCommand]
+    private async Task RunSpeedTestAsync()
+    {
+        if (SpeedTesting || !_vpnEngine.IsRunning) return;
+        SpeedTesting = true;
+        SpeedResult = Loc.T("Замеряю скорость…");
+        try
+        {
+            var (down, up) = await SpeedTestService.RunAsync(VpnEngine.SocksPort).ConfigureAwait(true);
+            SpeedResult = Loc.T("Загрузка") + $" {down:0} " + Loc.T("Мбит/с") + " · " + Loc.T("Отдача") + $" {up:0} " + Loc.T("Мбит/с");
+        }
+        catch (Exception)
+        {
+            SpeedResult = Loc.T("Не удалось замерить — узел не отвечает");
+        }
+        SpeedTesting = false;
+    }
+
     /// <summary>«Новогоднее оформление»: Выкл/Вкл; показывается только в сезон (1 декабря — 31 января).</summary>
     public int WinterDecorIndex
     {
@@ -427,16 +534,48 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     public bool WinterSeason => GodjiVpn.Controls.WinterOverlay.InSeason();
 
-    // ── Приложения мимо VPN (порт Android «Раздельное туннелирование») ──
+    // ── Per-app Proxy (порт Android AppTunnelingScreen): ВЫКЛ — всем одинаково через VPN,
+    // ВКЛ — только выбранные через VPN, Обход — выбранные напрямую. Список один и тот же. ──
     public ObservableCollection<string> BypassApps { get; } = new();
     public string BypassAppsListLabel => $"ПРИЛОЖЕНИЯ · {BypassApps.Count}";
     public bool BypassAppsEmpty => BypassApps.Count == 0;
+
+    public IReadOnlyList<string> PerAppModeOptions { get; } = new[] { "Выкл", "Вкл", "Обход" };
+
+    public int PerAppModeIndex
+    {
+        get => (int)_appSettings.PerAppMode;
+        set
+        {
+            if (_appSettings.PerAppMode == (PerAppProxyMode)value) return;
+            _appSettings.PerAppMode = (PerAppProxyMode)value;
+            // Режим читается движком при подключении — как список, требует переподключения.
+            BypassDirty = true;
+            OnPropertyChanged(nameof(PerAppModeDescription));
+            OnPropertyChanged(nameof(BypassAppsEmptyText));
+        }
+    }
+
+    /// <summary>Пояснение под переключателем режима — строки Android appTunnelingMode*Desc.</summary>
+    public string PerAppModeDescription => Loc.T(_appSettings.PerAppMode switch
+    {
+        PerAppProxyMode.Allow => "Функция Per-app Proxy управляет тем, какие приложения используют прокси. ВКЛ — только выбранные приложения используют прокси, а все остальные подключаются напрямую.",
+        PerAppProxyMode.Bypass => "Функция Per-app Proxy управляет тем, какие приложения используют прокси. Обход — выбранные приложения обходят прокси и подключаются напрямую, в то время как все остальные приложения используют прокси.",
+        _ => "Функция Per-app Proxy управляет тем, какие приложения используют прокси. ВЫКЛ — прокси применяется ко всем приложениям без исключений."
+    });
+
+    public string BypassAppsEmptyText => Loc.T(_appSettings.PerAppMode == PerAppProxyMode.Allow
+        ? "Список пуст — все программы работают напрямую."
+        : "Список пуст — все программы работают через VPN.");
 
     [RelayCommand]
     private void OpenBypassApps()
     {
         RefreshBypassApps();
         BypassDirty = false;
+        OnPropertyChanged(nameof(PerAppModeIndex));
+        OnPropertyChanged(nameof(PerAppModeDescription));
+        OnPropertyChanged(nameof(BypassAppsEmptyText));
         Page = SettingsPage.BypassApps;
     }
 

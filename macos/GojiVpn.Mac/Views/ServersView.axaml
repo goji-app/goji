@@ -36,7 +36,7 @@
         <Style Selector="Path.bannerIcon.error"><Setter Property="Data" Value="{StaticResource IconPriorityHigh}"/></Style>
     </UserControl.Styles>
     <!-- Без прокрутки: список узлов занимает оставшееся место и листается страницами. -->
-    <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="16">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" Margin="16">
             <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="4,0">
                 <StackPanel VerticalAlignment="Bottom">
                     <TextBlock Classes="title" Text="{loc:T 'Где выйти в сеть'}" TextWrapping="Wrap"/>
@@ -45,6 +45,12 @@
                 <!-- Две кнопки, у каждой свой индикатор (2026-10-28): с одной общей он крутился и во
                      время автоматической проверки пинга — выглядело как «постоянное обновление». -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom" Margin="10,0,0,0">
+                    <Button Classes="bare" Command="{Binding AddNodeLinkCommand}" AutomationProperties.Name="{loc:T 'Свой узел'}">
+                        <Border Background="{DynamicResource SurfaceContainerHighBrush}" CornerRadius="2" Height="40" Width="40">
+                            <TextBlock Text="+" FontWeight="Bold" FontSize="{s:Fs 18}" Foreground="{DynamicResource TealDeepBrush}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </Button>
                     <Button Classes="bare" Command="{Binding PingAllCommand}" AutomationProperties.Name="{loc:T 'Проверить пинг всех серверов'}">
                         <Border Background="{DynamicResource SurfaceContainerHighBrush}" CornerRadius="2" Height="40" Padding="14,0">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="6">
@@ -72,7 +78,16 @@
 
             <c:SegmentedControl Grid.Row="1" ItemsSource="{Binding SortOptions}" SelectedIndex="{Binding SortIndex}" ItemHeight="32" LabelFontSize="12" Margin="0,12,0,0"/>
 
-            <Border Grid.Row="2" Classes="rbanner" Classes.error="{Binding RefreshResultIsError}" Margin="0,12,0,0" Padding="14,10,8,10" BorderThickness="4,0,0,0"
+            <!-- Постоянное объяснение пустого списка (сбой автообновления на старте, нет сети,
+                 лимит устройств): видно, пока список не загрузился, а не только 4.5 с после
+                 ручного «Обновить». -->
+            <Border Grid.Row="2" Classes="rbanner error" Margin="0,12,0,0" Padding="14,10,14,10" BorderThickness="4,0,0,0"
+                    IsVisible="{Binding NodesError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <TextBlock Text="{Binding NodesError}" FontWeight="SemiBold" FontSize="{s:Fs 13}" TextWrapping="Wrap" VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+            </Border>
+
+            <Border Grid.Row="3" Classes="rbanner" Classes.error="{Binding RefreshResultIsError}" Margin="0,12,0,0" Padding="14,10,8,10" BorderThickness="4,0,0,0"
                     IsVisible="{Binding RefreshResultMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Text="{Binding RefreshResultMessage}" FontWeight="SemiBold" FontSize="{s:Fs 13}" TextWrapping="Wrap" VerticalAlignment="Center"
@@ -83,7 +98,7 @@
                 </Grid>
             </Border>
 
-            <c:PagedItems Grid.Row="3" Columns="2" Margin="0,12,0,0" VerticalAlignment="Top" ItemsSource="{Binding Nodes}">
+            <c:PagedItems Grid.Row="4" Columns="2" Margin="0,12,0,0" VerticalAlignment="Top" ItemsSource="{Binding Nodes}">
                 <c:PagedItems.ItemTemplate>
                     <DataTemplate>
                         <!-- Ячейка макета 9a: код страны 34 моно, название, шкала пинга; выбранная — «шалфей». -->

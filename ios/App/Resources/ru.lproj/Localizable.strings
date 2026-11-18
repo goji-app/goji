@@ -190,6 +190,8 @@
 "settings.connection" = "Подключение";
 "settings.killswitch" = "Kill switch";
 "settings.killswitch.desc" = "Весь трафик только через VPN: если туннель оборвётся, интернет будет заблокирован, а не пойдёт в обход.";
+"settings.blockads" = "Блокировать рекламу";
+"settings.blockads.desc" = "Реклама и типичные трекеры режутся на уровне VPN. Применяется сразу, без разрыва соединения.";
 "settings.autoconnect" = "Автоподключение";
 "settings.autoswitch" = "Держать в сети";
 "settings.autoswitch.desc" = "Глушат мобильную — уходим на российский узел, появился Wi-Fi — возвращаемся. Пока приложение открыто.";
