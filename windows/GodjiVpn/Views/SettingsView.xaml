@@ -211,7 +211,7 @@
                                           IsChecked="{Binding KillSwitch, Mode=TwoWay}"/>
                         </Grid>
                         <Rectangle Style="{StaticResource Hair}"/>
-                        <Grid>
+                        <Grid Margin="14,13">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
@@ -225,7 +225,7 @@
                                           IsChecked="{Binding StartWithSystem, Mode=TwoWay}"/>
                         </Grid>
                         <Rectangle Style="{StaticResource Hair}"/>
-                        <Grid>
+                        <Grid Margin="14,13">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
@@ -239,7 +239,7 @@
                                           IsChecked="{Binding AutoConnectOnLaunch, Mode=TwoWay}"/>
                         </Grid>
                         <Rectangle Style="{StaticResource Hair}"/>
-                        <Grid>
+                        <Grid Margin="14,13">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
@@ -253,7 +253,7 @@
                                           IsChecked="{Binding BlockAds, Mode=TwoWay}"/>
                         </Grid>
                         <Rectangle Style="{StaticResource Hair}"/>
-                        <Grid>
+                        <Grid Margin="14,13">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
