@@ -56,7 +56,7 @@ public sealed class NetworkDiagnostics
         var ipLeak = realIp != null && realIp.Ip == vpnIp.Ip;
         var dnsLeak = realIp != null && IsDnsLeak(dns, realIp, vpnIp);
         var dnsViaIsp = dnsLeak && SameIsp(dns, realIp!);
-        return new Report(ipLeak || dnsLeak ? Verdict.Leak : Verdict.Safe, realIp, vpnIp, dns, ipLeak, dnsLeak, dnsViaIsp);
+        return new Report(ipLeak || dnsLeak ? Verdict.Leak : realIp == null || dns == null ? Verdict.Error : Verdict.Safe, realIp, vpnIp, dns, ipLeak, dnsLeak, dnsViaIsp);
     }
 
     private static HttpClient CreateDirectClient(string? bindIp)

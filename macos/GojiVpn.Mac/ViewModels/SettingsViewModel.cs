@@ -117,7 +117,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             {
                 NetworkDiagnostics.Verdict.Safe => Loc.T("Сайты видят IP сервера VPN, DNS-запросы тоже идут через туннель."),
                 NetworkDiagnostics.Verdict.VpnOff => Loc.T("Сайты и провайдер видят твой настоящий IP. Включи VPN и проверь ещё раз."),
-                NetworkDiagnostics.Verdict.Error => Loc.T("Через туннель не пришёл ответ. Проверь соединение и попробуй ещё раз."),
+                NetworkDiagnostics.Verdict.Error => Loc.T("Не удалось завершить замеры IP и DNS. Проверь соединение и попробуй ещё раз."),
                 _ => string.Join(" ", new[]
                 {
                     r.IpLeak ? Loc.T("Сайты видят твой настоящий IP.") : null,

@@ -19,4 +19,5 @@ public sealed class GitHubAsset
     public string Name { get; set; } = "";
     [JsonPropertyName("browser_download_url")] public string BrowserDownloadUrl { get; set; } = "";
     public long Size { get; set; }
+    public string? Digest { get; set; }
 }

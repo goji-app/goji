@@ -89,8 +89,16 @@ enum LeakChecker {
             let sameCountryAsReal = dns.country != nil && dns.country == realIP.country && realIP.country != vpnIP.country
             dnsLeak = sameIsp || sameCountryAsReal
         }
+        let verdict: Verdict
+        if ipLeak || dnsLeak {
+            verdict = .leak
+        } else if realIP == nil || dns == nil {
+            verdict = .error
+        } else {
+            verdict = .safe
+        }
         return Report(
-            verdict: (ipLeak || dnsLeak) ? .leak : .safe,
+            verdict: verdict,
             realIP: realIP, vpnIP: vpnIP, dns: dns, ipLeak: ipLeak, dnsLeak: dnsLeak
         )
     }

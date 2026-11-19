@@ -79,9 +79,10 @@ public sealed class UpdateService
             var fileName = Path.GetFileName(file.Name);
             if (string.IsNullOrEmpty(fileName)) return null;
 
+            if (!IsSha256(file.Sha256)) return null;
             return new UpdateInfo(version, platform.Version, platform.Notes, $"{site}/{file.Path.TrimStart('/')}",
                 fileName, file.Size,
-                string.IsNullOrWhiteSpace(file.Sha256) ? null : file.Sha256.Trim());
+                file.Sha256);
         }
         catch { return null; }
     }
@@ -97,9 +98,13 @@ public sealed class UpdateService
             if (!Version.TryParse(tag, out var version)) return null;
 
             var asset = release.Assets.FirstOrDefault(a => a.Name.EndsWith($"-macOS-{MacArch}.zip", StringComparison.OrdinalIgnoreCase));
-            if (asset == null) return null;
+            const string prefix = "sha256:";
+            if (asset?.Digest is not { } digest || !digest.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                return null;
+            var sha256 = digest[prefix.Length..];
+            if (!IsSha256(sha256)) return null;
 
-            return new UpdateInfo(version, tag, release.Body, asset.BrowserDownloadUrl, Path.GetFileName(asset.Name), asset.Size);
+            return new UpdateInfo(version, tag, release.Body, asset.BrowserDownloadUrl, Path.GetFileName(asset.Name), asset.Size, sha256);
         }
         catch { return null; }
     }
@@ -107,57 +112,48 @@ public sealed class UpdateService
     /// <returns>Путь к скачанному установщику во временной папке.</returns>
     public async Task<string> DownloadAsync(UpdateInfo update, IProgress<double>? progress, CancellationToken ct = default)
     {
+        if (!IsSha256(update.Sha256))
+            throw new InvalidDataException("Источник не предоставил SHA-256 обновления.");
         // В "Загрузки": пользователь сам заменяет приложение в "Программах" (без подписи Apple
         // автоматическая замена бандла на месте ненадёжна).
         var downloads = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
         Directory.CreateDirectory(downloads);
         // Только имя файла — манифест/ассет не должны уводить запись выше "Загрузок".
         var tempPath = Path.Combine(downloads, Path.GetFileName(update.FileName));
-        using var response = await _http.GetAsync(update.DownloadUrl, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
-        var total = response.Content.Headers.ContentLength ?? update.SizeBytes ?? -1L;
-
-        await using var stream = await response.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
-        await using var file = File.Create(tempPath);
-        var buffer = new byte[81920];
-        long downloaded = 0;
-        int read;
-        while ((read = await stream.ReadAsync(buffer, ct).ConfigureAwait(false)) > 0)
+        var partialPath = tempPath + "." + Guid.NewGuid().ToString("N") + ".part";
+        try
         {
-            await file.WriteAsync(buffer.AsMemory(0, read), ct).ConfigureAwait(false);
-            downloaded += read;
-            if (total > 0) progress?.Report((double)downloaded / total);
-        }
-
-        // Целостность: sha256 обязателен, когда манифест его даёт; для GitHub-ассетов хэша нет —
-        // сверяем хотя бы размер. Нет ни того ни другого — обновление не устанавливаем.
-        if (!string.IsNullOrWhiteSpace(update.Sha256))
-        {
-            string actualHex;
-            using (var hashed = File.OpenRead(tempPath))
-                actualHex = Convert.ToHexString(await SHA256.HashDataAsync(hashed, ct).ConfigureAwait(false));
-            if (!actualHex.Equals(update.Sha256, StringComparison.OrdinalIgnoreCase))
+            using var response = await _http.GetAsync(update.DownloadUrl, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+            var total = response.Content.Headers.ContentLength ?? update.SizeBytes ?? -1L;
+            await using var stream = await response.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+            using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+            await using (var file = new FileStream(partialPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
             {
-                TryDelete(tempPath);
-                throw new InvalidOperationException("Контрольная сумма скачанного обновления не совпала — установка отменена, попробуйте ещё раз.");
+                var buffer = new byte[81920];
+                long downloaded = 0;
+                int read;
+                while ((read = await stream.ReadAsync(buffer, ct).ConfigureAwait(false)) > 0)
+                {
+                    await file.WriteAsync(buffer.AsMemory(0, read), ct).ConfigureAwait(false);
+                    hash.AppendData(buffer, 0, read);
+                    downloaded += read;
+                    if (total > 0) progress?.Report((double)downloaded / total);
+                }
             }
+            if (!string.Equals(Convert.ToHexString(hash.GetHashAndReset()), update.Sha256, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException("Контрольная сумма скачанного обновления не совпала.");
+            ct.ThrowIfCancellationRequested();
+            File.Move(partialPath, tempPath, overwrite: true);
+            return tempPath;
         }
-        else
+        finally
         {
-            var expectedSize = update.SizeBytes ?? total;
-            if (expectedSize <= 0 || downloaded != expectedSize)
-            {
-                TryDelete(tempPath);
-                throw new InvalidOperationException("Скачанное обновление не совпало по размеру — установка отменена, попробуйте ещё раз.");
-            }
+            try { File.Delete(partialPath); } catch (IOException) { } catch (UnauthorizedAccessException) { }
         }
-        return tempPath;
     }
 
-    private static void TryDelete(string path)
-    {
-        try { if (File.Exists(path)) File.Delete(path); } catch { /* лучшее усилие */ }
-    }
+    private static bool IsSha256(string? value) => value is { Length: 64 } && value.All(Uri.IsHexDigit);
 
     /// <summary>Запускает скачанный установщик и сразу завершает приложение — установщик сам
     /// закрыл бы ещё оставшийся процесс через AppMutex/CloseApplications=yes, но самостоятельное

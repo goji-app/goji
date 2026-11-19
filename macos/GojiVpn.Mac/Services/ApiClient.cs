@@ -335,7 +335,7 @@ public sealed class ApiClient
         {
             return await _http.SendAsync(request, ct).ConfigureAwait(false);
         }
-        catch (HttpRequestException) when (VpnEngine.Current?.IsRunning == true)
+        catch (HttpRequestException) when (request.Method == HttpMethod.Get && VpnEngine.Current?.IsRunning == true)
         {
             using var directRequest = requestFactory();
             PrepareRequest(directRequest);
@@ -354,28 +354,10 @@ public sealed class ApiClient
     /// разлогинивает — сессия продлится при следующем запросе (порт Android 955fd69).</summary>
     private async Task<RefreshOutcome> RefreshSessionAsync(string refreshToken, CancellationToken ct)
     {
-        HttpRequestMessage Build()
-        {
-            var request = new HttpRequestMessage(HttpMethod.Post, "api/auth/refresh") { Content = new StringContent("") };
-            request.Headers.Add("Cookie", $"rw_refresh_token={refreshToken}");
-            request.Headers.Add("X-Requested-With", "XMLHttpRequest");
-            return request;
-        }
-
-        HttpResponseMessage response;
-        using (var request = Build())
-        {
-            try
-            {
-                response = await _http.SendAsync(request, ct).ConfigureAwait(false);
-            }
-            catch (HttpRequestException) when (VpnEngine.Current?.IsRunning == true)
-            {
-                // Как и у обычных запросов: сбой на выходном узле туннеля — пробуем напрямую.
-                using var direct = Build();
-                response = await _directHttp.SendAsync(direct, ct).ConfigureAwait(false);
-            }
-        }
+        using var request = new HttpRequestMessage(HttpMethod.Post, "api/auth/refresh") { Content = new StringContent("") };
+        request.Headers.Add("Cookie", $"rw_refresh_token={refreshToken}");
+        request.Headers.Add("X-Requested-With", "XMLHttpRequest");
+        var response = await _http.SendAsync(request, ct).ConfigureAwait(false);
 
         using (response)
         {
